@@ -106,6 +106,11 @@ export const ChatRoomPage = () => {
     const nextCharIndex = isDeleting ? placeholder.length - 1 : placeholder.length + 1;
 
     const timeout = window.setTimeout(() => {
+      // Pause animation if user is typing or there is text in the input
+      if (messageText.length > 0) {
+        return;
+      }
+
       if (!isDeleting && placeholder.length === currentFullText.length) {
         // Pause at the end
         window.setTimeout(() => setIsDeleting(true), 2000);
