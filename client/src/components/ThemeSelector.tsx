@@ -10,10 +10,20 @@ export const ThemeSelector = () => {
 
   const themes: { name: string; value: Accent; color: string }[] = [
     { name: 'Cyan', value: 'cyan', color: 'bg-cyan-500' },
-    { name: 'Indigo', value: 'indigo', color: 'bg-indigo-500' },
+    { name: 'Teal', value: 'teal', color: 'bg-teal-500' },
     { name: 'Emerald', value: 'emerald', color: 'bg-emerald-500' },
-    { name: 'Rose', value: 'rose', color: 'bg-rose-500' },
+    { name: 'Green', value: 'green', color: 'bg-green-500' },
+    { name: 'Lime', value: 'lime', color: 'bg-lime-500' },
+    { name: 'Yellow', value: 'yellow', color: 'bg-yellow-500' },
     { name: 'Amber', value: 'amber', color: 'bg-amber-500' },
+    { name: 'Orange', value: 'orange', color: 'bg-orange-500' },
+    { name: 'Rose', value: 'rose', color: 'bg-rose-500' },
+    { name: 'Pink', value: 'pink', color: 'bg-pink-500' },
+    { name: 'Fuchsia', value: 'fuchsia', color: 'bg-fuchsia-500' },
+    { name: 'Violet', value: 'violet', color: 'bg-violet-500' },
+    { name: 'Indigo', value: 'indigo', color: 'bg-indigo-500' },
+    { name: 'Blue', value: 'blue', color: 'bg-blue-500' },
+    { name: 'Sky', value: 'sky', color: 'bg-sky-500' },
   ];
 
   // Close when clicking outside
@@ -35,7 +45,7 @@ export const ThemeSelector = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all sm:h-10 sm:w-10 ${
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all sm:h-10 sm:w-10 ${
           isOpen 
             ? 'border-primary-500 bg-primary-50 text-primary-600 dark:bg-primary-950/30' 
             : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
@@ -46,8 +56,8 @@ export const ThemeSelector = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-48">
-          <div className="grid grid-cols-1 gap-1">
+        <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-64">
+          <div className="grid grid-cols-2 gap-1 max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 p-1">
             {themes.map((theme) => (
               <button
                 key={theme.value}

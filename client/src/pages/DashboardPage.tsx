@@ -78,7 +78,7 @@ export const DashboardPage = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:px-4 sm:py-2 sm:text-sm"
+              className="rounded-full border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:px-4 sm:py-2 sm:text-sm"
             >
               Logout
             </button>

@@ -81,9 +81,45 @@ export const ChatRoomPage = () => {
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement | null>(null);
+  const reactionPickerRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
+
+  // Typing placeholder logic
+  const [placeholder, setPlaceholder] = useState('');
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const placeholders = useMemo(() => [
+    'Say something...',
+    'Type a message...',
+    'Share your thoughts...',
+    'Join the conversation...',
+    'Send an emoji...',
+    'Share a file...'
+  ], []);
+
+  useEffect(() => {
+    const currentFullText = placeholders[placeholderIndex];
+    const typingSpeed = isDeleting ? 50 : 100;
+    const nextCharIndex = isDeleting ? placeholder.length - 1 : placeholder.length + 1;
+
+    const timeout = window.setTimeout(() => {
+      if (!isDeleting && placeholder.length === currentFullText.length) {
+        // Pause at the end
+        window.setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && placeholder.length === 0) {
+        // Move to next placeholder
+        setIsDeleting(false);
+        setPlaceholderIndex((current) => (current + 1) % placeholders.length);
+      } else {
+        setPlaceholder(currentFullText.substring(0, nextCharIndex));
+      }
+    }, typingSpeed);
+
+    return () => clearTimeout(timeout);
+  }, [placeholder, isDeleting, placeholderIndex, placeholders]);
 
   const isCreator = Boolean(room && user && room.createdBy.id === user.id);
 
@@ -242,6 +278,35 @@ export const ChatRoomPage = () => {
       disconnectSocket();
     };
   }, [activeRoomId, addNotice, navigate, stopTyping, user]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: PointerEvent) => {
+      // Check emoji picker
+      if (
+        showEmojiPicker &&
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target as Node)
+      ) {
+        // Only close if it's not the trigger button
+        const isTrigger = (event.target as HTMLElement).closest('button')?.title === 'Emoji';
+        if (!isTrigger) {
+          setShowEmojiPicker(false);
+        }
+      }
+
+      // Check reaction picker
+      if (
+        activeReactionMessageId &&
+        reactionPickerRef.current &&
+        !reactionPickerRef.current.contains(event.target as Node)
+      ) {
+        setActiveReactionMessageId(null);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, [showEmojiPicker, activeReactionMessageId]);
 
   const handleMessageChange = (value: string) => {
     setMessageText(value);
@@ -418,7 +483,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
+              className="rounded-full p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden"
               title="Toggle Sidebar"
             >
               <HugeiconsIcon icon={Menu01Icon} size={20} />
@@ -434,7 +499,7 @@ export const ChatRoomPage = () => {
                 <button
                   type="button"
                   onClick={copyRoomId}
-                  className="rounded-lg p-1 text-slate-400 transition hover:text-slate-950 dark:hover:text-white"
+                  className="rounded-full p-1 text-slate-400 transition hover:text-slate-950 dark:hover:text-white"
                   title="Copy Room ID"
                 >
                   <HugeiconsIcon icon={Copy01Icon} size={16} />
@@ -449,7 +514,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={() => setSoundEnabled((current) => !current)}
-              className="hidden rounded-lg p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 sm:block"
+              className="hidden rounded-full p-2 transition hover:bg-slate-100 dark:hover:bg-slate-800 sm:block"
               title={soundEnabled ? 'Mute' : 'Unmute'}
             >
               <HugeiconsIcon icon={soundEnabled ? VolumeHighIcon : VolumeMuteIcon} size={20} />
@@ -459,7 +524,7 @@ export const ChatRoomPage = () => {
                 type="button"
                 onClick={closeRoom}
                 disabled={isClosing}
-                className="rounded-lg p-2 text-red-500 transition hover:bg-red-50 dark:hover:bg-red-950/30"
+                className="rounded-full p-2 text-red-500 transition hover:bg-red-50 dark:hover:bg-red-950/30"
                 title="Close Room"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
@@ -468,7 +533,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={leaveRoom}
-              className="flex items-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:px-4 sm:text-sm"
+              className="flex items-center gap-2 rounded-full bg-slate-950 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:px-4 sm:text-sm"
             >
               <HugeiconsIcon icon={ArrowLeft02Icon} size={18} />
               <span className="hidden sm:inline">Leave</span>
@@ -528,7 +593,8 @@ export const ChatRoomPage = () => {
         )}
 
         {/* Main Chat Area */}
-        <section className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900 lg:rounded-lg lg:border lg:border-slate-200 lg:dark:border-slate-800">
+        <section className="relative flex flex-1 flex-col overflow-hidden bg-white dark:bg-slate-900 lg:rounded-lg lg:border lg:border-slate-200 lg:dark:border-slate-800">
+          <div className="chat-bg-gradient" />
           {error && (
             <div className="m-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
               <HugeiconsIcon icon={Cancel01Icon} size={18} />
@@ -570,8 +636,8 @@ export const ChatRoomPage = () => {
                       onPointerUp={handleTouchEnd}
                       onPointerLeave={handleTouchEnd}
                       className={`relative rounded-3xl px-4 py-3 shadow-sm ${isMine
-                          ? 'rounded-tr-none bg-primary-600 text-white'
-                          : 'rounded-tl-none bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white'
+                        ? 'rounded-tr-none bg-primary-600 text-white'
+                        : 'rounded-tl-none bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white'
                         }`}
                     >
                       {/* Desktop Reaction Trigger */}
@@ -587,7 +653,10 @@ export const ChatRoomPage = () => {
 
                       {/* Floating Reaction Picker */}
                       {activeReactionMessageId === message.id && (
-                        <div className={`absolute z-50 animate-in fade-in zoom-in duration-200 ${isMine ? 'right-0' : 'left-0'} bottom-full mb-2`}>
+                        <div
+                          ref={reactionPickerRef}
+                          className={`absolute z-50 animate-in fade-in zoom-in duration-200 ${isMine ? 'right-0' : 'left-0'} bottom-full mb-2`}
+                        >
                           <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                             {reactionOptions.map((emoji) => (
                               <button
@@ -674,7 +743,10 @@ export const ChatRoomPage = () => {
             className="border-t border-slate-100 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 relative sm:p-4"
           >
             {showEmojiPicker && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 z-50 animate-in fade-in slide-in-from-bottom-4 sm:left-4 sm:right-auto">
+              <div
+                ref={emojiPickerRef}
+                className="absolute bottom-full left-2 mb-2 z-50 animate-in fade-in slide-in-from-bottom-4 sm:left-4 sm:right-auto w-fit"
+              >
                 <EmojiPicker
                   theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
                   emojiStyle={EmojiStyle.APPLE}
@@ -697,8 +769,8 @@ export const ChatRoomPage = () => {
                   type="button"
                   onClick={() => setShowEmojiPicker((current) => !current)}
                   className={`rounded-full p-3 transition-all ${showEmojiPicker
-                      ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/30 dark:text-primary-400'
-                      : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    ? 'bg-primary-50 text-primary-600 dark:bg-primary-950/30 dark:text-primary-400'
+                    : 'text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   title="Emoji"
                 >
@@ -715,27 +787,29 @@ export const ChatRoomPage = () => {
                 </button>
               </div>
 
-              <div className="relative flex-1">
-                <textarea
-                  value={messageText}
-                  onChange={(event) => handleMessageChange(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      event.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                  rows={1}
-                  className="max-h-32 w-full resize-none rounded-full border border-slate-200 bg-slate-50 px-5 py-3.5 pr-12 text-sm text-slate-950 outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-white dark:focus:bg-slate-950 sm:text-base"
-                  placeholder="Say something..."
-                />
-                <button
-                  type="submit"
-                  disabled={isSending || !messageText.trim()}
-                  className="absolute bottom-2.5 right-2 rounded-full bg-primary-600 p-2.5 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/40 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
-                >
-                  <HugeiconsIcon icon={SentIcon} size={20} />
-                </button>
+              <div className="relative flex-1 chat-input-wrapper">
+                <div className="chat-input-inner relative flex items-end">
+                  <textarea
+                    value={messageText}
+                    onChange={(event) => handleMessageChange(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                    rows={1}
+                    className="max-h-32 w-full resize-none bg-transparent px-5 py-3.5 pr-14 text-sm text-slate-950 outline-none transition-all dark:text-white sm:text-base"
+                    placeholder={placeholder}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSending || !messageText.trim()}
+                    className="absolute bottom-1 right-1 rounded-full bg-primary-600 p-2.5 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:shadow-primary-500/40 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
+                  >
+                    <HugeiconsIcon icon={SentIcon} size={20} />
+                  </button>
+                </div>
               </div>
             </div>
           </form>

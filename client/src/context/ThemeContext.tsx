@@ -9,7 +9,7 @@ import {
 import type { ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
-export type Accent = 'cyan' | 'indigo' | 'emerald' | 'rose' | 'amber';
+export type Accent = 'cyan' | 'indigo' | 'emerald' | 'rose' | 'amber' | 'teal' | 'green' | 'blue' | 'violet' | 'orange' | 'fuchsia' | 'sky' | 'lime' | 'yellow' | 'pink';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -32,7 +32,11 @@ const getInitialTheme = (): Theme => {
 
 const getInitialAccent = (): Accent => {
   const savedAccent = localStorage.getItem('accent') as Accent;
-  const validAccents: Accent[] = ['cyan', 'indigo', 'emerald', 'rose', 'amber'];
+  const validAccents: Accent[] = [
+    'cyan', 'indigo', 'emerald', 'rose', 'amber',
+    'teal', 'green', 'blue', 'violet', 'orange',
+    'fuchsia', 'sky', 'lime', 'yellow', 'pink'
+  ];
   return validAccents.includes(savedAccent) ? savedAccent : 'cyan';
 };
 
