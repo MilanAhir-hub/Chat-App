@@ -84,6 +84,7 @@ export const ChatRoomPage = () => {
   const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
 
@@ -354,6 +355,10 @@ export const ChatRoomPage = () => {
 
         setMessageText('');
         stopTyping();
+        // Re-focus the textarea to keep the keyboard open on mobile
+        setTimeout(() => {
+          textareaRef.current?.focus();
+        }, 10);
       }
     );
   };
@@ -795,6 +800,7 @@ export const ChatRoomPage = () => {
               <div className="relative flex-1 chat-input-wrapper">
                 <div className="chat-input-inner relative flex items-end">
                   <textarea
+                    ref={textareaRef}
                     value={messageText}
                     onChange={(event) => handleMessageChange(event.target.value)}
                     onKeyDown={(event) => {
