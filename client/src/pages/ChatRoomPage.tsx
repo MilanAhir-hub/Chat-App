@@ -699,7 +699,7 @@ export const ChatRoomPage = () => {
                           </div>
                         </a>
                       ) : (
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed sm:text-base">
+                        <p className="whitespace-pre-wrap break-words text-base leading-relaxed sm:text-lg">
                           {message.content}
                         </p>
                       )}
@@ -810,7 +810,7 @@ export const ChatRoomPage = () => {
                       }
                     }}
                     rows={1}
-                    className="max-h-32 w-full resize-none bg-transparent px-5 py-3.5 pr-14 text-sm text-slate-950 outline-none transition-all dark:text-white sm:text-base"
+                    className="max-h-32 w-full resize-none bg-transparent px-5 py-3.5 pr-14 text-base text-slate-950 outline-none transition-all dark:text-white sm:text-lg"
                     placeholder={placeholder}
                   />
                   <button
