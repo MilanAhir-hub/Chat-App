@@ -1,3 +1,5 @@
+// this is auth service page
+
 import { User, type IUser } from '../models/User';
 import type { AuthUser } from '../types/auth';
 import { AppError } from '../utils/AppError';
