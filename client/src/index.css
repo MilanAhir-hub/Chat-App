@@ -246,89 +246,27 @@
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
+  height: 100dvh;
+  width: 100vw;
+  overflow: hidden;
   margin: 0;
+  padding: 0;
+}
+
+body {
   min-width: 320px;
-  min-height: 100vh;
   @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50;
 }
 
-#root {
-  min-height: 100vh;
-}
-
-/* Premium Animated Gradient Border */
-@keyframes spin-gradient {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-.chat-input-wrapper {
-  position: relative;
-  border-radius: 34px;
-  padding: 2px;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.chat-input-wrapper::before {
-  content: "";
+/* Static Gradient for Chat Area */
+.chat-bg-gradient {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 150%; /* Reduced from 250% */
-  height: 150%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0%,
-    var(--primary-400) 25%,
-    transparent 50%,
-    var(--primary-500) 75%,
-    transparent 100%
-  );
-  animation: spin-gradient 4s linear infinite;
-  z-index: 0;
-  opacity: 0.5;
-  transition: opacity 0.3s ease;
-  will-change: transform; /* GPU Acceleration */
   transform: translate(-50%, -50%);
-}
-
-.dark .chat-input-wrapper::before {
-  opacity: 0.7;
-}
-
-.chat-input-wrapper:focus-within::before {
-  opacity: 1;
-}
-
-.chat-input-inner {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  border-radius: 32px;
-  background-color: theme('colors.white');
-}
-
-.dark .chat-input-inner {
-  background-color: theme('colors.slate.900');
-}
-
-@keyframes float-gradient {
-  0% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
-  33% { top: 45%; left: 55%; transform: translate(-50%, -50%) scale(1.1); }
-  66% { top: 55%; left: 45%; transform: translate(-50%, -50%) scale(0.9); }
-  100% { top: 50%; left: 50%; transform: translate(-50%, -50%) scale(1); }
-}
-
-.chat-bg-gradient {
-  position: absolute;
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at center,
@@ -338,7 +276,6 @@ body {
   pointer-events: none;
   z-index: 0;
   filter: blur(40px);
-  animation: float-gradient 15s ease-in-out infinite;
 }
 
 .dark .chat-bg-gradient {
@@ -347,3 +284,33 @@ body {
       transparent 70%);
   opacity: 0.12;
 }
+
+/* Simplified Chat Input Border */
+.chat-input-wrapper {
+  position: relative;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background-color: var(--primary-200);
+  transition: all 0.3s ease;
+}
+
+.dark .chat-input-wrapper {
+  background-color: var(--primary-900);
+}
+
+.chat-input-wrapper:focus-within {
+  background-color: var(--primary-500);
+}
+
+.chat-input-inner {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background-color: theme('colors.white');
+}
+
+.dark .chat-input-inner {
+  background-color: theme('colors.slate.950');
+}

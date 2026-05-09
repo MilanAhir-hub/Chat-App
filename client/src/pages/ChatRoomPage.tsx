@@ -481,7 +481,7 @@ export const ChatRoomPage = () => {
   }
 
   return (
-    <main className="flex h-dvh flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
+    <main className="fixed inset-0 flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
       <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-3">

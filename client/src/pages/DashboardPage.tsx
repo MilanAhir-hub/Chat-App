@@ -63,7 +63,7 @@ export const DashboardPage = () => {
   };
 
   return (
-    <main className="min-h-dvh bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
+    <main className="h-dvh overflow-y-auto bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white scrollbar-thin">
       <header className="border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90 sm:px-6 sm:py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 sm:gap-4">
           <div className="min-w-0">

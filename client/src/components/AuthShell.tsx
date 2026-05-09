@@ -8,7 +8,7 @@ interface AuthShellProps {
 }
 
 export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
-  <main className="relative grid min-h-dvh bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white lg:grid-cols-[0.85fr_1.15fr]">
+  <main className="relative grid h-dvh overflow-y-auto bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white lg:grid-cols-[0.85fr_1.15fr]">
 
     {/* Theme toggle — hidden on mobile (shown inside card instead) */}
     <div className="absolute top-4 right-4 z-10 hidden sm:block">
