@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Loader } from './Loader';
 
 export const ProtectedRoute = () => {
   const { user, isCheckingAuth } = useAuth();
@@ -8,7 +9,7 @@ export const ProtectedRoute = () => {
   if (isCheckingAuth) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary-500" />
+        <Loader size="lg" />
       </div>
     );
   }

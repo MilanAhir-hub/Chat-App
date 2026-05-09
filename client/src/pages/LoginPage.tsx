@@ -10,6 +10,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { AuthShell } from '../components/AuthShell';
 import { useAuth } from '../context/AuthContext';
+import { Loader } from '../components/Loader';
 
 export const LoginPage = () => {
   const { login } = useAuth();
@@ -49,13 +50,13 @@ export const LoginPage = () => {
       subtitle="Login to create a room or continue to a shared room."
     >
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <label className="block text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <label className="block text-left text-xs font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
           Email
           <div className="relative mt-1.5 sm:mt-2">
             <HugeiconsIcon
               icon={Mail02Icon}
-              size={20}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:left-3.5"
             />
             <input
               type="text"
@@ -66,19 +67,19 @@ export const LoginPage = () => {
               onChange={(event) =>
                 setForm((current) => ({ ...current, email: event.target.value }))
               }
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 pr-4 text-sm sm:text-base text-slate-950 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-4 text-sm text-slate-950 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white sm:py-3 sm:pl-10 sm:text-base"
               placeholder="you@example.com"
             />
           </div>
         </label>
 
-        <label className="block text-left text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <label className="block text-left text-xs font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
           Password
           <div className="relative mt-1.5 sm:mt-2">
             <HugeiconsIcon
               icon={SquareLockPasswordIcon}
-              size={20}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 sm:left-3.5"
             />
             <input
               type={showPassword ? 'text' : 'password'}
@@ -91,28 +92,28 @@ export const LoginPage = () => {
                   password: event.target.value,
                 }))
               }
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 sm:py-3 pl-10 pr-12 text-sm sm:text-base text-slate-950 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-12 text-sm text-slate-950 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white sm:py-3 sm:pl-10 sm:text-base"
               placeholder="Your password"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200 p-1 -mr-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 -mr-1 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
               title={showPassword ? 'Hide password' : 'Show password'}
             >
-              <HugeiconsIcon icon={showPassword ? ViewOffSlashIcon : ViewIcon} size={20} />
+              <HugeiconsIcon icon={showPassword ? ViewOffSlashIcon : ViewIcon} size={18} />
             </button>
           </div>
         </label>
 
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200">
+          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200 sm:px-4 sm:py-3 sm:text-sm">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200">
+          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-medium text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200 sm:px-4 sm:py-3 sm:text-sm">
             {success}
           </p>
         )}
@@ -120,13 +121,13 @@ export const LoginPage = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 sm:py-3 text-sm font-bold text-white transition hover:bg-primary-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-primary-800"
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-primary-800 sm:py-3"
         >
-          {isSubmitting ? 'Logging in...' : 'Login'}
+          {isSubmitting ? <Loader size="sm" light /> : 'Login'}
         </button>
       </form>
 
-      <p className="mt-5 sm:mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+      <p className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400 sm:mt-6 sm:text-sm">
         New here?{' '}
         <Link
           to="/signup"

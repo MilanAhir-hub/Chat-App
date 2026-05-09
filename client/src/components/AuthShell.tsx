@@ -16,12 +16,12 @@ export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
     </div>
 
     {/* Left branding panel — desktop only */}
-    <section className="hidden bg-slate-950 text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <section className="hidden bg-slate-950 text-white lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-12">
       <div>
-        <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300 lg:text-sm">
           Temporary Chat
         </p>
-        <h1 className="mt-5 max-w-md text-4xl font-bold leading-tight xl:text-5xl">
+        <h1 className="mt-4 max-w-md text-3xl font-bold leading-tight lg:mt-5 lg:text-4xl xl:text-5xl">
           Room-based conversations that disappear cleanly.
         </h1>
       </div>
@@ -32,29 +32,29 @@ export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
     </section>
 
     {/* Right auth section */}
-    <section className="flex min-h-dvh items-center justify-center sm:min-h-0 sm:px-8 sm:py-8">
+    <section className="flex min-h-dvh items-center justify-center px-4 py-6 sm:min-h-0 sm:px-8 sm:py-8">
       <div className="
-        w-full sm:max-w-md
+        w-full max-w-[calc(100vw-2rem)] sm:max-w-md
         min-h-dvh sm:min-h-0
         flex flex-col justify-center
         bg-white dark:bg-slate-900
-        px-6 py-10 sm:p-10
+        px-5 py-8 sm:p-10
         sm:rounded-lg sm:border sm:border-slate-200 sm:shadow-xl sm:shadow-slate-200/70
         dark:sm:border-slate-800 dark:sm:shadow-black/20
       ">
         {/* Card header — theme toggle on mobile, title always */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-300 sm:text-sm">
-              MERN Chat
+              Chattogram
             </p>
             {/* Theme toggle inside card — mobile only */}
             <div className="sm:hidden">
               <ThemeToggle />
             </div>
           </div>
-          <h2 className="mt-3 text-2xl font-bold sm:text-3xl">{title}</h2>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          <h2 className="mt-3 text-xl font-bold sm:text-2xl md:text-3xl">{title}</h2>
+          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 sm:mt-2 sm:text-sm">
             {subtitle}
           </p>
         </div>

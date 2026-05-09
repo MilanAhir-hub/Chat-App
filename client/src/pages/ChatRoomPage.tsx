@@ -23,6 +23,7 @@ import {
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector } from '../components/ThemeSelector';
+import { Loader } from '../components/Loader';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../services/http';
@@ -403,16 +404,16 @@ export const ChatRoomPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-primary-500" />
+      <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
+        <Loader size="lg" />
       </div>
     );
   }
 
   return (
-    <main className="flex h-screen flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
-      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+    <main className="flex h-dvh flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95 sm:px-4 sm:py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -670,10 +671,10 @@ export const ChatRoomPage = () => {
 
           <form
             onSubmit={sendMessage}
-            className="border-t border-slate-100 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 relative"
+            className="border-t border-slate-100 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 relative sm:p-4"
           >
             {showEmojiPicker && (
-              <div className="absolute bottom-full left-4 mb-2 z-50 animate-in fade-in slide-in-from-bottom-4">
+              <div className="absolute bottom-full left-0 right-0 mb-2 z-50 animate-in fade-in slide-in-from-bottom-4 sm:left-4 sm:right-auto">
                 <EmojiPicker
                   theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
                   emojiStyle={EmojiStyle.APPLE}

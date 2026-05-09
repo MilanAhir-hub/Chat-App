@@ -35,18 +35,18 @@ export const ThemeSelector = () => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border transition-all ${
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-xl border transition-all sm:h-10 sm:w-10 ${
           isOpen 
             ? 'border-primary-500 bg-primary-50 text-primary-600 dark:bg-primary-950/30' 
             : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
         }`}
         title="Change Accent Color"
       >
-        <HugeiconsIcon icon={PaintBrush01Icon} size={20} />
+        <HugeiconsIcon icon={PaintBrush01Icon} size={18} />
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 top-full mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-48">
           <div className="grid grid-cols-1 gap-1">
             {themes.map((theme) => (
               <button
