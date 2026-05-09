@@ -148,7 +148,11 @@ const handleRoomExit = async (
 const authenticateSocket = async (socket: Socket, next: (err?: Error) => void) => {
   try {
     const cookies = parseCookies(socket.handshake.headers.cookie);
-    const token = cookies[env.COOKIE_NAME];
+    let token = cookies[env.COOKIE_NAME] || socket.handshake.auth?.token;
+
+    if (!token && socket.handshake.headers.authorization?.startsWith('Bearer')) {
+      token = socket.handshake.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
       throw new AppError('Please login before opening a socket connection.', 401);

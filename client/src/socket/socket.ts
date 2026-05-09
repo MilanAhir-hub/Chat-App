@@ -64,6 +64,9 @@ export const getSocket = () => {
     socket = io(socketUrl, {
       autoConnect: false,
       withCredentials: true,
+      auth: {
+        token: localStorage.getItem('chat_app_token'),
+      },
     });
   }
 

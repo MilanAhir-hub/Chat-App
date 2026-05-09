@@ -12,6 +12,14 @@ export const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('chat_app_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 export const getErrorMessage = (error: unknown) => {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
     return error.response?.data?.message || error.message;

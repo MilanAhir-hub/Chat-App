@@ -10,7 +10,11 @@ export const protect = async (
   next: NextFunction
 ) => {
   try {
-    const token = req.cookies?.[env.COOKIE_NAME];
+    let token = req.cookies?.[env.COOKIE_NAME];
+
+    if (!token && req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
       throw new AppError('Please login to continue.', 401);

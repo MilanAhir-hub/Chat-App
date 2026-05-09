@@ -55,6 +55,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = useCallback(async (input: LoginInput) => {
     try {
       const response = await authService.login(input);
+      if (response.token) {
+        localStorage.setItem('chat_app_token', response.token);
+      }
       setUser(response.user);
       return response.message;
     } catch (error) {
@@ -65,6 +68,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = useCallback(async (input: RegisterInput) => {
     try {
       const response = await authService.register(input);
+      if (response.token) {
+        localStorage.setItem('chat_app_token', response.token);
+      }
       setUser(response.user);
       return response.message;
     } catch (error) {
@@ -76,6 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       await authService.logout();
     } finally {
+      localStorage.removeItem('chat_app_token');
       disconnectSocket();
       setUser(null);
     }

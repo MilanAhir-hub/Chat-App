@@ -13,6 +13,7 @@ interface RegisterPayload extends AuthPayload {
 interface AuthResponse {
   message: string;
   user: User;
+  token: string;
 }
 
 export const authService = {

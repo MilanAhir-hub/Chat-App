@@ -14,6 +14,7 @@ export const register: RequestHandler = asyncHandler(async (req, res) => {
     success: true,
     message: 'Account created successfully.',
     user,
+    token,
   });
 });
 
@@ -27,6 +28,7 @@ export const login: RequestHandler = asyncHandler(async (req, res) => {
     success: true,
     message: 'Logged in successfully.',
     user,
+    token,
   });
 });
 
