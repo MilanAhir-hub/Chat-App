@@ -82,7 +82,7 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
 
   return (
     <div
-      className="relative"
+      className={`relative flex w-full ${isMine ? 'justify-end' : 'justify-start'}`}
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -92,13 +92,13 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
       <div
         ref={iconRef}
         style={{ opacity: 0, transform: 'scale(0.5)' }}
-        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 z-0 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 will-change-transform ${isMine ? 'left-[-36px]' : 'right-[-36px]'}`}
+        className="pointer-events-none absolute left-[-36px] top-1/2 z-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-200 text-slate-500 will-change-transform dark:bg-slate-700 dark:text-slate-400"
       >
         <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={15} />
       </div>
 
       {/* The actual message bubble — translates horizontally on swipe */}
-      <div ref={wrapperRef} className="relative z-10 will-change-transform">
+      <div ref={wrapperRef} className="relative z-10 w-fit will-change-transform">
         {children}
       </div>
     </div>
@@ -986,7 +986,7 @@ export const ChatRoomPage = () => {
                   >
                     <SwipeableMessage isMine={isMine} onReply={() => handleReply(message)}>
                     <div
-                      className={`group relative max-w-[88%] sm:max-w-[75%] transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
+                      className={`group relative flex flex-col w-fit max-w-[88%] sm:max-w-[80%] transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
                         } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
                     >
                       {!isMine && (
