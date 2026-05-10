@@ -14,6 +14,7 @@ import {
   Minimize01Icon,
   UserIcon,
   MoreHorizontalIcon,
+  Camera01Icon,
 } from '@hugeicons/core-free-icons';
 import type { User } from '../../types';
 import { useVideoCall } from './useVideoCall';
@@ -60,10 +61,10 @@ const VideoTile = ({
   return (
     <div
       style={isFloating && position ? { transform: `translate(${position.x}px, ${position.y}px)` } : {}}
-      className={`relative overflow-hidden transition-all duration-500 ease-out group ${
+      className={`relative overflow-hidden transition-all duration-500 ease-out group pointer-events-auto ${
         isFloating
-          ? 'absolute right-6 top-24 z-50 w-36 h-52 sm:w-56 sm:h-80 rounded-2xl border-2 border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] cursor-grab active:cursor-grabbing backdrop-blur-md'
-          : 'w-full h-full rounded-2xl sm:rounded-[2.5rem] bg-slate-900 shadow-inner'
+          ? 'absolute right-6 top-24 z-50 w-32 h-44 sm:w-56 sm:h-80 rounded-2xl border-2 border-white/20 shadow-[0_30px_60px_-12px_rgba(0,0,0,0.6)] cursor-grab active:cursor-grabbing backdrop-blur-xl animate-in zoom-in-90 duration-500'
+          : 'w-full h-full rounded-2xl sm:rounded-[2.5rem] bg-slate-900 shadow-inner border border-white/5'
       }`}
       onMouseDown={isFloating ? onDragStart : undefined}
       onTouchStart={isFloating ? onDragStart : undefined}
@@ -139,6 +140,8 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    switchCamera,
+    canScreenShare,
     dismissError,
   } = useVideoCall(roomId, currentUser);
 
@@ -263,39 +266,14 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
 
       {/* Main Video Area */}
       <main className={`flex-1 relative w-full h-full flex items-center justify-center p-4 sm:p-12 overflow-hidden transition-all duration-500 ${isFullscreen ? 'p-0 sm:p-0' : ''}`}>
-        {isOneOnOne ? (
-          // 1-on-1 Layout: Remote full screen, local floating
-          <div className="relative w-full h-full max-w-7xl mx-auto overflow-hidden rounded-[2rem] sm:rounded-[3rem] shadow-2xl bg-slate-900/20 backdrop-blur-sm border border-white/5">
-            <VideoTile
-              label={remoteParticipants[0].user.name}
-              stream={remoteParticipants[0].stream}
-              media={remoteParticipants[0].media}
-              connectionState={remoteParticipants[0].connectionState}
-            />
-            <VideoTile
-              label={currentUser?.name || 'You'}
-              stream={localStream}
-              isLocal
-              media={mediaState}
-              isFloating
-              position={dragPos}
-              onDragStart={onDragStart}
-            />
-          </div>
-        ) : (
-          // Group/Outgoing Layout: Dynamic grid
-          // Note: In an outgoing call, participantCount is 1, so this grid renders the local user full-screen
-          <div className={`grid w-full h-full max-w-7xl mx-auto gap-4 sm:gap-8 p-4 overflow-y-auto content-center scrollbar-hide ${
-            participantCount <= 2 ? 'grid-cols-1 md:grid-cols-2' : 
-            participantCount <= 4 ? 'grid-cols-2' : 
-            'grid-cols-2 lg:grid-cols-3'
+        {remoteParticipants.length > 0 ? (
+          <div className={`grid w-full h-full gap-4 sm:gap-8 p-4 content-center transition-all duration-700 ${
+            remoteParticipants.length === 1 
+              ? 'grid-cols-1 max-w-5xl aspect-video rounded-[2rem] sm:rounded-[3rem] overflow-hidden ring-1 ring-white/10' 
+              : remoteParticipants.length === 2 
+                ? 'grid-cols-1 md:grid-cols-2' 
+                : 'grid-cols-2 lg:grid-cols-3'
           }`}>
-            <VideoTile
-              label={currentUser?.name || 'You'}
-              stream={localStream}
-              isLocal
-              media={mediaState}
-            />
             {remoteParticipants.map((participant) => (
               <VideoTile
                 key={participant.socketId}
@@ -306,7 +284,33 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
               />
             ))}
           </div>
+        ) : (
+          <div className="flex flex-col items-center animate-in fade-in zoom-in duration-1000">
+            <div className="relative mb-8">
+              <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
+              <div className="relative h-32 w-32 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-xl">
+                <HugeiconsIcon icon={UserIcon} size={48} className="text-white/20" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-lg font-black tracking-widest text-white mb-2 uppercase">Calling...</p>
+              <p className="text-[10px] font-extrabold tracking-[0.4em] text-emerald-400 uppercase opacity-80">Waiting for others</p>
+            </div>
+          </div>
         )}
+
+        {/* Persistent WhatsApp-style Local Preview (Floating) */}
+        <div className="absolute inset-0 pointer-events-none z-[60]">
+          <VideoTile
+            label={currentUser?.name || 'You'}
+            stream={localStream}
+            isLocal
+            media={mediaState}
+            isFloating
+            position={dragPos}
+            onDragStart={onDragStart}
+          />
+        </div>
 
         {/* Floating Error Toast */}
         {error && (
@@ -332,7 +336,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             className={`group flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 border-2 ${
               mediaState.isVideoEnabled
                 ? 'bg-white/5 text-white border-white/10 hover:bg-white/10'
-                : 'bg-white text-slate-950 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)]'
+                : 'bg-red-500 text-white border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.5)]'
             }`}
           >
             <HugeiconsIcon
@@ -340,6 +344,16 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
               size={24}
               className="sm:scale-125"
             />
+          </button>
+
+          <button
+            type="button"
+            onClick={switchCamera}
+            disabled={mediaState.isScreenSharing || !mediaState.isVideoEnabled}
+            className={`group flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 border-2 bg-white/5 text-white border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none`}
+            title="Flip Camera"
+          >
+            <HugeiconsIcon icon={Camera01Icon} size={24} className="sm:scale-125" />
           </button>
 
           <button
@@ -358,17 +372,19 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             />
           </button>
 
-          <button
-            type="button"
-            onClick={toggleScreenShare}
-            className={`group flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 border-2 ${
-              mediaState.isScreenSharing
-                ? 'bg-primary-500 text-white border-primary-400 shadow-[0_0_30px_rgba(var(--primary-500-rgb),0.5)]'
-                : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
-            }`}
-          >
-            <HugeiconsIcon icon={ComputerScreenShareIcon} size={24} className="sm:scale-125" />
-          </button>
+          {canScreenShare && (
+            <button
+              type="button"
+              onClick={toggleScreenShare}
+              className={`group flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 border-2 ${
+                mediaState.isScreenSharing
+                  ? 'bg-primary-500 text-white border-primary-400 shadow-[0_0_30px_rgba(var(--primary-500-rgb),0.5)]'
+                  : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
+              }`}
+            >
+              <HugeiconsIcon icon={ComputerScreenShareIcon} size={24} className="sm:scale-125" />
+            </button>
+          )}
 
           <button
             type="button"

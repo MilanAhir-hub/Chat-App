@@ -90,6 +90,10 @@ export const ChatRoomPage = () => {
   const [showScrollButton, setShowScrollButton] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [swipingMessageId, setSwipingMessageId] = useState<string | null>(null);
+  const [swipeX, setSwipeX] = useState(0);
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -455,7 +459,7 @@ export const ChatRoomPage = () => {
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: 'environment' } 
+          video: { facingMode: { ideal: facingMode } } 
         });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -474,7 +478,7 @@ export const ChatRoomPage = () => {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  }, [showCamera]);
+  }, [showCamera, facingMode]);
 
   const handleCapture = () => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -707,11 +711,34 @@ export const ChatRoomPage = () => {
     });
   };
 
-  const handleTouchStart = (messageId: string) => {
+  const handleTouchStart = (e: React.TouchEvent | React.PointerEvent, messageId: string) => {
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    setTouchStartX(clientX);
+    setSwipingMessageId(messageId);
+
     longPressTimerRef.current = window.setTimeout(() => {
-      setActiveReactionMessageId(messageId);
-      if (navigator.vibrate) navigator.vibrate(50);
+      if (swipeX < 10) {
+        setActiveReactionMessageId(messageId);
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
     }, 600);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStartX === null || !swipingMessageId) return;
+
+    const deltaX = e.touches[0].clientX - touchStartX;
+    if (deltaX > 0) {
+      // Swipe right logic
+      const cappedX = Math.min(deltaX, 100);
+      setSwipeX(cappedX);
+      
+      // If we've started swiping significantly, cancel the long press
+      if (deltaX > 15 && longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
   };
 
   const handleTouchEnd = () => {
@@ -719,6 +746,18 @@ export const ChatRoomPage = () => {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
+
+    if (swipingMessageId && swipeX > 60) {
+      const msg = messages.find(m => m.id === swipingMessageId);
+      if (msg) {
+        handleReply(msg);
+        if (navigator.vibrate) navigator.vibrate(50);
+      }
+    }
+
+    setSwipingMessageId(null);
+    setSwipeX(0);
+    setTouchStartX(null);
   };
 
   const typingNames = Object.values(typingUsers);
@@ -935,14 +974,34 @@ export const ChatRoomPage = () => {
                         </p>
                       )}
                       <div
-                        onPointerDown={() => handleTouchStart(message.id)}
+                        onTouchStart={(e) => handleTouchStart(e, message.id)}
+                        onTouchMove={handleTouchMove}
+                        onTouchEnd={handleTouchEnd}
+                        onPointerDown={(e) => handleTouchStart(e, message.id)}
                         onPointerUp={handleTouchEnd}
                         onPointerLeave={handleTouchEnd}
-                        className={`relative rounded-2xl shadow-sm ${isMine
+                        style={{ 
+                          transform: swipingMessageId === message.id ? `translateX(${swipeX}px)` : 'none',
+                          transition: swipingMessageId === message.id ? 'none' : 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+                        }}
+                        className={`relative rounded-2xl shadow-sm z-10 ${isMine
                           ? 'rounded-tr-none bg-primary-600 text-white'
                           : 'rounded-tl-none bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white'
                           } ${isImageMessage(message) ? 'p-1.5' : 'px-3 py-1.5 pb-2'}`}
                       >
+                        {/* Swipe-to-reply Indicator (behind) */}
+                        <div 
+                          className="absolute -left-12 top-1/2 -translate-y-1/2 transition-all duration-200"
+                          style={{ 
+                            opacity: swipingMessageId === message.id ? Math.min(swipeX / 60, 1) : 0,
+                            transform: `scale(${swipingMessageId === message.id ? Math.min(swipeX / 60, 1) : 0.5})`
+                          }}
+                        >
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-200/50 dark:bg-slate-800/50 text-slate-400">
+                            <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={16} />
+                          </div>
+                        </div>
+
                         <div className="flex flex-col relative">
                         {/* Reply Display */}
                         {message.replyTo && (
@@ -1319,7 +1378,13 @@ export const ChatRoomPage = () => {
               <HugeiconsIcon icon={Cancel01Icon} size={24} />
             </button>
             <span className="font-semibold text-white">Camera</span>
-            <div className="w-10" /> {/* Spacer */}
+            <button 
+              onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
+              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              title="Switch Camera"
+            >
+              <HugeiconsIcon icon={Camera01Icon} size={24} />
+            </button>
           </div>
 
           <div className="relative flex-1 overflow-hidden">

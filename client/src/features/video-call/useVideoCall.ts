@@ -542,8 +542,15 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     emitMediaState({ isVideoEnabled: nextVideoEnabled });
   }, [emitMediaState, mediaState.isVideoEnabled]);
 
+  const canScreenShare = Boolean(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+
   const toggleScreenShare = useCallback(async () => {
     if (!localStreamRef.current) {
+      return;
+    }
+
+    if (!canScreenShare) {
+      setError('Screen sharing is not supported on this browser or device.');
       return;
     }
 
@@ -579,12 +586,41 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       setError(getMediaErrorMessage(shareError));
     }
   }, [
+    canScreenShare,
     emitMediaState,
     mediaState.isScreenSharing,
     replaceOutgoingVideoTrack,
     setLocalVideoTrack,
     stopScreenShare,
   ]);
+
+  const switchCamera = useCallback(async () => {
+    if (!localStreamRef.current || mediaState.isScreenSharing) {
+      return;
+    }
+
+    const currentTrack = localStreamRef.current.getVideoTracks()[0];
+    if (!currentTrack) return;
+
+    // Toggle between user and environment
+    const currentFacingMode = currentTrack.getSettings().facingMode;
+    const nextFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+
+    try {
+      const nextStream = await navigator.mediaDevices.getUserMedia({
+        video: { ...cameraMediaConstraints.video as object, facingMode: { ideal: nextFacingMode } },
+        audio: false,
+      });
+      const nextTrack = nextStream.getVideoTracks()[0];
+
+      if (nextTrack) {
+        await replaceOutgoingVideoTrack(nextTrack);
+        setLocalVideoTrack(nextTrack);
+      }
+    } catch (switchError) {
+      setError(getMediaErrorMessage(switchError));
+    }
+  }, [mediaState.isScreenSharing, replaceOutgoingVideoTrack, setLocalVideoTrack]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -678,6 +714,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    switchCamera,
+    canScreenShare,
     dismissError: () => setError(''),
   };
 };

@@ -43,7 +43,7 @@ export const cameraMediaConstraints: MediaStreamConstraints = {
     width: { ideal: 960, max: 1280 },
     height: { ideal: 540, max: 720 },
     frameRate: { ideal: 24, max: 30 },
-    facingMode: 'user',
+    facingMode: { ideal: 'user' },
   },
 };
 
