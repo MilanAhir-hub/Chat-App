@@ -46,13 +46,26 @@ const VideoTile = ({
   position,
   onDragStart,
 }: VideoTileProps) => {
-  // Use a callback ref to ensure the stream is attached as soon as the video element mounts
-  const videoRef = useCallback((node: HTMLVideoElement | null) => {
-    if (node && stream) {
-      // Avoid re-assigning if it's already set to the same stream
-      if (node.srcObject !== stream) {
-        node.srcObject = stream;
+  // useRef + useEffect is the correct pattern here.
+  // A callback ref (useCallback) only fires on mount/unmount, NOT when 'stream'
+  // changes on an already-mounted element — causing black screens after camera
+  // switching or stream recreation.
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (stream) {
+      if (video.srcObject !== stream) {
+        video.srcObject = stream;
+        // Trigger play() explicitly for iOS Safari autoplay restrictions
+        video.play().catch(() => {
+          // Autoplay blocked — user interaction required; video will play on touch
+        });
       }
+    } else {
+      video.srcObject = null;
     }
   }, [stream]);
 

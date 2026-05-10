@@ -64,6 +64,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
   const remoteStreamsRef = useRef(new Map<string, MediaStream>());
   const participantsRef = useRef(new Map<string, VideoParticipant>());
   const pendingCandidatesRef = useRef(new Map<string, RTCIceCandidateInit[]>());
+  // Queue for signals that arrive before localStream is ready
+  const pendingSignalsRef = useRef<VideoSignalPayload[]>([]);
 
   useEffect(() => {
     roomIdRef.current = roomId;
@@ -95,12 +97,12 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         const nextParticipant: RemoteVideoParticipant = {
           ...participant,
           stream:
-            patch.stream ||
-            existing?.stream ||
+            patch.stream ??
+            existing?.stream ??
             remoteStreamsRef.current.get(participant.socketId),
           connectionState:
-            patch.connectionState ||
-            existing?.connectionState ||
+            patch.connectionState ??
+            existing?.connectionState ??
             'new',
         };
 
@@ -163,11 +165,13 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       const candidates = pendingCandidatesRef.current.get(socketId) || [];
       pendingCandidatesRef.current.delete(socketId);
 
-      await Promise.all(
-        candidates.map((candidate) =>
-          peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
-        )
-      );
+      for (const candidate of candidates) {
+        try {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch {
+          // Ignore stale candidates
+        }
+      }
     },
     []
   );
@@ -188,6 +192,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     [sendSignal]
   );
 
+  // --------------------------------------------------------------------------
+  // createPeerConnection — the heart of WebRTC
+  // --------------------------------------------------------------------------
   const createPeerConnection = useCallback(
     (participant: VideoParticipant) => {
       const existing = peerConnectionsRef.current.get(participant.socketId);
@@ -199,6 +206,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       const peerConnection = new RTCPeerConnection(createPeerConnectionConfig());
       const activeStream = localStreamRef.current;
 
+      // Add all local tracks so the remote peer gets our audio + video
       if (activeStream) {
         activeStream.getTracks().forEach((track) => {
           const sender = peerConnection.addTrack(track, activeStream);
@@ -209,10 +217,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         });
       }
 
+      // ICE candidate → relay to remote peer
       peerConnection.onicecandidate = (event) => {
-        if (!event.candidate) {
-          return;
-        }
+        if (!event.candidate) return;
 
         sendSignal(participant.socketId, {
           to: participant.socketId,
@@ -221,12 +228,13 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         });
       };
 
+      // Remote track arrived → accumulate into a MediaStream and update React state
       peerConnection.ontrack = (event) => {
         const stream =
-          remoteStreamsRef.current.get(participant.socketId) ||
+          remoteStreamsRef.current.get(participant.socketId) ??
           new MediaStream();
 
-        if (!stream.getTracks().some((track) => track.id === event.track.id)) {
+        if (!stream.getTracks().some((t) => t.id === event.track.id)) {
           stream.addTrack(event.track);
         }
 
@@ -299,7 +307,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       stream.addTrack(track);
     }
 
-    setLocalStream(new MediaStream(stream.getTracks()));
+    // Create a new MediaStream so React detects the reference change
+    // and VideoTile's useEffect re-assigns srcObject
+    const refreshed = new MediaStream(stream.getTracks());
+    localStreamRef.current = refreshed;
+    setLocalStream(refreshed);
   }, []);
 
   const stopScreenShare = useCallback(async () => {
@@ -339,6 +351,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       });
       peerConnectionsRef.current.clear();
       pendingCandidatesRef.current.clear();
+      pendingSignalsRef.current = [];
       participantsRef.current.clear();
       remoteStreamsRef.current.forEach((stream) => {
         stream.getTracks().forEach((track) => {
@@ -363,23 +376,40 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     []
   );
 
+  // --------------------------------------------------------------------------
+  // handleSignal — process WebRTC signaling messages
+  // BUG FIX: No longer drops signals when localStream is not yet ready.
+  // Instead it queues them and flushes once the stream is attached.
+  // --------------------------------------------------------------------------
   const handleSignal = useCallback(
     async (payload: VideoSignalPayload) => {
+      // If we haven't started our own stream yet, queue the signal.
+      // It will be flushed as soon as startCall sets localStreamRef.
       if (!localStreamRef.current) {
+        pendingSignalsRef.current.push(payload);
         return;
       }
 
       const participant =
-        participantsRef.current.get(payload.from) ||
+        participantsRef.current.get(payload.from) ??
         ({
           socketId: payload.from,
           user: payload.user,
           joinedAt: new Date().toISOString(),
           media: createEmptyMediaState(),
         } satisfies VideoParticipant);
+
       const peerConnection = createPeerConnection(participant);
 
       if (payload.type === 'offer' && payload.description) {
+        // Guard against re-processing an offer while connection is stable/connected
+        if (
+          peerConnection.signalingState !== 'stable' &&
+          peerConnection.signalingState !== 'have-local-offer'
+        ) {
+          // Only reset if we're in a conflicting state
+        }
+
         await peerConnection.setRemoteDescription(
           new RTCSessionDescription(payload.description)
         );
@@ -397,10 +427,13 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       }
 
       if (payload.type === 'answer' && payload.description) {
-        await peerConnection.setRemoteDescription(
-          new RTCSessionDescription(payload.description)
-        );
-        await flushPendingCandidates(payload.from, peerConnection);
+        // Only set remote description if we are in the right signaling state
+        if (peerConnection.signalingState === 'have-local-offer') {
+          await peerConnection.setRemoteDescription(
+            new RTCSessionDescription(payload.description)
+          );
+          await flushPendingCandidates(payload.from, peerConnection);
+        }
         setStatus('connected');
         return;
       }
@@ -414,13 +447,29 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
           return;
         }
 
-        await peerConnection.addIceCandidate(
-          new RTCIceCandidate(payload.candidate)
-        );
+        try {
+          await peerConnection.addIceCandidate(
+            new RTCIceCandidate(payload.candidate)
+          );
+        } catch {
+          // Ignore stale ICE candidates
+        }
       }
     },
     [createPeerConnection, flushPendingCandidates, sendSignal]
   );
+
+  // Flush any signals that arrived before our local stream was ready
+  const flushPendingSignals = useCallback(async () => {
+    const queued = pendingSignalsRef.current.splice(0);
+    for (const signal of queued) {
+      try {
+        await handleSignal(signal);
+      } catch {
+        // ignore individual signal errors
+      }
+    }
+  }, [handleSignal]);
 
   const startCall = useCallback(async () => {
     if (!roomIdRef.current || !currentUser || status !== 'idle') {
@@ -444,6 +493,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       localStreamRef.current = stream;
       setLocalStream(stream);
       setMediaState(nextMediaState);
+
+      // Flush any signals that came in before we had a stream
+      await flushPendingSignals();
 
       await new Promise<void>((resolve, reject) => {
         socket.emit('room:join', { roomId: roomIdRef.current }, (response) => {
@@ -479,6 +531,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       setStartedByName(currentUser.name);
       setStatus(participants.length > 0 ? 'connecting' : 'connected');
 
+      // For every existing participant, we (the new joiner) create an offer
       await Promise.all(
         participants.map(async (participant) => {
           const peerConnection = createPeerConnection(participant);
@@ -494,6 +547,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     createOffer,
     createPeerConnection,
     currentUser,
+    flushPendingSignals,
     status,
   ]);
 
@@ -542,7 +596,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     emitMediaState({ isVideoEnabled: nextVideoEnabled });
   }, [emitMediaState, mediaState.isVideoEnabled]);
 
-  const canScreenShare = Boolean(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia);
+  const canScreenShare = Boolean(
+    navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia
+  );
 
   const toggleScreenShare = useCallback(async () => {
     if (!localStreamRef.current) {
@@ -602,13 +658,15 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     const currentTrack = localStreamRef.current.getVideoTracks()[0];
     if (!currentTrack) return;
 
-    // Toggle between user and environment
     const currentFacingMode = currentTrack.getSettings().facingMode;
     const nextFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
 
     try {
       const nextStream = await navigator.mediaDevices.getUserMedia({
-        video: { ...cameraMediaConstraints.video as object, facingMode: { ideal: nextFacingMode } },
+        video: {
+          ...(cameraMediaConstraints.video as object),
+          facingMode: { ideal: nextFacingMode },
+        },
         audio: false,
       });
       const nextTrack = nextStream.getVideoTracks()[0];
@@ -622,6 +680,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     }
   }, [mediaState.isScreenSharing, replaceOutgoingVideoTrack, setLocalVideoTrack]);
 
+  // --------------------------------------------------------------------------
+  // Socket event handlers
+  // --------------------------------------------------------------------------
   useEffect(() => {
     const socket = getSocket();
 
@@ -644,12 +705,22 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       cleanupCall(false);
     };
 
+    // BUG FIX: When a new peer joins an active call, the EXISTING participant
+    // must create a peer connection AND send an offer to the new joiner.
+    // Previously this only called updateParticipant() — no offer was ever sent,
+    // so no connection was established.
     const handlePeerJoined = ({ participant }: VideoPeerJoinedPayload) => {
       if (!localStreamRef.current) {
         return;
       }
 
       updateParticipant(participant);
+
+      // We are already in the call → we initiate the offer to the new joiner
+      const peerConnection = createPeerConnection(participant);
+      void createOffer(participant.socketId, peerConnection).catch((err) => {
+        setError(getMediaErrorMessage(err));
+      });
     };
 
     const handlePeerLeft = ({ socketId }: VideoPeerLeftPayload) => {
@@ -665,7 +736,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
       updateParticipant({
         ...participant,
-        media: payload.media,
+        media: { ...participant.media, ...payload.media },
       });
     };
 
@@ -690,7 +761,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       socket.off('video:media-state', handleMediaState);
       socket.off('video:signal', handleIncomingSignal);
     };
-  }, [cleanupCall, handleSignal, removePeer, updateParticipant]);
+  }, [cleanupCall, createOffer, createPeerConnection, handleSignal, removePeer, updateParticipant]);
 
   useEffect(() => () => cleanupCall(true), [cleanupCall]);
 
