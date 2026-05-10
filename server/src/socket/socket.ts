@@ -2,16 +2,28 @@ import type http from 'http';
 import { Server, type Socket } from 'socket.io';
 import { env } from '../config/env';
 import { User } from '../models/User';
+import { Room } from '../models/Room';
 import {
   createFileMessage,
   createTextMessage,
+  markMessageAsDelivered,
+  markMessageAsSeen,
   toggleMessageReaction,
 } from '../services/message.service';
-import { getRoom, joinRoom, leaveRoom } from '../services/room.service';
+import {
+  deleteRoomAndMessages,
+  getRoom,
+  joinRoom,
+  leaveRoom,
+} from '../services/room.service';
 import type { AuthUser } from '../types/auth';
 import { AppError } from '../utils/AppError';
 import { verifyToken } from '../utils/jwt';
 import { parseCookies } from '../utils/socketCookie';
+import {
+  closeVideoCallForRoom,
+  registerVideoCallHandlers,
+} from './videoCall';
 import {
   reactionSchema,
   sendFileMessageSchema,
@@ -103,6 +115,7 @@ export const emitRoomClosed = (
     message,
     createdAt: new Date().toISOString(),
   });
+  closeVideoCallForRoom(io, normalizedRoomId);
   io.in(normalizedRoomId).socketsLeave(normalizedRoomId);
   roomPresence.delete(normalizedRoomId);
 };
@@ -180,15 +193,39 @@ const authenticateSocket = async (socket: Socket, next: (err?: Error) => void) =
 export const initializeSocket = (server: http.Server) => {
   io = new Server(server, {
     cors: {
-      origin: env.CLIENT_URL,
+      origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174'],
       credentials: true,
       methods: ['GET', 'POST'],
     },
   });
 
+  // Background cleanup for inactive rooms (10 minutes)
+  setInterval(async () => {
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+    try {
+      const inactiveRooms = await Room.find({
+        isActive: true,
+        updatedAt: { $lt: tenMinutesAgo },
+      });
+
+      for (const room of inactiveRooms) {
+        console.log(`Auto-terminating inactive room: ${room.roomId}`);
+        emitRoomClosed(
+          room.roomId,
+          'INACTIVITY_TERMINATION: This room has been terminated due to 10 minutes of inactivity.'
+        );
+        await deleteRoomAndMessages(room.roomId);
+      }
+    } catch (err) {
+      console.error('Cleanup job error:', err);
+    }
+  }, 60000); // Check every minute
+
   io.use(authenticateSocket);
 
   io.on('connection', (socket) => {
+    registerVideoCallHandlers(io as Server, socket, getSocketUser);
+
     socket.on('room:join', async (payload: { roomId: string }, ack?: Ack) => {
       try {
         const user = getSocketUser(socket);
@@ -231,7 +268,8 @@ export const initializeSocket = (server: http.Server) => {
           user.id,
           user.name,
           data.content,
-          data.replyTo
+          data.replyTo,
+          data.tempId
         );
 
         io?.to(data.roomId).emit('message:new', message);
@@ -242,7 +280,6 @@ export const initializeSocket = (server: http.Server) => {
         socket.emit('socket:error', { message });
       }
     });
-
     socket.on('file:send', async (payload, ack?: Ack) => {
       try {
         const user = getSocketUser(socket);
@@ -256,6 +293,7 @@ export const initializeSocket = (server: http.Server) => {
           fileType: data.fileType,
           fileSize: data.fileSize,
           replyTo: data.replyTo,
+          tempId: data.tempId,
         });
 
         io?.to(data.roomId).emit('message:new', message);
@@ -264,6 +302,30 @@ export const initializeSocket = (server: http.Server) => {
         const message = socketErrorMessage(error);
         ack?.({ ok: false, message });
         socket.emit('socket:error', { message });
+      }
+    });
+
+    socket.on('message:delivered', async (payload: { messageId: string }) => {
+      try {
+        const user = getSocketUser(socket);
+        const message = await markMessageAsDelivered(payload.messageId, user.id);
+        if (message) {
+          io?.to(message.roomId).emit('message:updated', message);
+        }
+      } catch (error) {
+        console.error('Error marking message as delivered:', error);
+      }
+    });
+
+    socket.on('message:seen', async (payload: { messageId: string }) => {
+      try {
+        const user = getSocketUser(socket);
+        const message = await markMessageAsSeen(payload.messageId, user.id);
+        if (message) {
+          io?.to(message.roomId).emit('message:updated', message);
+        }
+      } catch (error) {
+        console.error('Error marking message as seen:', error);
       }
     });
 

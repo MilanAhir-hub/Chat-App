@@ -40,6 +40,7 @@ export const sendTextMessageSchema = z.object({
     content: z.string().trim(),
     senderName: z.string().trim(),
   }).optional(),
+  tempId: z.string().trim().optional(),
 });
 
 export const sendFileMessageSchema = z.object({
@@ -64,6 +65,7 @@ export const sendFileMessageSchema = z.object({
     content: z.string().trim(),
     senderName: z.string().trim(),
   }).optional(),
+  tempId: z.string().trim().optional(),
 });
 
 export const reactionSchema = z.object({

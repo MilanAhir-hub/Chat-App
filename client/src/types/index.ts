@@ -38,6 +38,10 @@ export interface ChatMessage {
     content: string;
     senderName: string;
   };
+  status: 'sending' | 'sent' | 'delivered' | 'seen';
+  deliveredTo: string[];
+  seenBy: string[];
+  tempId?: string;
   createdAt: string;
 }
 

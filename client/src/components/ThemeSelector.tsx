@@ -3,7 +3,7 @@ import { useTheme, type Accent } from '../context/ThemeContext';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PaintBrush01Icon } from '@hugeicons/core-free-icons';
 
-export const ThemeSelector = () => {
+export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
   const { accent, setAccent } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -55,7 +55,7 @@ export const ThemeSelector = () => {
         <HugeiconsIcon icon={PaintBrush01Icon} size={18} />
       </button>
 
-      {isOpen && (
+      {isOpen && !isInline && (
         <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 animate-in fade-in slide-in-from-top-2 duration-200 sm:w-64">
           <div className="grid grid-cols-2 gap-1 max-h-[320px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 p-1">
             {themes.map((theme) => (
@@ -77,6 +77,28 @@ export const ThemeSelector = () => {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {isInline && (
+        <div className="grid grid-cols-5 gap-2 py-2">
+          {themes.map((theme) => (
+            <button
+              key={theme.value}
+              onClick={() => setAccent(theme.value)}
+              className={`group relative flex h-8 w-8 items-center justify-center rounded-full transition-all hover:scale-110 ${
+                accent === theme.value ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-slate-950' : ''
+              }`}
+              title={theme.name}
+            >
+              <span className={`h-full w-full rounded-full ${theme.color} shadow-sm`} />
+              {accent === theme.value && (
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white shadow-sm" />
+                </span>
+              )}
+            </button>
+          ))}
         </div>
       )}
     </div>

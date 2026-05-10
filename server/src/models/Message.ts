@@ -23,6 +23,10 @@ export interface IMessage extends Document {
     content: string;
     senderName: string;
   };
+  cloudinaryPublicId?: string;
+  deliveredTo: Types.ObjectId[];
+  seenBy: Types.ObjectId[];
+  tempId?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -88,9 +92,33 @@ const messageSchema = new Schema<IMessage>(
       default: [],
     },
     replyTo: {
-      id: { type: Schema.Types.ObjectId, ref: 'Message' },
-      content: String,
-      senderName: String,
+      type: {
+        id: { type: Schema.Types.ObjectId, ref: 'Message' },
+        content: String,
+        senderName: String,
+      },
+      required: false,
+      _id: false
+    },
+    cloudinaryPublicId: {
+      type: String,
+      trim: true,
+    },
+    deliveredTo: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    seenBy: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    tempId: {
+      type: String,
+      trim: true,
     },
   },
   { timestamps: true }

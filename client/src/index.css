@@ -288,33 +288,3 @@ body {
       transparent 70%);
   opacity: 0.12;
 }
-
-/* Simplified Chat Input Border */
-.chat-input-wrapper {
-  position: relative;
-  border-radius: 9999px;
-  padding: 1.5px;
-  background-color: var(--primary-200);
-  transition: all 0.3s ease;
-}
-
-.dark .chat-input-wrapper {
-  background-color: var(--primary-900);
-}
-
-.chat-input-wrapper:focus-within {
-  background-color: var(--primary-500);
-}
-
-.chat-input-inner {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background-color: theme('colors.white');
-}
-
-.dark .chat-input-inner {
-  background-color: theme('colors.slate.950');
-}

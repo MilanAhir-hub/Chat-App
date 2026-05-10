@@ -3,7 +3,8 @@ import { env } from '../config/env';
 import { Message, type IMessage } from '../models/Message';
 import { AppError } from '../utils/AppError';
 import { encrypt, decrypt } from '../utils/crypto';
-import { assertRoomMember } from './room.service';
+import { assertRoomMember, touchRoom } from './room.service';
+import { cloudinaryService } from './cloudinary.service';
 
 export interface MessageDTO {
   id: string;
@@ -27,6 +28,10 @@ export interface MessageDTO {
     content: string;
     senderName: string;
   };
+  status: 'sent' | 'delivered' | 'seen';
+  deliveredTo: string[];
+  seenBy: string[];
+  tempId?: string;
   createdAt: string;
 }
 
@@ -52,6 +57,10 @@ export const formatMessage = (message: IMessage): MessageDTO => ({
     content: decrypt(message.replyTo.content),
     senderName: message.replyTo.senderName,
   } : undefined,
+  status: message.seenBy.length > 0 ? 'seen' : (message.deliveredTo.length > 0 ? 'delivered' : 'sent'),
+  deliveredTo: message.deliveredTo.map(id => id.toString()),
+  seenBy: message.seenBy.map(id => id.toString()),
+  tempId: message.tempId,
   createdAt: message.createdAt.toISOString(),
 });
 
@@ -70,7 +79,8 @@ export const createTextMessage = async (
   senderId: string,
   senderName: string,
   content: string,
-  replyTo?: { id: string; content: string; senderName: string }
+  replyTo?: { id: string; content: string; senderName: string },
+  tempId?: string
 ) => {
   await assertRoomMember(roomId, senderId);
 
@@ -91,8 +101,10 @@ export const createTextMessage = async (
       content: encrypt(replyTo.content),
       senderName: replyTo.senderName,
     } : undefined,
+    tempId,
   });
 
+  await touchRoom(roomId);
   return formatMessage(message);
 };
 
@@ -105,6 +117,7 @@ export const createFileMessage = async (input: {
   fileType?: string;
   fileSize: number;
   replyTo?: { id: string; content: string; senderName: string };
+  tempId?: string;
 }) => {
   await assertRoomMember(input.roomId, input.senderId);
 
@@ -112,12 +125,17 @@ export const createFileMessage = async (input: {
     throw new AppError('File is too large for temporary sharing.', 400);
   }
 
+  // Upload the file to Cloudinary
+  const folder = `chattogram_rooms/${input.roomId}`;
+  const cloudinaryResult = await cloudinaryService.uploadFile(input.dataUrl, folder, input.roomId);
+
   const message = await Message.create({
     roomId: input.roomId,
     sender: input.senderId,
     senderName: input.senderName,
     type: 'file',
-    content: encrypt(input.dataUrl),
+    content: encrypt(cloudinaryResult.secure_url), // Store the secure URL
+    cloudinaryPublicId: cloudinaryResult.public_id, // Store ID for cleanup
     fileName: input.fileName,
     fileType: input.fileType,
     fileSize: input.fileSize,
@@ -126,8 +144,10 @@ export const createFileMessage = async (input: {
       content: encrypt(input.replyTo.content),
       senderName: input.replyTo.senderName,
     } : undefined,
+    tempId: input.tempId,
   });
 
+  await touchRoom(input.roomId);
   return formatMessage(message);
 };
 
@@ -170,10 +190,57 @@ export const toggleMessageReaction = async (
   }
 
   // Filter out empty reactions
-  message.reactions = message.reactions.filter(
+  const updatedReactions = message.reactions.filter(
     (reaction) => reaction.users.length > 0
   );
+  
+  // Reassign and mark as modified for Mongoose to track subdocument changes
+  message.reactions = updatedReactions as any;
+  message.markModified('reactions');
 
   await message.save();
+  await touchRoom(message.roomId);
+  return formatMessage(message);
+};
+
+export const markMessageAsDelivered = async (messageId: string, userId: string) => {
+  const message = await Message.findById(messageId);
+  if (!message) return null;
+
+  // Don't mark as delivered if it's the sender
+  if (message.sender.toString() === userId) return formatMessage(message);
+
+  if (!message.deliveredTo.includes(new Types.ObjectId(userId))) {
+    message.deliveredTo.push(new Types.ObjectId(userId));
+    await message.save();
+  }
+
+  return formatMessage(message);
+};
+
+export const markMessageAsSeen = async (messageId: string, userId: string) => {
+  const message = await Message.findById(messageId);
+  if (!message) return null;
+
+  // Don't mark as seen if it's the sender
+  if (message.sender.toString() === userId) return formatMessage(message);
+
+  let updated = false;
+
+  // Ensure it's also marked as delivered if it's being seen
+  if (!message.deliveredTo.includes(new Types.ObjectId(userId))) {
+    message.deliveredTo.push(new Types.ObjectId(userId));
+    updated = true;
+  }
+
+  if (!message.seenBy.includes(new Types.ObjectId(userId))) {
+    message.seenBy.push(new Types.ObjectId(userId));
+    updated = true;
+  }
+
+  if (updated) {
+    await message.save();
+  }
+
   return formatMessage(message);
 };

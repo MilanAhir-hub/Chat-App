@@ -4,6 +4,7 @@ import { Room, type IRoom } from '../models/Room';
 import type { IUser } from '../models/User';
 import type { AuthUser } from '../types/auth';
 import { AppError } from '../utils/AppError';
+import { cloudinaryService } from './cloudinary.service';
 
 export interface RoomDTO {
   id: string;
@@ -151,6 +152,28 @@ export const closeRoom = async (roomId: string, userId: string) => {
 export const deleteRoomAndMessages = async (roomId: string) => {
   const normalizedRoomId = normalizeRoomId(roomId);
 
+  try {
+    // 1. Find all messages with files uploaded to Cloudinary
+    const fileMessages = await Message.find({
+      roomId: normalizedRoomId,
+      type: 'file',
+      cloudinaryPublicId: { $exists: true, $ne: null },
+    });
+
+    const publicIds = fileMessages
+      .map((msg) => msg.cloudinaryPublicId)
+      .filter((id): id is string => Boolean(id));
+
+    // 2. Delete the assets from Cloudinary
+    if (publicIds.length > 0) {
+      await cloudinaryService.deleteFilesByPublicIds(publicIds);
+    }
+  } catch (error) {
+    console.error(`Error during Cloudinary cleanup for room ${normalizedRoomId}:`, error);
+    // Continue with DB deletion even if Cloudinary cleanup fails
+  }
+
+  // 3. Delete from Database
   await Promise.all([
     Room.deleteOne({ roomId: normalizedRoomId }),
     Message.deleteMany({ roomId: normalizedRoomId }),
@@ -167,4 +190,11 @@ export const assertRoomMember = async (roomId: string, userId: string) => {
   if (!room) {
     throw new AppError('Join the room before sending or reading messages.', 403);
   }
+};
+
+export const touchRoom = async (roomId: string) => {
+  await Room.updateOne(
+    { roomId: normalizeRoomId(roomId) },
+    { updatedAt: new Date() }
+  );
 };

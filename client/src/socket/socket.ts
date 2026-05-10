@@ -1,6 +1,16 @@
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { ChatMessage, Room, RoomNotice } from '../types';
+import type {
+  VideoCallEndedPayload,
+  VideoCallStartedPayload,
+  VideoMediaState,
+  VideoMediaStatePayload,
+  VideoParticipant,
+  VideoPeerJoinedPayload,
+  VideoPeerLeftPayload,
+  VideoSignalPayload,
+} from '../features/video-call/types';
 
 interface AckResponse<T = unknown> {
   ok: boolean;
@@ -19,6 +29,12 @@ interface ServerToClientEvents {
     name: string;
     isTyping: boolean;
   }) => void;
+  'video:call-started': (payload: VideoCallStartedPayload) => void;
+  'video:call-ended': (payload: VideoCallEndedPayload) => void;
+  'video:peer-joined': (payload: VideoPeerJoinedPayload) => void;
+  'video:peer-left': (payload: VideoPeerLeftPayload) => void;
+  'video:signal': (payload: VideoSignalPayload) => void;
+  'video:media-state': (payload: VideoMediaStatePayload) => void;
   'socket:error': (payload: { message: string }) => void;
 }
 
@@ -32,7 +48,12 @@ interface ClientToServerEvents {
     ack?: (response: AckResponse) => void
   ) => void;
   'message:send': (
-    payload: { roomId: string; content: string },
+    payload: {
+      roomId: string;
+      content: string;
+      replyTo?: { id: string; content: string; senderName: string };
+      tempId?: string;
+    },
     ack?: (response: AckResponse<ChatMessage>) => void
   ) => void;
   'file:send': (
@@ -42,6 +63,8 @@ interface ClientToServerEvents {
       fileName: string;
       fileType?: string;
       fileSize: number;
+      replyTo?: { id: string; content: string; senderName: string };
+      tempId?: string;
     },
     ack?: (response: AckResponse<ChatMessage>) => void
   ) => void;
@@ -51,6 +74,29 @@ interface ClientToServerEvents {
   ) => void;
   'typing:start': (payload: { roomId: string }) => void;
   'typing:stop': (payload: { roomId: string }) => void;
+  'message:delivered': (payload: { messageId: string }) => void;
+  'message:seen': (payload: { messageId: string }) => void;
+  'video:join': (
+    payload: { roomId: string; media: VideoMediaState },
+    ack?: (
+      response: AckResponse<{ participants: VideoParticipant[] }>
+    ) => void
+  ) => void;
+  'video:leave': (
+    payload: { roomId: string },
+    ack?: (response: AckResponse) => void
+  ) => void;
+  'video:signal': (payload: {
+    roomId: string;
+    to: string;
+    type: 'offer' | 'answer' | 'ice-candidate';
+    description?: RTCSessionDescriptionInit;
+    candidate?: RTCIceCandidateInit;
+  }) => void;
+  'video:media-state': (payload: {
+    roomId: string;
+    media: Partial<VideoMediaState>;
+  }) => void;
 }
 
 export type AppSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
