@@ -288,3 +288,97 @@ body {
       transparent 70%);
   opacity: 0.12;
 }
+
+/* WhatsApp Style Chat Bubbles */
+.message-bubble {
+  position: relative;
+  max-width: 85%;
+  padding: 6px 10px 8px;
+  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+  @apply transition-all duration-200;
+}
+
+@media (min-width: 640px) {
+  .message-bubble {
+    max-width: 75%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .message-bubble {
+    max-width: 70%;
+  }
+}
+
+.message-bubble-mine {
+  @apply bg-primary-600 text-white rounded-2xl rounded-tr-none;
+}
+
+.message-bubble-other {
+  @apply bg-white dark:bg-slate-800 text-slate-950 dark:text-white rounded-2xl rounded-tl-none;
+}
+
+/* Tails for bubbles */
+.message-bubble-mine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -8px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  clip-path: polygon(0 0, 0 100%, 100% 0);
+  z-index: -1;
+}
+
+.message-bubble-other::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -8px;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  clip-path: polygon(100% 0, 100% 100%, 0 0);
+  z-index: -1;
+}
+
+.message-content {
+  @apply text-[15px] leading-relaxed sm:text-[16px];
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+  display: inline;
+}
+
+.message-meta {
+  @apply flex items-center justify-end gap-1 float-right mt-1 ml-4 relative;
+  height: 16px;
+  line-height: 1;
+  bottom: -4px;
+  user-select: none;
+}
+
+.message-timestamp {
+  @apply text-[10px] font-medium opacity-70;
+}
+
+/* Reply Preview Polishing */
+.reply-preview-bubble {
+  @apply mb-2 cursor-pointer rounded-xl border-l-[4px] border-primary-500 p-2.5 text-[11px] leading-tight transition-all;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.dark .reply-preview-bubble {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.message-bubble-mine .reply-preview-bubble {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Media Messages */
+.media-container {
+  @apply relative overflow-hidden rounded-xl bg-black/5 dark:bg-white/5;
+  margin: -2px -6px 4px;
+}

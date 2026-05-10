@@ -963,11 +963,11 @@ export const ChatRoomPage = () => {
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
           >
-            <div className="flex min-h-full flex-col justify-end px-4 py-6 space-y-6">
+            <div className="flex min-h-full flex-col justify-end px-4 py-6 space-y-2">
               {notices.map((notice) => (
                 <div
                   key={`${notice.createdAt}-${notice.message}`}
-                  className="flex justify-center"
+                  className="flex justify-center my-2"
                 >
                   <span className="rounded-full bg-slate-100 px-4 py-1.5 text-center text-[10px] font-bold tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                     {notice.message}
@@ -986,11 +986,11 @@ export const ChatRoomPage = () => {
                   >
                     <SwipeableMessage isMine={isMine} onReply={() => handleReply(message)}>
                     <div
-                      className={`group relative flex flex-col w-fit max-w-[88%] sm:max-w-[80%] transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
+                      className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
                         } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
                     >
                       {!isMine && (
-                        <p className="mb-1.5 ml-2 text-[10px] font-bold text-slate-400">
+                        <p className="mb-1 ml-2 text-[10px] font-bold text-slate-400">
                           {message.sender.name}
                         </p>
                       )}
@@ -998,17 +998,14 @@ export const ChatRoomPage = () => {
                         onPointerDown={() => handleTouchStart(message.id)}
                         onPointerUp={handleTouchEnd}
                         onPointerLeave={handleTouchEnd}
-                        className={`relative rounded-2xl shadow-sm ${isMine
-                          ? 'rounded-tr-none bg-primary-600 text-white'
-                          : 'rounded-tl-none bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white'
-                          } ${isImageMessage(message) ? 'p-1.5' : 'px-3 py-1.5 pb-2'}`}
+                        className={`message-bubble ${isMine ? 'message-bubble-mine' : 'message-bubble-other'}`}
                       >
                         <div className="flex flex-col relative">
                         {/* Reply Display */}
                         {message.replyTo && (
                           <div 
                             onClick={() => message.replyTo && scrollToMessage(message.replyTo.id)}
-                            className={`mb-2 cursor-pointer rounded-xl border-l-[4px] border-primary-500 bg-black/10 p-2.5 text-[11px] leading-tight transition-all hover:bg-black/20 dark:bg-white/10 dark:hover:bg-white/20 ${isMine ? 'bg-black/15 text-white/90' : 'text-slate-600 dark:text-slate-300'}`}
+                            className="reply-preview-bubble"
                           >
                             <p className="font-extrabold text-primary-600 dark:text-primary-400 mb-0.5">
                               {message.replyTo.senderName}
@@ -1087,7 +1084,7 @@ export const ChatRoomPage = () => {
                         {isImageMessage(message) ? (
                           <div 
                             onClick={() => setFullscreenImage(message.content)}
-                            className="relative cursor-pointer overflow-hidden rounded-xl bg-black/5 dark:bg-white/5 group/media mb-1"
+                            className="media-container group/media"
                           >
                             <img 
                               src={message.content} 
@@ -1107,7 +1104,7 @@ export const ChatRoomPage = () => {
                           <a
                             href={message.content}
                             download={message.fileName}
-                            className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-1"
+                            className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
                           >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
                               <HugeiconsIcon icon={ImageAdd01Icon} size={20} />
@@ -1118,15 +1115,39 @@ export const ChatRoomPage = () => {
                             </div>
                           </a>
                         ) : (
-                          <p className="inline whitespace-pre-wrap break-words text-[15px] leading-relaxed sm:text-[16px]">
-                            {message.content}
-                            <span className="inline-block w-20" />
-                          </p>
+                          <div className="block">
+                            <span className="message-content">
+                              {message.content}
+                            </span>
+                            <div className="message-meta">
+                              <span className="message-timestamp">
+                                {formatTime(message.createdAt)}
+                              </span>
+                              {isMine && (
+                                <div className="flex transition-all duration-300">
+                                  <HugeiconsIcon
+                                    icon={
+                                      message.status === 'sending'
+                                        ? Clock01Icon
+                                        : message.status === 'sent'
+                                        ? Tick02Icon
+                                        : TickDouble02Icon
+                                    }
+                                    size={14}
+                                    className={`
+                                      ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
+                                      ${message.status === 'sending' ? 'animate-pulse' : ''}
+                                    `}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         )}
 
-                        <div className={`absolute bottom-0.5 right-1.5 flex items-center gap-1 ${isMine ? 'text-primary-100/80' : 'text-slate-400'}`}>
-                          <div className="mt-1 flex items-center justify-end gap-1 px-1">
-                            <span className="text-[9px] font-medium opacity-60">
+                        { (isImageMessage(message) || message.type === 'file') && (
+                          <div className="message-meta">
+                            <span className="message-timestamp">
                               {formatTime(message.createdAt)}
                             </span>
                             {isMine && (
@@ -1139,7 +1160,7 @@ export const ChatRoomPage = () => {
                                       ? Tick02Icon
                                       : TickDouble02Icon
                                   }
-                                  size={16}
+                                  size={14}
                                   className={`
                                     ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
                                     ${message.status === 'sending' ? 'animate-pulse' : ''}
@@ -1148,7 +1169,7 @@ export const ChatRoomPage = () => {
                               </div>
                             )}
                           </div>
-                        </div>
+                        )}
                         </div>
 
                         {/* Reaction Display Bubble */}
@@ -1178,7 +1199,7 @@ export const ChatRoomPage = () => {
               })}
 
               {typingNames.length > 0 && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 py-2">
                   <div className="flex gap-1">
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
@@ -1193,6 +1214,7 @@ export const ChatRoomPage = () => {
               <div ref={bottomRef} />
             </div>
           </div>
+
 
           {/* Scroll to Bottom FAB */}
           {showScrollButton && (
