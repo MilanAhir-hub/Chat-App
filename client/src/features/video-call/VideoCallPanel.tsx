@@ -17,7 +17,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import type { User } from '../../types';
 import { useVideoCall } from './useVideoCall';
-import type { RemoteVideoParticipant, VideoMediaState } from './types';
+import type { VideoMediaState } from './types';
 
 interface VideoCallPanelProps {
   roomId: string;
