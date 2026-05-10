@@ -133,6 +133,8 @@ export const ChatRoomPage = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollTopRef = useRef(0);
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -212,6 +214,20 @@ export const ChatRoomPage = () => {
     
     if (isBottom) {
       setUnreadCount(0);
+    }
+
+    // Smart Header Logic: Hide on scroll down, show on scroll up
+    // Only trigger if we've scrolled a bit (e.g., > 20px) to avoid jitter
+    const scrollDelta = scrollTop - lastScrollTopRef.current;
+    if (Math.abs(scrollDelta) > 10) {
+      if (scrollDelta > 0 && scrollTop > 100) {
+        // Scrolling down -> Hide
+        setIsHeaderVisible(false);
+      } else {
+        // Scrolling up -> Show instantly
+        setIsHeaderVisible(true);
+      }
+      lastScrollTopRef.current = scrollTop;
     }
   }, []);
 
@@ -776,7 +792,7 @@ export const ChatRoomPage = () => {
 
   return (
     <main className="fixed inset-0 flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/98 px-3 py-0 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/98 sm:px-6">
+      <header className={`sticky top-0 z-20 border-b border-slate-200/80 bg-white/98 px-3 py-0 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/98 sm:px-6 transition-transform duration-300 ease-in-out ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 sm:gap-4">
 
           {/* Left — identity */}
@@ -866,7 +882,7 @@ export const ChatRoomPage = () => {
           `}
         >
           <div className="flex h-full flex-col p-5">
-            <div className="mb-6 flex items-center justify-between">
+            <div className="sticky top-0 z-10 mb-6 flex items-center justify-between bg-white py-1 dark:bg-slate-950">
               <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 <HugeiconsIcon icon={UserGroupIcon} size={18} />
                 Online ({room?.users.length || 0})
@@ -1231,15 +1247,19 @@ export const ChatRoomPage = () => {
             {showEmojiPicker && (
               <div
                 ref={emojiPickerRef}
-                className="absolute bottom-full left-2 mb-2 z-50 animate-in fade-in slide-in-from-bottom-4 sm:left-4 sm:right-auto w-fit"
+                className="absolute bottom-full left-0 right-0 z-[60] mb-3 px-2 sm:left-4 sm:right-auto sm:w-fit sm:px-0 animate-in fade-in slide-in-from-bottom-4"
               >
-                <EmojiPicker
-                  theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
-                  emojiStyle={EmojiStyle.APPLE}
-                  onEmojiClick={(emojiData) => {
-                    setMessageText((current) => current + emojiData.emoji);
-                  }}
-                />
+                <div className="overflow-hidden rounded-2xl shadow-2xl">
+                  <EmojiPicker
+                    theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
+                    emojiStyle={EmojiStyle.APPLE}
+                    width="100%"
+                    height={window.innerWidth < 640 ? 300 : 400}
+                    onEmojiClick={(emojiData) => {
+                      setMessageText((current) => current + emojiData.emoji);
+                    }}
+                  />
+                </div>
               </div>
             )}
 
@@ -1279,7 +1299,7 @@ export const ChatRoomPage = () => {
 
                 {showAttachmentMenu && (
                   <div 
-                    className="absolute bottom-full left-0 mb-4 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 dark:border-slate-800 dark:bg-slate-900 z-50"
+                    className="absolute bottom-full left-0 mb-4 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 dark:border-slate-800 dark:bg-slate-900 z-[60]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
