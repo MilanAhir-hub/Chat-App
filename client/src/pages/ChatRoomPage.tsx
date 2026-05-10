@@ -62,10 +62,6 @@ const formatTime = (dateValue: string) =>
     minute: '2-digit',
   }).format(new Date(dateValue));
 
-const replaceMessage = (messages: ChatMessage[], nextMessage: ChatMessage) =>
-  messages.map((message) =>
-    message.id === nextMessage.id ? nextMessage : message
-  );
 
 export const ChatRoomPage = () => {
   const { roomId } = useParams();
@@ -81,7 +77,6 @@ export const ChatRoomPage = () => {
   const [messageText, setMessageText] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -417,7 +412,7 @@ export const ChatRoomPage = () => {
   }, [messages, user]);
 
   useEffect(() => {
-    const handleClickOutside = (event: PointerEvent) => {
+    const handleClickOutside = (event: MouseEvent) => {
       // Check emoji picker
       if (
         showEmojiPicker &&
@@ -582,7 +577,7 @@ export const ChatRoomPage = () => {
   const sendFile = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-    if (!file || !activeRoomId) {
+    if (!file || !activeRoomId || !user) {
       return;
     }
 
@@ -1303,7 +1298,7 @@ export const ChatRoomPage = () => {
 
               <button
                 type="submit"
-                disabled={isSending || !messageText.trim()}
+                disabled={!messageText.trim()}
                 onMouseDown={(e) => e.preventDefault()}
                 className="flex-shrink-0 mb-0.5 rounded-full bg-primary-600 p-3 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
               >

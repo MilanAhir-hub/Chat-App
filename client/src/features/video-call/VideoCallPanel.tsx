@@ -430,7 +430,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-emerald-600'
             : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
         }`}
-        title={hasActiveRoomCall ? 'Join Call' : 'Video Call'}
+        title={hasActiveRoomCall ? `Join ${startedByName}'s Call` : 'Video Call'}
       >
         <HugeiconsIcon icon={Video01Icon} size={22} className="group-hover:scale-110 transition-transform" />
         {hasActiveRoomCall && (
