@@ -51,6 +51,7 @@ import {
   readFileAsDataUrl,
 } from '../utils/file';
 import { playNotificationSound } from '../utils/sound';
+import { useSwipeReply } from '../hooks/useSwipeReply';
 
 const reactionOptions = [0x1f44d, 0x2764, 0x1f602, 0x1f525, 0x1f389].map(
   (codePoint) => String.fromCodePoint(codePoint)
@@ -62,6 +63,47 @@ const formatTime = (dateValue: string) =>
     minute: '2-digit',
   }).format(new Date(dateValue));
 
+
+
+/**
+ * SwipeableMessage
+ * Wraps a message bubble to add WhatsApp-style swipe-right-to-reply on mobile.
+ * Desktop layout is completely unchanged.
+ */
+interface SwipeableMessageProps {
+  isMine: boolean;
+  onReply: () => void;
+  children: React.ReactNode;
+}
+
+const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) => {
+  const { wrapperRef, iconRef, onTouchStart, onTouchMove, onTouchEnd } =
+    useSwipeReply({ onReply });
+
+  return (
+    <div
+      className="relative"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onTouchCancel={onTouchEnd}
+    >
+      {/* Reply icon — appears behind the bubble as user swipes */}
+      <div
+        ref={iconRef}
+        style={{ opacity: 0, transform: 'scale(0.5)' }}
+        className={`pointer-events-none absolute top-1/2 -translate-y-1/2 z-0 flex h-8 w-8 items-center justify-center rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 will-change-transform ${isMine ? 'left-[-36px]' : 'right-[-36px]'}`}
+      >
+        <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={15} />
+      </div>
+
+      {/* The actual message bubble — translates horizontally on swipe */}
+      <div ref={wrapperRef} className="relative z-10 will-change-transform">
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export const ChatRoomPage = () => {
   const { roomId } = useParams();
@@ -926,6 +968,7 @@ export const ChatRoomPage = () => {
                     id={`msg-${message.id}`}
                     className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
                   >
+                    <SwipeableMessage isMine={isMine} onReply={() => handleReply(message)}>
                     <div
                       className={`group relative max-w-[88%] sm:max-w-[75%] transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
                         } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
@@ -1113,6 +1156,7 @@ export const ChatRoomPage = () => {
                         )}
                       </div>
                     </div>
+                    </SwipeableMessage>
                   </article>
                 );
               })}
