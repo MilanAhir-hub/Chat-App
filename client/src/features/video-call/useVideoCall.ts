@@ -230,12 +230,17 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
       // Remote track arrived → accumulate into a MediaStream and update React state
       peerConnection.ontrack = (event) => {
-        const stream =
-          remoteStreamsRef.current.get(participant.socketId) ??
-          new MediaStream();
-
-        if (!stream.getTracks().some((t) => t.id === event.track.id)) {
-          stream.addTrack(event.track);
+        const existingStream = remoteStreamsRef.current.get(participant.socketId);
+        
+        let stream: MediaStream;
+        if (existingStream) {
+          if (!existingStream.getTracks().some((t) => t.id === event.track.id)) {
+            existingStream.addTrack(event.track);
+          }
+          // Create a NEW MediaStream instance to trigger React and VideoTile's useEffect([stream])
+          stream = new MediaStream(existingStream.getTracks());
+        } else {
+          stream = new MediaStream([event.track]);
         }
 
         remoteStreamsRef.current.set(participant.socketId, stream);
@@ -402,12 +407,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       const peerConnection = createPeerConnection(participant);
 
       if (payload.type === 'offer' && payload.description) {
-        // Guard against re-processing an offer while connection is stable/connected
-        if (
-          peerConnection.signalingState !== 'stable' &&
-          peerConnection.signalingState !== 'have-local-offer'
-        ) {
-          // Only reset if we're in a conflicting state
+        // Handle glare: if we also sent an offer, rollback ours and accept theirs
+        if (peerConnection.signalingState === 'have-local-offer') {
+          await peerConnection.setLocalDescription({ type: 'rollback' });
         }
 
         await peerConnection.setRemoteDescription(
@@ -490,13 +492,6 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       };
       const socket = connectSocket();
 
-      localStreamRef.current = stream;
-      setLocalStream(stream);
-      setMediaState(nextMediaState);
-
-      // Flush any signals that came in before we had a stream
-      await flushPendingSignals();
-
       await new Promise<void>((resolve, reject) => {
         socket.emit('room:join', { roomId: roomIdRef.current }, (response) => {
           if (!response.ok) {
@@ -526,6 +521,13 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
           );
         }
       );
+
+      // IMPORTANT: Set the local stream reference and flush signals ONLY AFTER joining the call.
+      // This ensures the server will accept our outgoing signals (like answers to queued offers).
+      localStreamRef.current = stream;
+      setLocalStream(stream);
+      setMediaState(nextMediaState);
+      await flushPendingSignals();
 
       setHasActiveRoomCall(true);
       setStartedByName(currentUser.name);
@@ -705,22 +707,18 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       cleanupCall(false);
     };
 
-    // BUG FIX: When a new peer joins an active call, the EXISTING participant
-    // must create a peer connection AND send an offer to the new joiner.
-    // Previously this only called updateParticipant() — no offer was ever sent,
-    // so no connection was established.
+    // The new joiner sends offers to all existing participants in startCall().
+    // We (the existing participant) must NOT also send an offer — that creates
+    // a WebRTC "glare" condition where both PCs end up in have-local-offer
+    // and neither can accept the other's offer.
+    // We just register the participant here; handleSignal will create the PC
+    // and process the incoming offer from the new joiner.
     const handlePeerJoined = ({ participant }: VideoPeerJoinedPayload) => {
       if (!localStreamRef.current) {
         return;
       }
 
       updateParticipant(participant);
-
-      // We are already in the call → we initiate the offer to the new joiner
-      const peerConnection = createPeerConnection(participant);
-      void createOffer(participant.socketId, peerConnection).catch((err) => {
-        setError(getMediaErrorMessage(err));
-      });
     };
 
     const handlePeerLeft = ({ socketId }: VideoPeerLeftPayload) => {
@@ -761,7 +759,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       socket.off('video:media-state', handleMediaState);
       socket.off('video:signal', handleIncomingSignal);
     };
-  }, [cleanupCall, createOffer, createPeerConnection, handleSignal, removePeer, updateParticipant]);
+  }, [cleanupCall, handleSignal, removePeer, updateParticipant]);
 
   useEffect(() => () => cleanupCall(true), [cleanupCall]);
 

@@ -69,7 +69,11 @@ const VideoTile = ({
     }
   }, [stream]);
 
-  const showVideo = Boolean(stream && media.isVideoEnabled);
+  const showVideo = Boolean(
+    stream && 
+    media.isVideoEnabled && 
+    stream.getVideoTracks().length > 0
+  );
 
   return (
     <div
@@ -84,16 +88,19 @@ const VideoTile = ({
     >
       {/* Video Content */}
       <div className="absolute inset-0 z-0">
-        {showVideo ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={isLocal}
-            className={`h-full w-full object-cover transition-opacity duration-700 ${isLocal ? 'scale-x-[-1]' : ''}`}
-          />
-        ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950">
+        {/* ALWAYS render the video element so the ref is stable.
+            Conditional rendering causes a race between mount and useEffect. */}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={isLocal}
+          className={`h-full w-full object-cover transition-opacity duration-700 ${isLocal ? 'scale-x-[-1]' : ''} ${showVideo ? 'opacity-100' : 'opacity-0'}`}
+        />
+
+        {/* Avatar fallback shown when video is off */}
+        {!showVideo && (
+          <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950">
             <div className="flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full bg-slate-800/50 text-4xl font-black uppercase text-white/20 border border-white/5 backdrop-blur-sm shadow-2xl">
               {label ? label.slice(0, 1) : <HugeiconsIcon icon={UserIcon} size={48} />}
             </div>
