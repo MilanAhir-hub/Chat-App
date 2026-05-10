@@ -19,7 +19,7 @@ import {
   UserGroupIcon,
   VolumeHighIcon,
   VolumeMuteIcon,
-  ArrowTurnBackward01Icon
+  ArrowTurnBackwardIcon
 } from '@hugeicons/core-free-icons';
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -671,11 +671,13 @@ export const ChatRoomPage = () => {
                     >
                       {/* Reply Display */}
                       {message.replyTo && (
-                        <div className={`mb-2 rounded-lg border-l-4 border-primary-500 bg-black/5 p-2 text-xs dark:bg-white/5 ${isMine ? 'text-primary-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                          <p className="font-bold text-primary-600 dark:text-primary-400">
+                        <div className={`mb-2 rounded-xl border-l-[3px] border-primary-500 bg-black/10 p-2.5 text-[11px] leading-snug dark:bg-white/10 ${isMine ? 'bg-black/20 text-primary-50' : 'text-slate-600 dark:text-slate-300'}`}>
+                          <p className="font-extrabold text-primary-600 dark:text-primary-400 mb-0.5">
                             {message.replyTo.senderName}
                           </p>
-                          <p className="truncate opacity-80">{message.replyTo.content}</p>
+                          <p className="truncate opacity-90 line-clamp-1 italic">
+                            {message.replyTo.content}
+                          </p>
                         </div>
                       )}
                       {/* Desktop Reaction Trigger */}
@@ -694,7 +696,7 @@ export const ChatRoomPage = () => {
                           className="ml-1 rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
                           title="Reply"
                         >
-                          <HugeiconsIcon icon={ArrowTurnBackward01Icon} size={18} />
+                          <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={18} />
                         </button>
                       </div>
 
@@ -705,7 +707,7 @@ export const ChatRoomPage = () => {
                           onClick={() => setReplyingTo(message)}
                           className="rounded-full bg-slate-900/50 p-1.5 text-white backdrop-blur-sm"
                         >
-                          <HugeiconsIcon icon={ArrowTurnBackward01Icon} size={14} />
+                          <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} />
                         </button>
                       </div>
 
