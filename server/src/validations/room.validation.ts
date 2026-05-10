@@ -35,6 +35,11 @@ export const sendTextMessageSchema = z.object({
     .trim()
     .min(1, 'Message cannot be empty.')
     .max(2000, 'Message cannot be longer than 2000 characters.'),
+  replyTo: z.object({
+    id: objectIdSchema,
+    content: z.string().trim(),
+    senderName: z.string().trim(),
+  }).optional(),
 });
 
 export const sendFileMessageSchema = z.object({
@@ -54,6 +59,11 @@ export const sendFileMessageSchema = z.object({
     .int()
     .positive()
     .max(env.MAX_FILE_SIZE_BYTES, 'File is too large for temporary sharing.'),
+  replyTo: z.object({
+    id: objectIdSchema,
+    content: z.string().trim(),
+    senderName: z.string().trim(),
+  }).optional(),
 });
 
 export const reactionSchema = z.object({

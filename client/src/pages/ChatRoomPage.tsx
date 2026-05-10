@@ -18,7 +18,8 @@ import {
   SentIcon,
   UserGroupIcon,
   VolumeHighIcon,
-  VolumeMuteIcon
+  VolumeMuteIcon,
+  ArrowTurnBackward01Icon
 } from '@hugeicons/core-free-icons';
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
@@ -76,6 +77,7 @@ export const ChatRoomPage = () => {
   const [isClosing, setIsClosing] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
 
@@ -344,7 +346,15 @@ export const ChatRoomPage = () => {
 
     getSocket().emit(
       'message:send',
-      { roomId: activeRoomId, content: messageText },
+      { 
+        roomId: activeRoomId, 
+        content: messageText,
+        replyTo: replyingTo ? {
+          id: replyingTo.id,
+          content: replyingTo.content,
+          senderName: replyingTo.sender.name
+        } : undefined
+      },
       (response) => {
         setIsSending(false);
 
@@ -354,6 +364,7 @@ export const ChatRoomPage = () => {
         }
 
         setMessageText('');
+        setReplyingTo(null);
         stopTyping();
         // Re-focus the textarea to keep the keyboard open on mobile
         setTimeout(() => {
@@ -391,10 +402,18 @@ export const ChatRoomPage = () => {
           fileName: file.name,
           fileType: file.type || 'application/octet-stream',
           fileSize: file.size,
+          replyTo: replyingTo ? {
+            id: replyingTo.id,
+            content: replyingTo.content,
+            senderName: replyingTo.sender.name
+          } : undefined
         },
         (response) => {
+          setIsUploading(false);
           if (!response.ok) {
             setError(response.message || 'Unable to share file.');
+          } else {
+            setReplyingTo(null);
           }
         }
       );
@@ -650,14 +669,43 @@ export const ChatRoomPage = () => {
                         : 'rounded-tl-none bg-slate-100 text-slate-950 dark:bg-slate-800 dark:text-white'
                         }`}
                     >
+                      {/* Reply Display */}
+                      {message.replyTo && (
+                        <div className={`mb-2 rounded-lg border-l-4 border-primary-500 bg-black/5 p-2 text-xs dark:bg-white/5 ${isMine ? 'text-primary-100' : 'text-slate-500 dark:text-slate-400'}`}>
+                          <p className="font-bold text-primary-600 dark:text-primary-400">
+                            {message.replyTo.senderName}
+                          </p>
+                          <p className="truncate opacity-80">{message.replyTo.content}</p>
+                        </div>
+                      )}
                       {/* Desktop Reaction Trigger */}
                       <div className={`absolute top-0 hidden lg:flex opacity-0 group-hover:opacity-100 transition-opacity ${isMine ? '-left-10' : '-right-10'}`}>
                         <button
                           type="button"
                           onClick={() => setActiveReactionMessageId(message.id)}
                           className="rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                          title="React"
                         >
                           <HugeiconsIcon icon={SmileIcon} size={18} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReplyingTo(message)}
+                          className="ml-1 rounded-full bg-slate-100 p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-700 dark:hover:text-slate-300"
+                          title="Reply"
+                        >
+                          <HugeiconsIcon icon={ArrowTurnBackward01Icon} size={18} />
+                        </button>
+                      </div>
+
+                      {/* Mobile Actions */}
+                      <div className="absolute right-0 top-0 flex -translate-y-full items-center gap-1 opacity-0 transition-opacity group-active:opacity-100 lg:hidden">
+                        <button
+                          type="button"
+                          onClick={() => setReplyingTo(message)}
+                          className="rounded-full bg-slate-900/50 p-1.5 text-white backdrop-blur-sm"
+                        >
+                          <HugeiconsIcon icon={ArrowTurnBackward01Icon} size={14} />
                         </button>
                       </div>
 
@@ -752,6 +800,28 @@ export const ChatRoomPage = () => {
             onSubmit={sendMessage}
             className="border-t border-slate-100 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900 relative sm:p-4"
           >
+            {/* Reply Preview */}
+            {replyingTo && (
+              <div className="mx-auto mb-3 flex max-w-7xl items-center gap-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-3 animate-in slide-in-from-bottom-2 dark:border-slate-800 dark:bg-slate-900/50">
+                <div className="h-10 w-1 rounded-full bg-primary-500" />
+                <div className="flex-1 overflow-hidden">
+                  <p className="text-xs font-bold text-primary-600 dark:text-primary-400">
+                    Replying to {replyingTo.sender.name}
+                  </p>
+                  <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                    {replyingTo.content}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReplyingTo(null)}
+                  className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={18} />
+                </button>
+              </div>
+            )}
+
             {showEmojiPicker && (
               <div
                 ref={emojiPickerRef}

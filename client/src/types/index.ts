@@ -33,6 +33,11 @@ export interface ChatMessage {
   fileType?: string;
   fileSize?: number;
   reactions: MessageReaction[];
+  replyTo?: {
+    id: string;
+    content: string;
+    senderName: string;
+  };
   createdAt: string;
 }
 

@@ -230,7 +230,8 @@ export const initializeSocket = (server: http.Server) => {
           data.roomId,
           user.id,
           user.name,
-          data.content
+          data.content,
+          data.replyTo
         );
 
         io?.to(data.roomId).emit('message:new', message);
@@ -254,6 +255,7 @@ export const initializeSocket = (server: http.Server) => {
           fileName: data.fileName,
           fileType: data.fileType,
           fileSize: data.fileSize,
+          replyTo: data.replyTo,
         });
 
         io?.to(data.roomId).emit('message:new', message);

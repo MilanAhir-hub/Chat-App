@@ -22,6 +22,11 @@ export interface MessageDTO {
     count: number;
     userIds: string[];
   }>;
+  replyTo?: {
+    id: string;
+    content: string;
+    senderName: string;
+  };
   createdAt: string;
 }
 
@@ -42,6 +47,11 @@ export const formatMessage = (message: IMessage): MessageDTO => ({
     count: reaction.users.length,
     userIds: reaction.users.map((userId) => userId.toString()),
   })),
+  replyTo: message.replyTo ? {
+    id: message.replyTo.id.toString(),
+    content: decrypt(message.replyTo.content),
+    senderName: message.replyTo.senderName,
+  } : undefined,
   createdAt: message.createdAt.toISOString(),
 });
 
@@ -59,7 +69,8 @@ export const createTextMessage = async (
   roomId: string,
   senderId: string,
   senderName: string,
-  content: string
+  content: string,
+  replyTo?: { id: string; content: string; senderName: string }
 ) => {
   await assertRoomMember(roomId, senderId);
 
@@ -75,6 +86,11 @@ export const createTextMessage = async (
     senderName,
     type: 'text',
     content: encrypt(cleanContent),
+    replyTo: replyTo ? {
+      id: new Types.ObjectId(replyTo.id),
+      content: encrypt(replyTo.content),
+      senderName: replyTo.senderName,
+    } : undefined,
   });
 
   return formatMessage(message);
@@ -88,6 +104,7 @@ export const createFileMessage = async (input: {
   fileName: string;
   fileType?: string;
   fileSize: number;
+  replyTo?: { id: string; content: string; senderName: string };
 }) => {
   await assertRoomMember(input.roomId, input.senderId);
 
@@ -104,6 +121,11 @@ export const createFileMessage = async (input: {
     fileName: input.fileName,
     fileType: input.fileType,
     fileSize: input.fileSize,
+    replyTo: input.replyTo ? {
+      id: new Types.ObjectId(input.replyTo.id),
+      content: encrypt(input.replyTo.content),
+      senderName: input.replyTo.senderName,
+    } : undefined,
   });
 
   return formatMessage(message);

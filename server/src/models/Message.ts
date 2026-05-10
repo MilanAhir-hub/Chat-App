@@ -18,6 +18,11 @@ export interface IMessage extends Document {
   fileType?: string;
   fileSize?: number;
   reactions: IMessageReaction[];
+  replyTo?: {
+    id: Types.ObjectId;
+    content: string;
+    senderName: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -81,6 +86,11 @@ const messageSchema = new Schema<IMessage>(
     reactions: {
       type: [messageReactionSchema],
       default: [],
+    },
+    replyTo: {
+      id: { type: Schema.Types.ObjectId, ref: 'Message' },
+      content: String,
+      senderName: String,
     },
   },
   { timestamps: true }
