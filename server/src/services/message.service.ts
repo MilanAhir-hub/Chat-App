@@ -3,6 +3,7 @@ import { env } from '../config/env';
 import { Message, type IMessage } from '../models/Message';
 import { AppError } from '../utils/AppError';
 import { encrypt, decrypt } from '../utils/crypto';
+import { encryptImageBuffer } from '../utils/imageCrypto';
 import { assertRoomMember, touchRoom } from './room.service';
 import { cloudinaryService } from './cloudinary.service';
 
@@ -35,7 +36,20 @@ export interface MessageDTO {
   createdAt: string;
 }
 
-export const formatMessage = (message: IMessage): MessageDTO => ({
+export const formatMessage = (message: IMessage): MessageDTO => {
+  const decryptedContent = decrypt(message.content);
+
+  let displayContent = decryptedContent;
+
+  // For image file messages, serve via the proxy route that decrypts on-the-fly
+  // instead of exposing the raw Cloudinary URL. The proxy endpoint handles
+  // downloading the encrypted image from Cloudinary, decrypting it with the
+  // stored IV, and returning the raw displayable image bytes.
+  if (message.fileType?.startsWith('image/')) {
+    displayContent = `${env.SERVER_ORIGIN}/api/images/${message._id}`;
+  }
+
+  return {
   id: message._id.toString(),
   roomId: message.roomId,
   sender: {
@@ -43,7 +57,7 @@ export const formatMessage = (message: IMessage): MessageDTO => ({
     name: message.senderName,
   },
   type: message.type,
-  content: decrypt(message.content),
+  content: displayContent,
   fileName: message.fileName,
   fileType: message.fileType,
   fileSize: message.fileSize,
@@ -62,7 +76,8 @@ export const formatMessage = (message: IMessage): MessageDTO => ({
   seenBy: message.seenBy.map(id => id.toString()),
   tempId: message.tempId,
   createdAt: message.createdAt.toISOString(),
-});
+  };
+};
 
 export const getRoomMessages = async (roomId: string, userId: string) => {
   await assertRoomMember(roomId, userId);
@@ -125,16 +140,42 @@ export const createFileMessage = async (input: {
     throw new AppError('File is too large for temporary sharing.', 400);
   }
 
-  // Upload the file to Cloudinary
+  // Encrypt image data BEFORE uploading to Cloudinary
+  // Step 1: Convert the base64 data URL to a raw image buffer
+  // Step 2: Encrypt the buffer with AES-256-CBC using a random IV
+  // Step 3: Convert the encrypted buffer back to a data URL for Cloudinary upload
+  // This ensures Cloudinary stores only encrypted binary data, NOT the original image.
+  let uploadDataUrl = input.dataUrl;
+  let imageIvHex: string | undefined;
+
+  if (input.fileType?.startsWith('image/')) {
+    const base64Data = input.dataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const imageBuffer = Buffer.from(base64Data, 'base64');
+
+    const { encryptedBuffer, iv } = encryptImageBuffer(imageBuffer);
+    imageIvHex = iv;
+
+    uploadDataUrl = `data:application/octet-stream;base64,${encryptedBuffer.toString('base64')}`;
+  }
+
+  // Upload the (now encrypted) file to Cloudinary
+  // Cloudinary receives only AES-256 ciphertext and cannot decode the original image.
   const folder = `chattogram_rooms/${input.roomId}`;
-  const cloudinaryResult = await cloudinaryService.uploadFile(input.dataUrl, folder, input.roomId);
+  const cloudinaryResult = await cloudinaryService.uploadFile(uploadDataUrl, folder, input.roomId);
+
+  // Store the IV (hex, always 32 chars) prepended to the Cloudinary URL, then encrypt the combined
+  // string using the existing content encryption. On retrieval, the IV is extracted to decrypt
+  // the image binary fetched from Cloudinary.
+  const contentToStore = imageIvHex
+    ? imageIvHex + cloudinaryResult.secure_url
+    : cloudinaryResult.secure_url;
 
   const message = await Message.create({
     roomId: input.roomId,
     sender: input.senderId,
     senderName: input.senderName,
     type: 'file',
-    content: encrypt(cloudinaryResult.secure_url), // Store the secure URL
+    content: encrypt(contentToStore),
     cloudinaryPublicId: cloudinaryResult.public_id, // Store ID for cleanup
     fileName: input.fileName,
     fileType: input.fileType,

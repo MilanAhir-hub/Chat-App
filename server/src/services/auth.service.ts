@@ -19,6 +19,7 @@ export const toAuthUser = (user: IUser): AuthUser => ({
   id: user._id.toString(),
   name: user.name,
   email: user.email,
+  credits: user.credits,
 });
 
 export const registerUser = async (input: RegisterInput) => {

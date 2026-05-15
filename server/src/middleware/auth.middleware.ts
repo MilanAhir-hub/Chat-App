@@ -21,7 +21,7 @@ export const protect = async (
     }
 
     const decoded = verifyToken(token);
-    const user = await User.findById(decoded.userId).select('name email');
+    const user = await User.findById(decoded.userId).select('name email credits');
 
     if (!user) {
       throw new AppError('The user for this session no longer exists.', 401);
@@ -31,6 +31,7 @@ export const protect = async (
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      credits: user.credits,
     };
 
     next();

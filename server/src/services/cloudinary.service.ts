@@ -23,7 +23,7 @@ export const cloudinaryService = {
     try {
       const result = await cloudinary.uploader.upload(dataUrl, {
         folder,
-        resource_type: 'auto',
+        resource_type: 'raw',
         tags: [roomId],
       });
 
