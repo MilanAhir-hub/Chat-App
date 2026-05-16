@@ -5,8 +5,6 @@ import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ChatRoomPage } from './pages/ChatRoomPage';
 import { DashboardPage } from './pages/DashboardPage';
-import { InterviewPage } from './pages/InterviewPage';
-import { InterviewReportPage } from './pages/InterviewReportPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 
@@ -24,11 +22,6 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/interviews/:interviewId" element={<InterviewPage />} />
-              <Route
-                path="/interviews/:interviewId/report"
-                element={<InterviewReportPage />}
-              />
               <Route path="/rooms/:roomId" element={<ChatRoomPage />} />
             </Route>
 

@@ -2,7 +2,6 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  credits: number;
 }
 
 export interface Room {
@@ -51,57 +50,4 @@ export interface RoomNotice {
   user?: User;
   message: string;
   createdAt: string;
-}
-
-export type InterviewLevel = 'junior' | 'mid' | 'senior';
-export type InterviewStatus = 'in_progress' | 'completed';
-
-export interface InterviewQuestion {
-  question: string;
-  userAnswer: string;
-  aiAnswer: string;
-  score: number;
-  feedback: string;
-  topics: string[];
-}
-
-export interface Interview {
-  id: string;
-  title: string;
-  role: string;
-  level: InterviewLevel;
-  status: InterviewStatus;
-  creditsUsed: number;
-  overallScore: number;
-  questions: InterviewQuestion[];
-  completedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreditHistoryItem {
-  id: string;
-  type: 'grant' | 'purchase' | 'use' | 'refund';
-  amount: number;
-  balanceAfter: number;
-  description: string;
-  provider?: 'razorpay' | 'system';
-  createdAt: string;
-}
-
-export interface InterviewDashboard {
-  credits: number;
-  stats: {
-    totalInterviews: number;
-    completedInterviews: number;
-    creditsUsed: number;
-    averageScore: number;
-  };
-  usageGraph: Array<{
-    label: string;
-    questions: number;
-    credits: number;
-  }>;
-  interviews: Interview[];
-  creditHistory: CreditHistoryItem[];
 }

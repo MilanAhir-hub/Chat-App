@@ -3,7 +3,7 @@ import { env } from '../config/env';
 import { Message, type IMessage } from '../models/Message';
 import { AppError } from '../utils/AppError';
 import { encrypt, decrypt } from '../utils/crypto';
-import { encryptImageBuffer } from '../utils/imageCrypto';
+import { encryptImageBuffer, IV_HEX_LENGTH } from '../utils/imageCrypto';
 import { assertRoomMember, touchRoom } from './room.service';
 import { cloudinaryService } from './cloudinary.service';
 
@@ -37,45 +37,41 @@ export interface MessageDTO {
 }
 
 export const formatMessage = (message: IMessage): MessageDTO => {
+  const messageId = message._id.toString();
   const decryptedContent = decrypt(message.content);
-
-  let displayContent = decryptedContent;
-
-  // For image file messages, serve via the proxy route that decrypts on-the-fly
-  // instead of exposing the raw Cloudinary URL. The proxy endpoint handles
-  // downloading the encrypted image from Cloudinary, decrypting it with the
-  // stored IV, and returning the raw displayable image bytes.
-  if (message.fileType?.startsWith('image/')) {
-    displayContent = `${env.SERVER_ORIGIN}/api/images/${message._id}`;
-  }
+  const isEncryptedImage =
+    message.type === 'file' &&
+    message.fileType?.startsWith('image/') &&
+    decryptedContent.length > IV_HEX_LENGTH &&
+    /^[0-9a-f]+$/i.test(decryptedContent.slice(0, IV_HEX_LENGTH));
 
   return {
-  id: message._id.toString(),
-  roomId: message.roomId,
-  sender: {
-    id: message.sender.toString(),
-    name: message.senderName,
-  },
-  type: message.type,
-  content: displayContent,
-  fileName: message.fileName,
-  fileType: message.fileType,
-  fileSize: message.fileSize,
-  reactions: message.reactions.map((reaction) => ({
-    emoji: reaction.emoji,
-    count: reaction.users.length,
-    userIds: reaction.users.map((userId) => userId.toString()),
-  })),
-  replyTo: message.replyTo ? {
-    id: message.replyTo.id.toString(),
-    content: decrypt(message.replyTo.content),
-    senderName: message.replyTo.senderName,
-  } : undefined,
-  status: message.seenBy.length > 0 ? 'seen' : (message.deliveredTo.length > 0 ? 'delivered' : 'sent'),
-  deliveredTo: message.deliveredTo.map(id => id.toString()),
-  seenBy: message.seenBy.map(id => id.toString()),
-  tempId: message.tempId,
-  createdAt: message.createdAt.toISOString(),
+    id: messageId,
+    roomId: message.roomId,
+    sender: {
+      id: message.sender.toString(),
+      name: message.senderName,
+    },
+    type: message.type,
+    content: isEncryptedImage ? `/api/images/${messageId}` : decryptedContent,
+    fileName: message.fileName,
+    fileType: message.fileType,
+    fileSize: message.fileSize,
+    reactions: message.reactions.map((reaction) => ({
+      emoji: reaction.emoji,
+      count: reaction.users.length,
+      userIds: reaction.users.map((userId) => userId.toString()),
+    })),
+    replyTo: message.replyTo ? {
+      id: message.replyTo.id.toString(),
+      content: decrypt(message.replyTo.content),
+      senderName: message.replyTo.senderName,
+    } : undefined,
+    status: message.seenBy.length > 0 ? 'seen' : (message.deliveredTo.length > 0 ? 'delivered' : 'sent'),
+    deliveredTo: message.deliveredTo.map(id => id.toString()),
+    seenBy: message.seenBy.map(id => id.toString()),
+    tempId: message.tempId,
+    createdAt: message.createdAt.toISOString(),
   };
 };
 
@@ -140,42 +136,49 @@ export const createFileMessage = async (input: {
     throw new AppError('File is too large for temporary sharing.', 400);
   }
 
-  // Encrypt image data BEFORE uploading to Cloudinary
-  // Step 1: Convert the base64 data URL to a raw image buffer
-  // Step 2: Encrypt the buffer with AES-256-CBC using a random IV
-  // Step 3: Convert the encrypted buffer back to a data URL for Cloudinary upload
-  // This ensures Cloudinary stores only encrypted binary data, NOT the original image.
   let uploadDataUrl = input.dataUrl;
   let imageIvHex: string | undefined;
 
   if (input.fileType?.startsWith('image/')) {
-    const base64Data = input.dataUrl.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Buffer.from(base64Data, 'base64');
+    const base64Data = input.dataUrl.replace(/^data:[^;]+;base64,/, '');
+    const originalBuffer = Buffer.from(base64Data, 'base64');
+    const { encryptedBuffer, iv } = encryptImageBuffer(originalBuffer);
 
-    const { encryptedBuffer, iv } = encryptImageBuffer(imageBuffer);
     imageIvHex = iv;
-
     uploadDataUrl = `data:application/octet-stream;base64,${encryptedBuffer.toString('base64')}`;
+
+    console.info('[image-encrypt]', {
+      mimetype: input.fileType,
+      originalBytes: originalBuffer.length,
+      encryptedBytes: encryptedBuffer.length,
+      originalHeader: originalBuffer.subarray(0, 8).toString('hex'),
+      encryptedHeader: encryptedBuffer.subarray(0, 8).toString('hex'),
+    });
   }
 
-  // Upload the (now encrypted) file to Cloudinary
-  // Cloudinary receives only AES-256 ciphertext and cannot decode the original image.
+  // Upload the encrypted file to Cloudinary
   const folder = `chattogram_rooms/${input.roomId}`;
-  const cloudinaryResult = await cloudinaryService.uploadFile(uploadDataUrl, folder, input.roomId);
-
-  // Store the IV (hex, always 32 chars) prepended to the Cloudinary URL, then encrypt the combined
-  // string using the existing content encryption. On retrieval, the IV is extracted to decrypt
-  // the image binary fetched from Cloudinary.
+  const cloudinaryResult = await cloudinaryService.uploadFile(
+    uploadDataUrl,
+    folder,
+    input.roomId,
+    imageIvHex ? 'raw' : 'auto'
+  );
   const contentToStore = imageIvHex
     ? imageIvHex + cloudinaryResult.secure_url
     : cloudinaryResult.secure_url;
+
+  console.info('[image-upload-result]', {
+    secure_url: cloudinaryResult.secure_url,
+    encryptedImage: Boolean(imageIvHex),
+  });
 
   const message = await Message.create({
     roomId: input.roomId,
     sender: input.senderId,
     senderName: input.senderName,
     type: 'file',
-    content: encrypt(contentToStore),
+    content: encrypt(contentToStore), // Store IV + encrypted Cloudinary URL for images
     cloudinaryPublicId: cloudinaryResult.public_id, // Store ID for cleanup
     fileName: input.fileName,
     fileType: input.fileType,
@@ -251,7 +254,7 @@ export const markMessageAsDelivered = async (messageId: string, userId: string) 
   // Don't mark as delivered if it's the sender
   if (message.sender.toString() === userId) return formatMessage(message);
 
-  if (!message.deliveredTo.includes(new Types.ObjectId(userId))) {
+  if (!message.deliveredTo.some((id) => id.toString() === userId)) {
     message.deliveredTo.push(new Types.ObjectId(userId));
     await message.save();
   }
@@ -269,12 +272,12 @@ export const markMessageAsSeen = async (messageId: string, userId: string) => {
   let updated = false;
 
   // Ensure it's also marked as delivered if it's being seen
-  if (!message.deliveredTo.includes(new Types.ObjectId(userId))) {
+  if (!message.deliveredTo.some((id) => id.toString() === userId)) {
     message.deliveredTo.push(new Types.ObjectId(userId));
     updated = true;
   }
 
-  if (!message.seenBy.includes(new Types.ObjectId(userId))) {
+  if (!message.seenBy.some((id) => id.toString() === userId)) {
     message.seenBy.push(new Types.ObjectId(userId));
     updated = true;
   }

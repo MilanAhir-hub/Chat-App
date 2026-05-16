@@ -32,14 +32,13 @@ const toUserSummary = (user: unknown): AuthUser => {
     id: document._id.toString(),
     name: document.name,
     email: document.email,
-    credits: document.credits,
   };
 };
 
 const populateRoom = async (room: IRoom) => {
   await room.populate([
-    { path: 'createdBy', select: 'name email credits' },
-    { path: 'users', select: 'name email credits' },
+    { path: 'createdBy', select: 'name email' },
+    { path: 'users', select: 'name email' },
   ]);
 
   return room;

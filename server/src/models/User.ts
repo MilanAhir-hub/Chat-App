@@ -6,7 +6,6 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
-  credits: number;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
@@ -32,11 +31,6 @@ const userSchema = new Schema<IUser>(
       required: true,
       minlength: 8,
       select: false,
-    },
-    credits: {
-      type: Number,
-      default: 5,
-      min: 0,
     },
   },
   { timestamps: true }

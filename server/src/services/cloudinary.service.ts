@@ -15,15 +15,25 @@ export const cloudinaryService = {
   /**
    * Uploads a base64 Data URL to Cloudinary.
    */
-  async uploadFile(dataUrl: string, folder: string, roomId: string) {
+  async uploadFile(
+    dataUrl: string,
+    folder: string,
+    roomId: string,
+    resourceType: 'auto' | 'raw' = 'auto'
+  ) {
     if (!env.CLOUDINARY_CLOUD_NAME) {
       throw new AppError('Cloudinary is not configured on the server.', 500);
     }
 
     try {
+      console.info('[image-upload]', {
+        payloadType: dataUrl.slice(0, dataUrl.indexOf(',') === -1 ? 40 : dataUrl.indexOf(',')),
+        resourceType,
+      });
+
       const result = await cloudinary.uploader.upload(dataUrl, {
         folder,
-        resource_type: 'raw',
+        resource_type: resourceType,
         tags: [roomId],
       });
 

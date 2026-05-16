@@ -1,4 +1,4 @@
-export const MAX_UPLOAD_BYTES = 5242880;
+export const MAX_UPLOAD_BYTES = 2000000;
 
 export const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {

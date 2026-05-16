@@ -35,7 +35,7 @@ import { ThemeSelector } from '../components/ThemeSelector';
 import { Loader } from '../components/Loader';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getErrorMessage } from '../services/http';
+import { API_BASE_URL, getErrorMessage } from '../services/http';
 import { roomService } from '../services/room.service';
 import {
   connectSocket,
@@ -62,6 +62,12 @@ const formatTime = (dateValue: string) =>
     hour: '2-digit',
     minute: '2-digit',
   }).format(new Date(dateValue));
+
+const resolveMediaUrl = (url: string) => {
+  if (!url.startsWith('/api/')) return url;
+
+  return `${API_BASE_URL.replace(/\/api\/?$/, '')}${url}`;
+};
 
 
 
@@ -440,6 +446,15 @@ export const ChatRoomPage = () => {
   // Seen detection logic
   useEffect(() => {
     if (!user || !messages.length) return;
+
+    const socket = getSocket();
+    if (socket.connected) {
+      messages
+        .filter((m) => m.sender.id !== user.id && !m.deliveredTo.includes(user.id))
+        .forEach((m) => {
+          socket.emit('message:delivered', { messageId: m.id });
+        });
+    }
 
     const unreadMessages = messages.filter(
       (m) => m.sender.id !== user.id && !m.seenBy.includes(user.id)
@@ -1083,11 +1098,11 @@ export const ChatRoomPage = () => {
 
                         {isImageMessage(message) ? (
                           <div 
-                            onClick={() => setFullscreenImage(message.content)}
+                            onClick={() => setFullscreenImage(resolveMediaUrl(message.content))}
                             className="media-container group/media"
                           >
                             <img 
-                              src={message.content} 
+                              src={resolveMediaUrl(message.content)} 
                               alt={message.fileName || 'Image'}
                               className="max-h-[400px] w-full min-w-[200px] object-cover transition-all duration-500 group-hover/media:scale-105"
                               loading="lazy"

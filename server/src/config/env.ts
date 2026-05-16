@@ -13,14 +13,10 @@ export const env = {
   COOKIE_NAME: process.env.COOKIE_NAME || 'chat_app_token',
   COOKIE_MAX_AGE_MS: Number(process.env.COOKIE_MAX_AGE_MS || ONE_WEEK_IN_MS),
   CLIENT_URL: process.env.CLIENT_URL || 'http://localhost:5173',
-  MAX_FILE_SIZE_BYTES: Number(process.env.MAX_FILE_SIZE_BYTES || 5242880),
+  MAX_FILE_SIZE_BYTES: Number(process.env.MAX_FILE_SIZE_BYTES || 2000000),
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
-  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
-  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
-  IMAGE_ENCRYPTION_KEY: process.env.IMAGE_ENCRYPTION_KEY || '',
-  SERVER_ORIGIN: process.env.SERVER_ORIGIN || `http://localhost:${Number(process.env.PORT || 5000)}`,
 };
 
 export const isProduction = env.NODE_ENV === 'production';

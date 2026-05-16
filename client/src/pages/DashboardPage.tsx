@@ -63,24 +63,22 @@ export const DashboardPage = () => {
   };
 
   return (
-    <main className="flex min-h-dvh flex-col bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 text-slate-950 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900 dark:text-white">
-      <header className="border-b border-slate-200/80 bg-white/80 px-4 py-4 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/80 sm:px-6 sm:py-5">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 sm:text-sm">
+    <main className="h-dvh overflow-y-auto bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white scrollbar-thin">
+      <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/90 sm:px-6 sm:py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 sm:gap-4">
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.16em] text-primary-700 dark:text-primary-300 sm:text-xs md:text-sm">
               Chattogram
             </p>
-            <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-              Welcome back, {user?.name?.split(' ')[0]}
-            </h1>
+            <h1 className="truncate text-lg font-bold sm:text-xl md:text-2xl">Dashboard</h1>
           </div>
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <ThemeSelector />
             <ThemeToggle />
             <button
               type="button"
               onClick={handleLogout}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 sm:px-4 sm:py-2 sm:text-sm"
+              className="rounded-full border border-slate-300 px-2.5 py-1.5 text-[10px] font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:px-4 sm:py-2 sm:text-sm"
             >
               Logout
             </button>
@@ -88,89 +86,76 @@ export const DashboardPage = () => {
         </div>
       </header>
 
-      <section className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
-        <div className="grid w-full max-w-4xl gap-6 lg:grid-cols-2">
-          {(error || success) && (
-            <div className="col-span-full rounded-xl border-2 px-4 py-3.5 text-sm font-medium lg:col-span-2 backdrop-blur-sm
-              ${error
-                ? 'border-red-200/50 bg-red-50/80 text-red-600 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-300'
-                : 'border-emerald-200/50 bg-emerald-50/80 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-950/50 dark:text-emerald-300'
-              }"
-            >
-              {error || success}
+      <section className="mx-auto grid max-w-6xl gap-4 px-3 py-4 sm:gap-6 sm:px-6 sm:py-8 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6 md:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div className="min-w-0">
+              <p className="text-xs text-slate-500 dark:text-slate-400 sm:text-sm">
+                Signed in as
+              </p>
+              <h2 className="mt-1 truncate text-xl font-bold sm:text-2xl md:text-3xl">{user?.name}</h2>
+              <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400 sm:mt-1 sm:text-sm">
+                {user?.email}
+              </p>
             </div>
-          )}
-
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl shadow-slate-200/30 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">Create a Room</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Start a new chat session</p>
-              </div>
-            </div>
-
             <button
               type="button"
               onClick={createRoom}
               disabled={isCreating}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-500/30 transition-all hover:from-primary-500 hover:to-primary-400 hover:shadow-xl hover:shadow-primary-500/40 active:scale-[0.98] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
+              className="w-full shrink-0 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-primary-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-primary-800 sm:w-auto sm:px-5 sm:py-3"
             >
-              {isCreating ? <Loader size="sm" light /> : 'Create New Room'}
+              {isCreating ? <Loader size="sm" light /> : 'Create Room'}
             </button>
-
-            {createdRoom && (
-              <div className="mt-6 rounded-xl border-2 border-primary-200/50 bg-primary-50/80 p-4 backdrop-blur-sm dark:border-primary-900/50 dark:bg-primary-950/50">
-                <p className="text-xs font-semibold uppercase tracking-wider text-primary-700 dark:text-primary-300">
-                  Room is ready
-                </p>
-                <div className="mt-3 flex flex-col gap-3">
-                  <code className="break-all rounded-lg border border-primary-200 bg-white px-4 py-3 text-xl font-black tracking-[0.15em] text-slate-900 dark:border-primary-900 dark:bg-slate-950 dark:text-white">
-                    {createdRoom.roomId}
-                  </code>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void copyRoomId(createdRoom.roomId)}
-                      className="flex-1 rounded-lg border border-primary-300 px-3 py-2.5 text-sm font-bold text-primary-700 transition hover:bg-primary-100 dark:border-primary-800 dark:text-primary-200 dark:hover:bg-primary-950"
-                    >
-                      Copy ID
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/rooms/${createdRoom.roomId}`)}
-                      className="flex-[2] rounded-lg bg-gradient-to-r from-slate-900 to-slate-800 px-3 py-2.5 text-sm font-bold text-white transition hover:from-slate-800 hover:to-slate-700 dark:from-white dark:to-slate-100 dark:text-slate-900 dark:hover:from-slate-100 dark:hover:to-white"
-                    >
-                      Enter Room
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
-          <div className="rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl shadow-slate-200/30 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 text-white shadow-lg shadow-slate-500/30">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold">Join a Room</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Enter an existing room</p>
+          {createdRoom && (
+            <div className="mt-6 rounded-lg border border-primary-200 bg-primary-50 p-3 dark:border-primary-900/70 dark:bg-primary-950/30 sm:mt-8 sm:p-4 md:p-6">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary-800 dark:text-primary-200 sm:text-xs md:text-sm">
+                Room is ready
+              </p>
+              <div className="mt-3 flex flex-col gap-2.5 sm:mt-4 sm:flex-row sm:items-center sm:gap-3">
+                <code className="flex-1 break-all rounded-lg border border-primary-200 bg-white px-3 py-2.5 text-lg font-black tracking-[0.2em] text-slate-950 dark:border-primary-900 dark:bg-slate-950 dark:text-white sm:px-4 sm:py-3 sm:text-xl md:text-2xl">
+                  {createdRoom.roomId}
+                </code>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => copyRoomId(createdRoom.roomId)}
+                    className="flex-1 rounded-lg border border-primary-300 px-3 py-2.5 text-xs font-bold text-primary-800 transition hover:bg-primary-100 dark:border-primary-800 dark:text-primary-200 dark:hover:bg-primary-950 sm:flex-none sm:px-4 sm:py-3 sm:text-sm"
+                  >
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/rooms/${createdRoom.roomId}`)}
+                    className="flex-[2] rounded-lg bg-slate-950 px-3 py-2.5 text-xs font-bold text-white transition hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 sm:flex-none sm:px-4 sm:py-3 sm:text-sm"
+                  >
+                    Enter
+                  </button>
+                </div>
               </div>
             </div>
+          )}
 
-            <form onSubmit={joinRoom} className="mt-6 space-y-4">
-              <label className="block">
-                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
-                  Room ID
-                </span>
+          {(error || success) && (
+            <p
+              className={`mt-4 rounded-lg px-3 py-2.5 text-xs font-medium sm:mt-6 sm:px-4 sm:py-3 sm:text-sm ${
+                error
+                  ? 'border border-red-200 bg-red-50 text-red-700 dark:border-red-900/70 dark:bg-red-950/40 dark:text-red-200'
+                  : 'border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/70 dark:bg-emerald-950/40 dark:text-emerald-200'
+              }`}
+            >
+              {error || success}
+            </p>
+          )}
+        </div>
+
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6 md:p-8">
+          <h2 className="text-lg font-bold sm:text-xl">Join Room</h2>
+          <form onSubmit={joinRoom} className="mt-4 space-y-4 sm:mt-5 sm:space-y-5">
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-200 sm:text-sm">
+              Room ID
+              <div className="relative mt-1.5 sm:mt-2">
                 <input
                   type="text"
                   value={joinRoomId}
@@ -178,31 +163,19 @@ export const DashboardPage = () => {
                   onChange={(event) =>
                     setJoinRoomId(event.target.value.toUpperCase())
                   }
-                  className="mt-2 block w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-4 py-3.5 text-xl font-bold uppercase tracking-[0.2em] text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-primary-500 focus:bg-white focus:ring-4 focus:ring-primary-500/15 dark:border-slate-700 dark:bg-slate-800/50 dark:text-white dark:placeholder:text-slate-600 dark:focus:border-primary-400 dark:focus:bg-slate-800"
-                  placeholder="ABCDEF"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-lg font-bold uppercase tracking-[0.2em] text-slate-950 outline-none transition focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 dark:border-slate-700 dark:bg-slate-950 dark:text-white sm:px-4 sm:py-4 sm:text-xl md:text-2xl"
+                  placeholder="AB12CD"
                 />
-              </label>
-              <button
-                type="submit"
-                disabled={isJoining || joinRoomId.trim().length !== 6}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-3.5 text-base font-semibold text-white shadow-lg transition-all hover:from-slate-800 hover:to-slate-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none dark:from-white dark:to-slate-100 dark:text-slate-900 dark:hover:from-slate-100 dark:hover:to-white"
-              >
-                {isJoining ? <Loader size="sm" light /> : 'Join Room'}
-              </button>
-            </form>
-          </div>
-
-          <div className="col-span-full rounded-2xl border border-slate-200/80 bg-white/80 p-6 shadow-xl shadow-slate-200/30 backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/80 dark:shadow-2xl dark:shadow-black/20 lg:col-span-2">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary-400 to-primary-500 text-lg font-bold text-white shadow-lg shadow-primary-500/30">
-                {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <div className="min-w-0 flex-1">
-                <h2 className="truncate text-xl font-bold">{user?.name}</h2>
-                <p className="truncate text-sm text-slate-500 dark:text-slate-400">{user?.email}</p>
-              </div>
-            </div>
-          </div>
+            </label>
+            <button
+              type="submit"
+              disabled={isJoining || joinRoomId.trim().length !== 6}
+              className="flex w-full items-center justify-center rounded-lg bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 dark:disabled:bg-slate-700 dark:disabled:text-slate-400 sm:py-4"
+            >
+              {isJoining ? <Loader size="sm" light /> : 'Join Room'}
+            </button>
+          </form>
         </div>
       </section>
     </main>

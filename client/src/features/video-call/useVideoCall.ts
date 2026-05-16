@@ -86,42 +86,29 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
   const updateParticipant = useCallback(
     (
-      socketId: string,
+      participant: VideoParticipant,
       patch: Partial<RemoteVideoParticipant> = {}
     ) => {
+      participantsRef.current.set(participant.socketId, participant);
       setRemoteParticipants((current) => {
-        const existing = current.find((item) => item.socketId === socketId);
-        
-        // If we don't have this participant in state yet, we need a full object
-        // but this should usually be handled by handlePeerJoined or handleSignal
-        if (!existing && !patch.user) {
-          return current;
-        }
-
-        const base = existing || (patch as VideoParticipant);
+        const existing = current.find(
+          (item) => item.socketId === participant.socketId
+        );
         const nextParticipant: RemoteVideoParticipant = {
-          ...base,
-          ...patch,
-          media: {
-            ...base.media,
-            ...patch.media,
-          },
+          ...participant,
           stream:
             patch.stream ??
             existing?.stream ??
-            remoteStreamsRef.current.get(socketId),
+            remoteStreamsRef.current.get(participant.socketId),
           connectionState:
             patch.connectionState ??
             existing?.connectionState ??
             'new',
         };
 
-        // Update the ref so other closures can access the latest data
-        participantsRef.current.set(socketId, nextParticipant);
-
         if (existing) {
           return current.map((item) =>
-            item.socketId === socketId ? nextParticipant : item
+            item.socketId === participant.socketId ? nextParticipant : item
           );
         }
 
@@ -209,8 +196,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
   // createPeerConnection — the heart of WebRTC
   // --------------------------------------------------------------------------
   const createPeerConnection = useCallback(
-    (socketId: string) => {
-      const existing = peerConnectionsRef.current.get(socketId);
+    (participant: VideoParticipant) => {
+      const existing = peerConnectionsRef.current.get(participant.socketId);
 
       if (existing) {
         return existing;
@@ -234,8 +221,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       peerConnection.onicecandidate = (event) => {
         if (!event.candidate) return;
 
-        sendSignal(socketId, {
-          to: socketId,
+        sendSignal(participant.socketId, {
+          to: participant.socketId,
           type: 'ice-candidate',
           candidate: event.candidate.toJSON(),
         });
@@ -243,16 +230,10 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
       // Remote track arrived → accumulate into a MediaStream and update React state
       peerConnection.ontrack = (event) => {
-        // Use the browser-provided stream if available, otherwise fallback to track-based manual stream
-        const [eventStream] = event.streams;
-        const existingStream = remoteStreamsRef.current.get(socketId);
+        const existingStream = remoteStreamsRef.current.get(participant.socketId);
         
         let stream: MediaStream;
-        if (eventStream) {
-          // Create a new wrapper to ensure React detects the reference change 
-          // when tracks are added/removed from the same browser stream object
-          stream = new MediaStream(eventStream.getTracks());
-        } else if (existingStream) {
+        if (existingStream) {
           if (!existingStream.getTracks().some((t) => t.id === event.track.id)) {
             existingStream.addTrack(event.track);
           }
@@ -262,15 +243,15 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
           stream = new MediaStream([event.track]);
         }
 
-        remoteStreamsRef.current.set(socketId, stream);
-        updateParticipant(socketId, {
+        remoteStreamsRef.current.set(participant.socketId, stream);
+        updateParticipant(participant, {
           stream,
           connectionState: peerConnection.connectionState,
         });
       };
 
       peerConnection.onconnectionstatechange = () => {
-        updateParticipant(socketId, {
+        updateParticipant(participant, {
           connectionState: peerConnection.connectionState,
         });
 
@@ -282,8 +263,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         }
       };
 
-      peerConnectionsRef.current.set(socketId, peerConnection);
-      updateParticipant(socketId, {
+      peerConnectionsRef.current.set(participant.socketId, peerConnection);
+      updateParticipant(participant, {
         connectionState: peerConnection.connectionState,
       });
 
@@ -414,9 +395,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         return;
       }
 
-      const existingParticipant = participantsRef.current.get(payload.from);
       const participant =
-        existingParticipant ??
+        participantsRef.current.get(payload.from) ??
         ({
           socketId: payload.from,
           user: payload.user,
@@ -424,12 +404,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
           media: createEmptyMediaState(),
         } satisfies VideoParticipant);
 
-      // Ensure the participant is in state if it's new
-      if (!existingParticipant) {
-        updateParticipant(participant.socketId, participant);
-      }
-
-      const peerConnection = createPeerConnection(participant.socketId);
+      const peerConnection = createPeerConnection(participant);
 
       if (payload.type === 'offer' && payload.description) {
         // Handle glare: if we also sent an offer, rollback ours and accept theirs
@@ -483,7 +458,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         }
       }
     },
-    [createPeerConnection, flushPendingCandidates, sendSignal, updateParticipant]
+    [createPeerConnection, flushPendingCandidates, sendSignal]
   );
 
   // Flush any signals that arrived before our local stream was ready
@@ -561,9 +536,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       // For every existing participant, we (the new joiner) create an offer
       await Promise.all(
         participants.map(async (participant) => {
-          // Register participant first
-          updateParticipant(participant.socketId, participant);
-          const peerConnection = createPeerConnection(participant.socketId);
+          const peerConnection = createPeerConnection(participant);
           await createOffer(participant.socketId, peerConnection);
         })
       );
@@ -578,7 +551,6 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     currentUser,
     flushPendingSignals,
     status,
-    updateParticipant,
   ]);
 
   const endCall = useCallback(() => {
@@ -746,7 +718,7 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         return;
       }
 
-      updateParticipant(participant.socketId, participant);
+      updateParticipant(participant);
     };
 
     const handlePeerLeft = ({ socketId }: VideoPeerLeftPayload) => {
@@ -754,7 +726,16 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     };
 
     const handleMediaState = (payload: VideoMediaStatePayload) => {
-      updateParticipant(payload.socketId, { media: payload.media });
+      const participant = participantsRef.current.get(payload.socketId);
+
+      if (!participant) {
+        return;
+      }
+
+      updateParticipant({
+        ...participant,
+        media: { ...participant.media, ...payload.media },
+      });
     };
 
     const handleIncomingSignal = (payload: VideoSignalPayload) => {
