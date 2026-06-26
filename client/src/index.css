@@ -486,7 +486,7 @@ body {
 .message-bubble {
   position: relative;
   width: fit-content;
-  min-width: 40%;
+  min-width: 100px;
   max-width: 80%;
   transition: all 0.2s ease;
 }
