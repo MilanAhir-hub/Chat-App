@@ -69,6 +69,14 @@ const resolveMediaUrl = (url: string) => {
   return `${API_BASE_URL.replace(/\/api\/?$/, '')}${url}`;
 };
 
+const isSingleEmoji = (str: string): boolean => {
+  const flagRegex = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
+  const emojiRegex = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
+  const trimmed = str.trim();
+  return flagRegex.test(trimmed) || emojiRegex.test(trimmed);
+};
+
+
 
 
 /**
@@ -1013,8 +1021,13 @@ export const ChatRoomPage = () => {
                           onPointerDown={() => handleTouchStart(message.id)}
                           onPointerUp={handleTouchEnd}
                           onPointerLeave={handleTouchEnd}
-                          className={`message-bubble ${isMine ? 'message-bubble-mine' : 'message-bubble-other'} ${message.type === 'file' || isImageMessage(message) ? 'message-bubble-media' : 'message-bubble-text'
-                            }`}
+                          className={`message-bubble ${isMine ? 'message-bubble-mine' : 'message-bubble-other'} ${
+                            message.type === 'file' || isImageMessage(message)
+                              ? 'message-bubble-media'
+                              : (message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo)
+                                ? 'message-bubble-emoji-only'
+                                : 'message-bubble-text'
+                          }`}
                         >
                           <div className="flex flex-col relative">
                             {/* Reply Display */}

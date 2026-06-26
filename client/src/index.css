@@ -747,3 +747,57 @@ body {
   font-size: 12px;
   font-weight: 500;
 }
+
+/* Single Emoji Message Styles */
+.message-bubble-emoji-only {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  min-width: auto !important;
+  padding: 0 !important;
+}
+
+.message-bubble-emoji-only::before {
+  content: none !important;
+}
+
+.message-bubble-emoji-only .message-content {
+  font-size: 36px !important;
+  line-height: 1.2 !important;
+  display: inline-block !important;
+}
+
+@media (min-width: 640px) {
+  .message-bubble-emoji-only .message-content {
+    font-size: 40px !important;
+  }
+}
+
+.message-bubble-emoji-only .message-content::after {
+  content: none !important;
+}
+
+.message-bubble-emoji-only .message-meta {
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  margin-top: 4px !important;
+  justify-content: flex-end !important;
+  display: flex !important;
+  padding: 0 !important;
+}
+
+.message-bubble-emoji-only .message-timestamp {
+  color: var(--text-secondary) !important;
+  opacity: 0.85 !important;
+}
+
+.message-bubble-emoji-only .message-meta svg {
+  color: var(--text-secondary) !important;
+  opacity: 0.85 !important;
+}
+
+.message-bubble-emoji-only .message-meta svg.text-sky-400 {
+  color: #38bdf8 !important;
+  opacity: 1 !important;
+}
