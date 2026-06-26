@@ -1221,9 +1221,6 @@ export const ChatRoomPage = () => {
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-slate-400" />
                   </div>
-                  <p className="text-xs font-semibold text-slate-400">
-                    {typingNames.length > 1 ? 'Multiple people are' : `${typingNames[0]} is`} typing...
-                  </p>
                 </div>
               )}
 
