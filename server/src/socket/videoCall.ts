@@ -139,6 +139,13 @@ export const registerVideoCallHandlers = (
 
         participants.set(socket.id, participant);
 
+        console.info('[video:join]', {
+          roomId,
+          socketId: socket.id,
+          existingParticipants: existingParticipants.length,
+          media: participant.media,
+        });
+
         if (isFirstParticipant) {
           io.to(roomId).emit('video:call-started', {
             roomId,
@@ -173,8 +180,23 @@ export const registerVideoCallHandlers = (
       const participants = roomParticipants.get(roomId);
 
       if (!participants?.has(socket.id) || !participants.has(payload.to)) {
+        console.info('[video:signal:drop]', {
+          roomId,
+          from: socket.id,
+          to: payload.to,
+          type: payload.type,
+          senderInCall: Boolean(participants?.has(socket.id)),
+          receiverInCall: Boolean(participants?.has(payload.to)),
+        });
         return;
       }
+
+      console.info('[video:signal:relay]', {
+        roomId,
+        from: socket.id,
+        to: payload.to,
+        type: payload.type,
+      });
 
       io.to(payload.to).emit('video:signal', {
         from: socket.id,

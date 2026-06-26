@@ -8,7 +8,7 @@ interface AuthShellProps {
 }
 
 export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
-  <main className="relative grid h-dvh overflow-y-auto bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white lg:grid-cols-[0.85fr_1.15fr]">
+  <main className="relative grid h-dvh overflow-y-auto bg-[var(--base-color)] text-[var(--text-primary)] lg:grid-cols-[0.85fr_1.15fr]">
 
     {/* Theme toggle — hidden on mobile (shown inside card instead) */}
     <div className="absolute top-4 right-4 z-10 hidden sm:block">
@@ -16,9 +16,9 @@ export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
     </div>
 
     {/* Left branding panel — desktop only */}
-    <section className="hidden bg-slate-950 text-white lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-12">
+    <section className="hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-12">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-300 lg:text-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--primary-300)] lg:text-sm">
           Temporary Chat
         </p>
         <h1 className="mt-4 max-w-md text-3xl font-bold leading-tight lg:mt-5 lg:text-4xl xl:text-5xl">
@@ -37,15 +37,16 @@ export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
         w-full max-w-[calc(100vw-2rem)] sm:max-w-md
         min-h-dvh sm:min-h-0
         flex flex-col justify-center
-        bg-white dark:bg-slate-900
+        bg-[var(--elevated-color)]
         px-5 py-8 sm:p-10
-        sm:rounded-lg sm:border sm:border-slate-200 sm:shadow-xl sm:shadow-slate-200/70
-        dark:sm:border-slate-800 dark:sm:shadow-black/20
-      ">
+        sm:rounded-[20px] sm:border sm:border-[var(--border-color)] sm:shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+      "
+        style={{ backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+      >
         {/* Card header — theme toggle on mobile, title always */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-600 dark:text-primary-300 sm:text-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--primary-600)] sm:text-sm">
               Chattogram
             </p>
             {/* Theme toggle inside card — mobile only */}
@@ -54,7 +55,7 @@ export const AuthShell = ({ title, subtitle, children }: AuthShellProps) => (
             </div>
           </div>
           <h2 className="mt-3 text-xl font-bold sm:text-2xl md:text-3xl">{title}</h2>
-          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 sm:mt-2 sm:text-sm">
+          <p className="mt-1.5 text-xs text-[var(--text-secondary)] sm:mt-2 sm:text-sm">
             {subtitle}
           </p>
         </div>

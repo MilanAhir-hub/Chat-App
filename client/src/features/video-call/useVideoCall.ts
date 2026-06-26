@@ -44,6 +44,14 @@ const getMediaErrorMessage = (error: unknown) => {
     : 'Unable to start the video call. Please check your connection and hardware.';
 };
 
+const describeTracks = (stream?: MediaStream | null) =>
+  stream?.getTracks().map((track) => ({
+    kind: track.kind,
+    enabled: track.enabled,
+    muted: track.muted,
+    readyState: track.readyState,
+  })) || [];
+
 export const useVideoCall = (roomId: string, currentUser: User | null) => {
   const [status, setStatus] = useState<VideoCallStatus>('idle');
   const [error, setError] = useState('');
@@ -149,6 +157,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         return;
       }
 
+      console.debug('[video:emit]', {
+        type: payload.type,
+        to,
+      });
+
       getSocket().emit('video:signal', {
         roomId: roomIdRef.current,
         to,
@@ -183,6 +196,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         offerToReceiveVideo: true,
       });
       await peerConnection.setLocalDescription(offer);
+      console.debug('[video:offer]', {
+        to: socketId,
+        signalingState: peerConnection.signalingState,
+        iceConnectionState: peerConnection.iceConnectionState,
+      });
       sendSignal(socketId, {
         to: socketId,
         type: 'offer',
@@ -206,10 +224,23 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       const peerConnection = new RTCPeerConnection(createPeerConnectionConfig());
       const activeStream = localStreamRef.current;
 
+      console.debug('[video:pc:create]', {
+        peer: participant.socketId,
+        localTracks: describeTracks(activeStream),
+      });
+
       // Add all local tracks so the remote peer gets our audio + video
       if (activeStream) {
         activeStream.getTracks().forEach((track) => {
           const sender = peerConnection.addTrack(track, activeStream);
+
+          console.debug('[video:pc:add-track]', {
+            peer: participant.socketId,
+            kind: track.kind,
+            enabled: track.enabled,
+            muted: track.muted,
+            readyState: track.readyState,
+          });
 
           if (track.kind === 'video') {
             void tuneVideoSender(sender).catch(() => undefined);
@@ -221,6 +252,12 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       peerConnection.onicecandidate = (event) => {
         if (!event.candidate) return;
 
+        console.debug('[video:ice:emit]', {
+          to: participant.socketId,
+          candidateType: event.candidate.type,
+          protocol: event.candidate.protocol,
+        });
+
         sendSignal(participant.socketId, {
           to: participant.socketId,
           type: 'ice-candidate',
@@ -231,6 +268,15 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       // Remote track arrived → accumulate into a MediaStream and update React state
       peerConnection.ontrack = (event) => {
         const existingStream = remoteStreamsRef.current.get(participant.socketId);
+
+        console.debug('[video:remote-track]', {
+          from: participant.socketId,
+          kind: event.track.kind,
+          enabled: event.track.enabled,
+          muted: event.track.muted,
+          readyState: event.track.readyState,
+          streamCount: event.streams.length,
+        });
         
         let stream: MediaStream;
         if (existingStream) {
@@ -251,6 +297,13 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       };
 
       peerConnection.onconnectionstatechange = () => {
+        console.debug('[video:pc:connection-state]', {
+          peer: participant.socketId,
+          connectionState: peerConnection.connectionState,
+          iceConnectionState: peerConnection.iceConnectionState,
+          signalingState: peerConnection.signalingState,
+        });
+
         updateParticipant(participant, {
           connectionState: peerConnection.connectionState,
         });
@@ -261,6 +314,20 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         ) {
           peerConnection.restartIce();
         }
+      };
+
+      peerConnection.oniceconnectionstatechange = () => {
+        console.debug('[video:ice:state]', {
+          peer: participant.socketId,
+          iceConnectionState: peerConnection.iceConnectionState,
+        });
+      };
+
+      peerConnection.onsignalingstatechange = () => {
+        console.debug('[video:signaling:state]', {
+          peer: participant.socketId,
+          signalingState: peerConnection.signalingState,
+        });
       };
 
       peerConnectionsRef.current.set(participant.socketId, peerConnection);
@@ -388,6 +455,12 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
   // --------------------------------------------------------------------------
   const handleSignal = useCallback(
     async (payload: VideoSignalPayload) => {
+      console.debug('[video:on]', {
+        type: payload.type,
+        from: payload.from,
+        hasLocalStream: Boolean(localStreamRef.current),
+      });
+
       // If we haven't started our own stream yet, queue the signal.
       // It will be flushed as soon as startCall sets localStreamRef.
       if (!localStreamRef.current) {
@@ -419,6 +492,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
+        console.debug('[video:answer]', {
+          to: payload.from,
+          signalingState: peerConnection.signalingState,
+          iceConnectionState: peerConnection.iceConnectionState,
+        });
         sendSignal(payload.from, {
           to: payload.from,
           type: 'answer',
@@ -485,6 +563,9 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
       const stream = await navigator.mediaDevices.getUserMedia(
         cameraMediaConstraints
       );
+      console.debug('[video:gUM]', {
+        tracks: describeTracks(stream),
+      });
       const nextMediaState = {
         isAudioEnabled: stream.getAudioTracks().some((track) => track.enabled),
         isVideoEnabled: stream.getVideoTracks().some((track) => track.enabled),
@@ -507,6 +588,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
 
       const participants = await new Promise<VideoParticipant[]>(
         (resolve, reject) => {
+          console.debug('[video:join:emit]', {
+            roomId: roomIdRef.current,
+            media: nextMediaState,
+          });
+
           socket.emit(
             'video:join',
             { roomId: roomIdRef.current, media: nextMediaState },
@@ -521,6 +607,10 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
           );
         }
       );
+
+      console.debug('[video:join:ack]', {
+        participants: participants.map((participant) => participant.socketId),
+      });
 
       // IMPORTANT: Set the local stream reference and flush signals ONLY AFTER joining the call.
       // This ensures the server will accept our outgoing signals (like answers to queued offers).
@@ -693,6 +783,11 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
         return;
       }
 
+      console.debug('[video:call-started]', {
+        roomId: payload.roomId,
+        startedBy: payload.startedBy.id,
+      });
+
       setHasActiveRoomCall(true);
       setStartedByName(payload.startedBy.name);
     };
@@ -714,6 +809,12 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     // We just register the participant here; handleSignal will create the PC
     // and process the incoming offer from the new joiner.
     const handlePeerJoined = ({ participant }: VideoPeerJoinedPayload) => {
+      console.debug('[video:peer-joined]', {
+        socketId: participant.socketId,
+        hasLocalStream: Boolean(localStreamRef.current),
+        media: participant.media,
+      });
+
       if (!localStreamRef.current) {
         return;
       }
@@ -726,6 +827,8 @@ export const useVideoCall = (roomId: string, currentUser: User | null) => {
     };
 
     const handleMediaState = (payload: VideoMediaStatePayload) => {
+      console.debug('[video:media-state:on]', payload);
+
       const participant = participantsRef.current.get(payload.socketId);
 
       if (!participant) {

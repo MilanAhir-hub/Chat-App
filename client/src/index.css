@@ -14,10 +14,21 @@
   --color-primary-800: var(--primary-800);
   --color-primary-900: var(--primary-900);
   --color-primary-950: var(--primary-950);
+
+  /* DESIGN SYSTEM v2 Base Colors */
+  --color-base-summary: var(--base-color);
+  --color-base-elevated: var(--elevated-color);
+  --color-base-elevated-rgb: var(--elevated-color-rgb);
+  --color-base-input: var(--input-color);
+  --color-base-border: var(--border-color);
+  --color-base-border-hover: var(--border-color-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
 }
 
 :root {
-  /* Default Cyan */
+  /* Default Cyan Accent */
   --primary-50: var(--color-cyan-50);
   --primary-100: var(--color-cyan-100);
   --primary-200: var(--color-cyan-200);
@@ -29,6 +40,17 @@
   --primary-800: var(--color-cyan-800);
   --primary-900: var(--color-cyan-900);
   --primary-950: var(--color-cyan-950);
+
+  /* DESIGN SYSTEM v2 Base */
+  --base-color: #f4f4f5;
+  --elevated-color: rgba(255, 255, 255, 0.85);
+  --elevated-color-rgb: 255, 255, 255;
+  --input-color: #ffffff;
+  --border-color: rgba(0, 0, 0, 0.06);
+  --border-color-hover: rgba(0, 0, 0, 0.10);
+  --text-primary: #0c0c0e;
+  --text-secondary: rgba(12, 12, 14, 0.55);
+  --text-tertiary: rgba(12, 12, 14, 0.35);
 }
 
 [data-accent="indigo"] {
@@ -49,7 +71,7 @@
   --primary-50: var(--color-emerald-50);
   --primary-100: var(--color-emerald-100);
   --primary-200: var(--color-emerald-200);
-  --primary-300: var(--color-emerald-300);
+  性爱-300: var(--color-emerald-300);
   --primary-400: var(--color-emerald-400);
   --primary-500: var(--color-emerald-500);
   --primary-600: var(--color-emerald-600);
@@ -148,7 +170,7 @@
   --primary-100: var(--color-orange-100);
   --primary-200: var(--color-orange-200);
   --primary-300: var(--color-orange-300);
-  --primary-400: var(--color-orange-400);
+  病死-400: var(--color-orange-400);
   --primary-500: var(--color-orange-500);
   --primary-600: var(--color-orange-600);
   --primary-700: var(--color-orange-700);
@@ -227,6 +249,113 @@
   --primary-950: var(--color-pink-950);
 }
 
+/* Dark mode overrides for design system v2 tokens */
+.dark {
+  --base-color: #0c0c0e;
+  --elevated-color: rgba(22, 22, 25, 0.8);
+  --elevated-color-rgb: 22, 22, 25;
+  --input-color: rgba(30, 30, 33, 0.9);
+  --border-color: rgba(255, 255, 255, 0.06);
+  --border-color-hover: rgba(255, 255, 255, 0.10);
+  --text-primary: #f5f5f5;
+  --text-secondary: rgba(245, 245, 245, 0.55);
+  --text-tertiary: rgba(245, 245, 245, 0.35);
+}
+
+html[data-accent="1a1d27"] {
+  --primary-400: #1A1D27;
+  --primary-500: #1A1D27;
+  --primary-600: #1A1D27;
+}
+
+html[data-accent="1c1c1e"] {
+  --primary-400: #1C1C1E;
+  --primary-500: #1C1C1E;
+  --primary-600: #1C1C1E;
+}
+
+html[data-accent="0d2137"] {
+  --primary-400: #0D2137;
+  --primary-500: #0D2137;
+  --primary-600: #0D2137;
+}
+
+html[data-accent="005c4b"] {
+  --primary-400: #005C4B;
+  --primary-500: #005C4B;
+  --primary-600: #005C4B;
+}
+
+html[data-accent="1f2c34"] {
+  --primary-400: #1F2C34;
+  --primary-500: #1F2C34;
+  --primary-600: #1F2C34;
+}
+
+html[data-accent="182229"] {
+  --primary-400: #182229;
+  --primary-500: #182229;
+  --primary-600: #182229;
+}
+
+html[data-accent="1e1f22"] {
+  --primary-400: #1E1F22;
+  --primary-500: #1E1F22;
+  --primary-600: #1E1F22;
+}
+
+html[data-accent="0f1117"] {
+  --primary-400: #0F1117;
+  --primary-500: #0F1117;
+  --primary-600: #0F1117;
+}
+
+html[data-accent="1b1f3b"] {
+  --primary-400: #1B1F3B;
+  --primary-500: #1B1F3B;
+  --primary-600: #1B1F3B;
+}
+
+html[data-accent="1a0533"] {
+  --primary-400: #1A0533;
+  --primary-500: #1A0533;
+  --primary-600: #1A0533;
+}
+
+html[data-accent="0a1628"] {
+  --primary-400: #0A1628;
+  --primary-500: #0A1628;
+  --primary-600: #0A1628;
+}
+
+html[data-accent="1f1b2e"] {
+  --primary-400: #1F1B2E;
+  --primary-500: #1F1B2E;
+  --primary-600: #1F1B2E;
+}
+
+html[data-accent="0d1f12"] {
+  --primary-400: #0D1F12;
+  --primary-500: #0D1F12;
+  --primary-600: #0D1F12;
+}
+
+html[data-accent="162032"] {
+  --primary-400: #162032;
+  --primary-500: #162032;
+  --primary-600: #162032;
+}
+
+html[data-accent="1c1a2e"] {
+  --primary-400: #1C1A2E;
+  --primary-500: #1C1A2E;
+  --primary-600: #1C1A2E;
+}
+
+
+
+/* Light mode defaults are set in :root above */
+
 /* Enable class-based dark mode for Tailwind v4 */
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -262,10 +391,11 @@ body,
 
 body {
   min-width: 320px;
-  @apply bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-50;
+  background-color: var(--base-color);
+  color: var(--text-primary);
 }
 
-/* Static Gradient for Chat Area */
+/* Static Gradient for Chat Area - Design System v2 Updated */
 .chat-bg-gradient {
   position: absolute;
   top: 50%;
@@ -276,7 +406,7 @@ body {
   background: radial-gradient(circle at center,
       var(--primary-400) 0%,
       transparent 70%);
-  opacity: 0.08;
+  opacity: 0.05;
   pointer-events: none;
   z-index: 0;
   filter: blur(40px);
@@ -286,86 +416,262 @@ body {
   background: radial-gradient(circle at center,
       var(--primary-500) 0%,
       transparent 70%);
-  opacity: 0.12;
+  opacity: 0.08;
 }
 
-/* WhatsApp Style Chat Bubbles */
+.chat-area-bg {
+  background-color: var(--base-color) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Mobile chat background styling */
+@media (max-width: 1023px) {
+  .chat-area-bg {
+    background-image: url('/chat-bg-light.png');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: cover;
+  }
+
+  .dark .chat-area-bg {
+    background-image: url('/chat-bg-dark.jpg');
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-size: cover;
+  }
+
+  .chat-bg-gradient {
+    display: none;
+  }
+}
+
+/* Glassmorphism Card Base */
+.glass-card {
+  background: var(--elevated-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-color-hover);
+}
+
+/* Glass Header */
+.glass-header {
+  background: color-mix(in srgb, var(--elevated-color) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Input Field - Design System v2 */
+.design-input {
+  background: var(--input-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.design-input:focus {
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-500) 10%, transparent);
+  outline: none;
+}
+
+/* Modern Chat Bubbles - Design System v2 Updated */
 .message-bubble {
   position: relative;
-  max-width: 85%;
-  padding: 6px 10px 8px;
-  box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
-  @apply transition-all duration-200;
+  width: fit-content;
+  min-width: 40%;
+  max-width: 80%;
+  transition: all 0.2s ease;
 }
 
-@media (min-width: 640px) {
-  .message-bubble {
-    max-width: 75%;
-  }
+.message-bubble-text.message-bubble-mine {
+  padding: 6px 16px 6px 12px;
+  border-radius: 8px 0px 8px 8px;
 }
 
-@media (min-width: 1024px) {
-  .message-bubble {
-    max-width: 70%;
-  }
+.message-bubble-text.message-bubble-other {
+  padding: 6px 16px 6px 12px;
+  border-radius: 0px 8px 8px 8px;
 }
 
+.message-bubble-media {
+  padding: 4px;
+}
+
+.message-bubble-media.message-bubble-mine {
+  border-radius: 8px 0px 8px 8px;
+}
+
+.message-bubble-media.message-bubble-other {
+  border-radius: 0px 8px 8px 8px;
+}
+
+/* Beautiful Gradients for Bubbles */
 .message-bubble-mine {
-  @apply bg-primary-600 text-white rounded-2xl rounded-tr-none;
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%);
+  color: #ffffff;
+  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.08),
+    0 0 10px color-mix(in srgb, var(--primary-500) 8%, transparent);
+}
+
+.dark .message-bubble-mine {
+  background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%);
+  color: #ffffff;
+  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.18),
+    0 0 12px color-mix(in srgb, var(--primary-500) 12%, transparent);
 }
 
 .message-bubble-other {
-  @apply bg-white dark:bg-slate-800 text-slate-950 dark:text-white rounded-2xl rounded-tl-none;
+  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Tails for bubbles */
-.message-bubble-mine::before {
+.dark .message-bubble-other {
+  background: linear-gradient(135deg, rgba(30, 30, 33, 0.9) 0%, rgba(20, 20, 22, 0.85) 100%);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* WhatsApp Style tails */
+.message-bubble::before {
   content: '';
   position: absolute;
   top: 0;
-  right: -8px;
-  width: 12px;
-  height: 12px;
+  width: 8px;
+  height: 13px;
   background: inherit;
-  clip-path: polygon(0 0, 0 100%, 100% 0);
-  z-index: -1;
+  z-index: 1;
+}
+
+.message-bubble-mine::before {
+  right: -8px;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
 }
 
 .message-bubble-other::before {
-  content: '';
-  position: absolute;
-  top: 0;
   left: -8px;
-  width: 12px;
-  height: 12px;
-  background: inherit;
-  clip-path: polygon(100% 0, 100% 100%, 0 0);
-  z-index: -1;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
 }
 
 .message-content {
-  @apply text-[15px] leading-relaxed sm:text-[16px];
+  font-size: 18px;
+  line-height: 1.5;
   overflow-wrap: anywhere;
   word-break: break-word;
   white-space: pre-wrap;
   display: inline;
 }
 
+@media (min-width: 640px) {
+  .message-content {
+    font-size: 20px;
+  }
+}
+
+/* Telegram-style inline spacer to wrap text around absolute timestamp */
+.message-content::after {
+  content: '';
+  display: inline-block;
+  height: 12px;
+}
+
+.message-bubble-mine .message-content::after {
+  width: 50px;
+  /* Space for time + ticks */
+}
+
+.message-bubble-other .message-content::after {
+  width: 35px;
+  /* Space for time only */
+}
+
 .message-meta {
-  @apply flex items-center justify-end gap-1 float-right mt-1 ml-4 relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  position: absolute;
+  bottom: 5px;
+  right: 10px;
   height: 16px;
   line-height: 1;
-  bottom: -4px;
+  white-space: nowrap;
   user-select: none;
+  z-index: 10;
 }
 
 .message-timestamp {
-  @apply text-[10px] font-medium opacity-70;
+  font-size: 11px;
+  /* slightly larger for readability */
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.75;
+}
+
+.message-bubble-mine .message-timestamp {
+  color: rgba(255, 255, 255, 0.7);
+  opacity: 0.85;
+}
+
+.message-bubble-mine .message-meta svg {
+  color: rgba(255, 255, 255, 0.7) !important;
+  opacity: 0.85;
+}
+
+.message-bubble-mine .message-meta svg.text-sky-400 {
+  color: #38bdf8 !important;
+  opacity: 1;
+}
+
+/* Media Overlay Style for Telegram-like Photo Timestamps */
+.message-bubble-media .message-meta {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 3px 8px;
+  border-radius: 9999px;
+  bottom: 12px;
+  right: 12px;
+  height: auto;
+}
+
+.message-bubble-media .message-meta .message-timestamp {
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 600;
+  opacity: 1;
+}
+
+.message-bubble-media .message-meta svg {
+  color: rgba(255, 255, 255, 0.9) !important;
+  opacity: 1;
+}
+
+.message-bubble-media .message-meta svg.text-sky-400 {
+  color: #38bdf8 !important;
 }
 
 /* Reply Preview Polishing */
 .reply-preview-bubble {
-  @apply mb-2 cursor-pointer rounded-xl border-l-[4px] border-primary-500 p-2.5 text-[11px] leading-tight transition-all;
+  margin-bottom: 8px;
+  cursor: pointer;
+  border-radius: 12px;
+  border-left-width: 4px;
+  border-left-color: var(--primary-500);
+  padding: 10px;
+  font-size: 11px;
+  line-height: 1.25;
+  transition: all 0.2s ease;
   background: rgba(0, 0, 0, 0.05);
 }
 
@@ -379,6 +685,65 @@ body {
 
 /* Media Messages */
 .media-container {
-  @apply relative overflow-hidden rounded-xl bg-black/5 dark:bg-white/5;
-  margin: -2px -6px 4px;
-}
+  position: relative;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.05);
+  margin: 0 0 4px;
+}
+
+.message-bubble-mine .media-container,
+.message-bubble-mine .media-container img {
+  border-radius: 6px 0 6px 6px;
+}
+
+.message-bubble-other .media-container,
+.message-bubble-other .media-container img {
+  border-radius: 0 6px 6px 6px;
+}
+
+/* Design System v2 Button Patterns */
+.btn-primary {
+  background: var(--primary-500);
+  color: #000000;
+  border-radius: 9999px;
+  font-weight: 700;
+  padding: 10px 24px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--primary-500) 90%, white);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--primary-500) 30%, transparent);
+}
+
+.btn-primary:active {
+  transform: scale(0.95);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 10px 24px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+}

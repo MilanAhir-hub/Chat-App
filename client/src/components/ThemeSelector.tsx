@@ -9,21 +9,21 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const themes: { name: string; value: Accent; color: string }[] = [
-    { name: 'Cyan', value: 'cyan', color: 'bg-cyan-500' },
-    { name: 'Teal', value: 'teal', color: 'bg-teal-500' },
-    { name: 'Emerald', value: 'emerald', color: 'bg-emerald-500' },
-    { name: 'Green', value: 'green', color: 'bg-green-500' },
-    { name: 'Lime', value: 'lime', color: 'bg-lime-500' },
-    { name: 'Yellow', value: 'yellow', color: 'bg-yellow-500' },
-    { name: 'Amber', value: 'amber', color: 'bg-amber-500' },
-    { name: 'Orange', value: 'orange', color: 'bg-orange-500' },
-    { name: 'Rose', value: 'rose', color: 'bg-rose-500' },
-    { name: 'Pink', value: 'pink', color: 'bg-pink-500' },
-    { name: 'Fuchsia', value: 'fuchsia', color: 'bg-fuchsia-500' },
-    { name: 'Violet', value: 'violet', color: 'bg-violet-500' },
-    { name: 'Indigo', value: 'indigo', color: 'bg-indigo-500' },
-    { name: 'Blue', value: 'blue', color: 'bg-blue-500' },
-    { name: 'Sky', value: 'sky', color: 'bg-sky-500' },
+    { name: 'Deep Slate', value: '#1A1D27', color: '#1A1D27' },
+    { name: 'Dark Gray', value: '#1C1C1E', color: '#1C1C1E' },
+    { name: 'Navy Blue', value: '#0D2137', color: '#0D2137' },
+    { name: 'WhatsApp Green', value: '#005C4B', color: '#005C4B' },
+    { name: 'WhatsApp Teal', value: '#1F2C34', color: '#1F2C34' },
+    { name: 'Dark Blue-Gray', value: '#182229', color: '#182229' },
+    { name: 'Discord Dark', value: '#1E1F22', color: '#1E1F22' },
+    { name: 'Space Cadet', value: '#0F1117', color: '#0F1117' },
+    { name: 'Midnight Blue', value: '#1B1F3B', color: '#1B1F3B' },
+    { name: 'Dark Purple', value: '#1A0533', color: '#1A0533' },
+    { name: 'Deep Space', value: '#0A1628', color: '#0A1628' },
+    { name: 'Dark Plum', value: '#1F1B2E', color: '#1F1B2E' },
+    { name: 'Forest Green', value: '#0D1F12', color: '#0D1F12' },
+    { name: 'Steel Blue', value: '#162032', color: '#162032' },
+    { name: 'Gothic Purple', value: '#1C1A2E', color: '#1C1A2E' },
   ];
 
   // Close when clicking outside
@@ -50,7 +50,7 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
             ? 'border-primary-500 bg-primary-50 text-primary-600 dark:bg-primary-950/30' 
             : 'border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
         }`}
-        title="Change Accent Color"
+        title="Change Theme Color"
       >
         <HugeiconsIcon icon={PaintBrush01Icon} size={18} />
       </button>
@@ -69,7 +69,7 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
                   accent === theme.value ? 'bg-slate-100 dark:bg-slate-900 ring-1 ring-primary-500' : ''
                 }`}
               >
-                <span className={`h-4 w-4 rounded-full ${theme.color}`} />
+                <span className="h-4 w-4 rounded-full border border-slate-200 dark:border-slate-800" style={{ backgroundColor: theme.color }} />
                 <span className="flex-1 text-left">{theme.name}</span>
                 {accent === theme.value && (
                   <span className="h-1.5 w-1.5 rounded-full bg-primary-500" />
@@ -91,7 +91,7 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
               }`}
               title={theme.name}
             >
-              <span className={`h-full w-full rounded-full ${theme.color} shadow-sm`} />
+              <span className="h-full w-full rounded-full shadow-sm border border-slate-200 dark:border-slate-800" style={{ backgroundColor: theme.color }} />
               {accent === theme.value && (
                 <span className="absolute inset-0 flex items-center justify-center">
                   <span className="h-1.5 w-1.5 rounded-full bg-white shadow-sm" />

@@ -9,7 +9,7 @@ import {
 import type { ReactNode } from 'react';
 
 type Theme = 'light' | 'dark';
-export type Accent = 'cyan' | 'indigo' | 'emerald' | 'rose' | 'amber' | 'teal' | 'green' | 'blue' | 'violet' | 'orange' | 'fuchsia' | 'sky' | 'lime' | 'yellow' | 'pink';
+export type Accent = '#1A1D27' | '#1C1C1E' | '#0D2137' | '#005C4B' | '#1F2C34' | '#182229' | '#1E1F22' | '#0F1117' | '#1B1F3B' | '#1A0533' | '#0A1628' | '#1F1B2E' | '#0D1F12' | '#162032' | '#1C1A2E';
 
 interface ThemeContextValue {
   theme: Theme;
@@ -33,11 +33,11 @@ const getInitialTheme = (): Theme => {
 const getInitialAccent = (): Accent => {
   const savedAccent = localStorage.getItem('accent') as Accent;
   const validAccents: Accent[] = [
-    'cyan', 'indigo', 'emerald', 'rose', 'amber',
-    'teal', 'green', 'blue', 'violet', 'orange',
-    'fuchsia', 'sky', 'lime', 'yellow', 'pink'
+    '#1A1D27', '#1C1C1E', '#0D2137', '#005C4B', '#1F2C34',
+    '#182229', '#1E1F22', '#0F1117', '#1B1F3B', '#1A0533',
+    '#0A1628', '#1F1B2E', '#0D1F12', '#162032', '#1C1A2E'
   ];
-  return validAccents.includes(savedAccent) ? savedAccent : 'cyan';
+  return validAccents.includes(savedAccent) ? savedAccent : '#1A1D27';
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
@@ -50,7 +50,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   }, [theme]);
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-accent', accent);
+    document.documentElement.setAttribute('data-accent', accent.replace('#', '').toLowerCase());
     localStorage.setItem('accent', accent);
   }, [accent]);
 
