@@ -66,7 +66,7 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
                   setAccent(theme.value);
                   setIsOpen(false);
                 }}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-slate-50 dark:hover:bg-slate-900 ${
+                className={`flex items-center gap-3 rounded-full px-3 py-2 text-sm font-semibold transition hover:bg-slate-50 dark:hover:bg-slate-900 ${
                   accent === theme.value ? 'bg-slate-100 dark:bg-slate-900 ring-1 ring-primary-500' : ''
                 }`}
               >

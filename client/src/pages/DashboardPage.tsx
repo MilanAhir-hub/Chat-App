@@ -200,7 +200,7 @@ export const DashboardPage = () => {
             onClick={() => handleTabChange('secure')}
             className={`rounded-full px-5 py-2 text-xs font-bold transition-all sm:text-sm cursor-pointer ${
               activeTab === 'secure'
-                ? 'bg-emerald-650 text-white shadow-md'
+                ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-950 shadow-md'
                 : 'text-slate-600 hover:text-slate-850 dark:text-slate-400 dark:hover:text-slate-200'
             }`}
           >
@@ -308,7 +308,7 @@ export const DashboardPage = () => {
           <div className="glass-card p-4 sm:p-6 md:p-8 shadow-lg">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-4 dark:border-slate-855">
               <div className="min-w-0">
-                <h2 className="text-xl font-extrabold sm:text-2xl flex items-center gap-2 text-emerald-650 dark:text-emerald-400">
+                <h2 className="text-xl font-extrabold sm:text-2xl flex items-center gap-2 text-slate-900 dark:text-white">
                   🔒 Secure Conversations
                 </h2>
                 <p className="text-xs text-text-secondary mt-1">
@@ -317,7 +317,7 @@ export const DashboardPage = () => {
               </div>
               <button
                 onClick={() => setShowSecureModal(true)}
-                className="w-full sm:w-auto justify-center rounded-full bg-emerald-650 hover:bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white transition active:scale-[0.98] flex items-center gap-1.5 sm:text-sm shadow-md cursor-pointer whitespace-nowrap"
+                className="w-full sm:w-auto justify-center rounded-full bg-slate-900 hover:bg-slate-800 px-5 py-2.5 text-xs font-bold text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 transition active:scale-[0.98] flex items-center gap-1.5 sm:text-sm shadow-md cursor-pointer whitespace-nowrap"
               >
                 <span>+</span> New Secure Chat
               </button>
@@ -344,7 +344,7 @@ export const DashboardPage = () => {
                 </p>
                 <button
                   onClick={() => setShowSecureModal(true)}
-                  className="mt-6 rounded-full border border-emerald-600 px-5 py-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition sm:text-sm cursor-pointer"
+                  className="mt-6 rounded-full border border-slate-900 px-5 py-2.5 text-xs font-bold text-slate-900 hover:bg-slate-100 dark:border-white dark:text-white dark:hover:bg-slate-900 transition sm:text-sm cursor-pointer"
                 >
                   Start Chatting
                 </button>
@@ -416,7 +416,7 @@ export const DashboardPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="w-full max-w-md rounded-2xl bg-white/95 dark:bg-slate-900/95 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 backdrop-blur-md animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between border-b border-slate-105 pb-3 dark:border-slate-800">
-              <h3 className="text-lg font-bold text-emerald-650 dark:text-emerald-400 flex items-center gap-1.5">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 🔒 Start Secure Chat
               </h3>
               <button
@@ -444,18 +444,18 @@ export const DashboardPage = () => {
             {!selectedUser ? (
               /* Search User Screen */
               <div className="mt-4 space-y-4">
-                <form onSubmit={handleUserSearch} className="flex gap-2">
+                <form onSubmit={handleUserSearch} className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by name or email..."
-                    className="design-input flex-1 px-3.5 py-2 text-sm outline-none"
+                    className="design-input flex-1 min-w-0 px-5 py-2 text-sm outline-none"
                   />
                   <button
                     type="submit"
                     disabled={searchingUsers || !searchQuery.trim()}
-                    className="rounded-full bg-slate-900 px-5 py-2 text-xs font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
+                    className="rounded-full bg-slate-900 px-5 py-2 text-sm font-bold text-white hover:bg-slate-800 dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 disabled:opacity-50 cursor-pointer shrink-0 w-full sm:w-auto"
                   >
                     {searchingUsers ? '...' : 'Search'}
                   </button>
@@ -477,7 +477,7 @@ export const DashboardPage = () => {
                           <p className="text-sm font-bold">{usr.name}</p>
                           <p className="text-[11px] text-text-secondary">{usr.email}</p>
                         </div>
-                        <span className="text-[10px] font-bold text-emerald-650 dark:text-emerald-400">
+                        <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                           Select ➔
                         </span>
                       </div>
@@ -511,7 +511,7 @@ export const DashboardPage = () => {
                       value={securePassword}
                       onChange={(e) => setSecurePassword(e.target.value)}
                       placeholder="Min 8 characters..."
-                      className="design-input mt-1 w-full px-3.5 py-2.5 text-sm outline-none"
+                      className="design-input mt-1 w-full px-5 py-2.5 text-sm outline-none"
                       required
                     />
                   </div>
@@ -525,7 +525,7 @@ export const DashboardPage = () => {
                       value={secureConfirmPassword}
                       onChange={(e) => setSecureConfirmPassword(e.target.value)}
                       placeholder="Repeat password..."
-                      className="design-input mt-1 w-full px-3.5 py-2.5 text-sm outline-none"
+                      className="design-input mt-1 w-full px-5 py-2.5 text-sm outline-none"
                       required
                     />
                   </div>
@@ -534,7 +534,7 @@ export const DashboardPage = () => {
                 <button
                   type="submit"
                   disabled={isCreatingSecure || !securePassword || !secureConfirmPassword}
-                  className="w-full rounded-full bg-emerald-650 py-3.5 text-sm font-bold text-white hover:bg-emerald-600 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md"
+                  className="w-full rounded-full bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-950 dark:hover:bg-slate-200 transition active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md"
                 >
                   {isCreatingSecure ? 'Creating Secure Chat...' : 'Start Secure Conversation'}
                 </button>

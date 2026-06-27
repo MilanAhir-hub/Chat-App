@@ -843,7 +843,7 @@ export const SecureChatPage = () => {
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               placeholder="Enter password..."
-              className="w-full rounded-2xl border border-slate-800 bg-slate-900/60 px-5 py-4 text-center text-lg tracking-widest outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+              className="w-full rounded-full border border-slate-800 bg-slate-900/60 px-5 py-4 text-center text-lg tracking-widest outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
               required
               autoFocus
             />
@@ -858,14 +858,14 @@ export const SecureChatPage = () => {
               <button
                 type="button"
                 onClick={() => navigate('/dashboard')}
-                className="flex-1 rounded-2xl border border-slate-800 bg-transparent py-4 text-xs font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-900 hover:text-white"
+                className="flex-1 rounded-full border border-slate-800 bg-transparent py-4 text-xs font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-900 hover:text-white"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isUnlocking}
-                className="flex-[2] rounded-2xl bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 active:scale-[0.98]"
+                className="flex-[2] rounded-full bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 active:scale-[0.98]"
               >
                 {isUnlocking ? 'Unlocking...' : 'Unlock'}
               </button>
@@ -895,7 +895,7 @@ export const SecureChatPage = () => {
             <button
               type="button"
               onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-lg p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
+              className="rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
               title="Toggle Sidebar"
             >
               <HugeiconsIcon icon={Menu01Icon} size={20} />
@@ -923,7 +923,7 @@ export const SecureChatPage = () => {
               type="button"
               onClick={handleGoToTemporaryRoom}
               disabled={isCreatingTempRoom}
-              className="flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-950/20 px-2.5 py-1.5 text-[11px] font-extrabold text-emerald-400 shadow-sm transition hover:bg-emerald-500 hover:text-white active:scale-95 disabled:opacity-40"
+              className="flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-950/20 px-2.5 py-1.5 text-[11px] font-extrabold text-emerald-400 shadow-sm transition hover:bg-emerald-500 hover:text-white active:scale-95 disabled:opacity-40"
               title="Create a temporary rooms workspace for this conversation"
             >
               <span>⚡</span>
@@ -939,7 +939,7 @@ export const SecureChatPage = () => {
             <button
               type="button"
               onClick={() => setSoundEnabled((current) => !current)}
-              className="hidden rounded-lg p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
+              className="hidden rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
               title={soundEnabled ? 'Mute' : 'Unmute'}
             >
               <HugeiconsIcon icon={soundEnabled ? VolumeHighIcon : VolumeMuteIcon} size={20} />
@@ -948,7 +948,7 @@ export const SecureChatPage = () => {
             <button
               type="button"
               onClick={handleLeaveChat}
-              className="ml-1 flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
             >
               <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
               <span className="hidden sm:inline">Back</span>
@@ -1525,7 +1525,7 @@ export const SecureChatPage = () => {
               </div>
 
               {/* Text Input Container */}
-              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-[28px] px-2 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
+              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-full px-3 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker((current) => !current)}
@@ -1619,13 +1619,13 @@ export const SecureChatPage = () => {
             </p>
             <button
               onClick={() => navigate(`/rooms/${tempRoomInvite.roomId}`)}
-              className="w-full rounded-2xl bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-500 transition active:scale-[0.98]"
+              className="w-full rounded-full bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-500 transition active:scale-[0.98]"
             >
               Join Now
             </button>
             <button
               onClick={() => setTempRoomInvite(null)}
-              className="mt-3 w-full rounded-2xl bg-slate-850 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 transition"
+              className="mt-3 w-full rounded-full bg-slate-850 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 transition"
             >
               Dismiss
             </button>

@@ -852,7 +852,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-lg p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
+              className="rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
               title="Toggle Sidebar"
             >
               <HugeiconsIcon icon={Menu01Icon} size={20} />
@@ -869,7 +869,7 @@ export const ChatRoomPage = () => {
                 <button
                   type="button"
                   onClick={copyRoomId}
-                  className="rounded-md p-1 text-slate-400 transition-all duration-150 hover:bg-slate-100 hover:text-slate-700 active:scale-90 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                  className="rounded-full p-1 text-slate-400 transition-all duration-150 hover:bg-slate-100 hover:text-slate-700 active:scale-90 dark:hover:bg-slate-800 dark:hover:text-slate-300"
                   title="Copy Room ID"
                 >
                   <HugeiconsIcon icon={Copy01Icon} size={14} />
@@ -894,7 +894,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={() => setSoundEnabled((current) => !current)}
-              className="hidden rounded-lg p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
+              className="hidden rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
               title={soundEnabled ? 'Mute' : 'Unmute'}
             >
               <HugeiconsIcon icon={soundEnabled ? VolumeHighIcon : VolumeMuteIcon} size={20} />
@@ -905,7 +905,7 @@ export const ChatRoomPage = () => {
                 type="button"
                 onClick={closeRoom}
                 disabled={isClosing}
-                className="rounded-lg p-2 text-red-500 transition-all duration-150 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                className="rounded-full p-2 text-red-500 transition-all duration-150 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-red-950/30 dark:hover:text-red-400"
                 title="Close Room"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
@@ -915,7 +915,7 @@ export const ChatRoomPage = () => {
             <button
               type="button"
               onClick={leaveRoom}
-              className="ml-1 flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
             >
               <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
               <span className="hidden sm:inline">Leave</span>
@@ -1549,7 +1549,7 @@ export const ChatRoomPage = () => {
                 )}
               </div>
 
-              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-[28px] px-2 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
+              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-full px-3 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker((current) => !current)}

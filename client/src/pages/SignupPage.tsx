@@ -58,7 +58,7 @@ export const SignupPage = () => {
             <HugeiconsIcon
               icon={UserIcon}
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-3.5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
             />
             <input
               type="text"
@@ -67,7 +67,7 @@ export const SignupPage = () => {
               onChange={(event) =>
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
-              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-9 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-10 sm:text-base"
+              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
               placeholder="Milan"
             />
           </div>
@@ -79,7 +79,7 @@ export const SignupPage = () => {
             <HugeiconsIcon
               icon={Mail02Icon}
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-3.5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
             />
             <input
               type="text"
@@ -90,7 +90,7 @@ export const SignupPage = () => {
               onChange={(event) =>
                 setForm((current) => ({ ...current, email: event.target.value }))
               }
-              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-9 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-10 sm:text-base"
+              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
               placeholder="you@example.com"
             />
           </div>
@@ -102,7 +102,7 @@ export const SignupPage = () => {
             <HugeiconsIcon
               icon={SquareLockPasswordIcon}
               size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-3.5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
             />
             <input
               type={showPassword ? 'text' : 'password'}
@@ -116,13 +116,13 @@ export const SignupPage = () => {
                   password: event.target.value,
                 }))
               }
-              className="w-full rounded-lg border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-9 pr-12 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-10 sm:text-base"
+              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-12 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
               placeholder="At least 8 characters"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 -mr-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
               title={showPassword ? 'Hide password' : 'Show password'}
             >
               <HugeiconsIcon icon={showPassword ? ViewOffSlashIcon : ViewIcon} size={18} />

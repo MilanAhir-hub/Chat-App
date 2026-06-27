@@ -471,7 +471,7 @@ body {
 .design-input {
   background: var(--input-color);
   border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border-radius: 9999px;
   color: var(--text-primary);
   transition: all 0.2s ease;
 }
@@ -726,7 +726,7 @@ body {
   background: transparent;
   border: 1px solid var(--border-color);
   color: var(--text-primary);
-  border-radius: 8px;
+  border-radius: 9999px;
   font-weight: 600;
   padding: 10px 24px;
   transition: all 0.2s ease;
