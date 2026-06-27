@@ -686,6 +686,9 @@ export const ChatRoomPage = () => {
         }
       }
     );
+
+    // Refocus input field to keep keyboard open on mobile
+    textareaRef.current?.focus();
   };
 
   const sendFile = async (event: ChangeEvent<HTMLInputElement>) => {

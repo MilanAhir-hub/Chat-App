@@ -712,6 +712,9 @@ export const SecureChatPage = () => {
         }
       }
     );
+
+    // Refocus input field to keep keyboard open on mobile
+    textareaRef.current?.focus();
   };
 
   const sendFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -1557,6 +1560,7 @@ export const SecureChatPage = () => {
               <button
                 type="submit"
                 disabled={!messageText.trim()}
+                onMouseDown={(e) => e.preventDefault()}
                 className="flex-shrink-0 mb-0.5 rounded-full bg-primary-600 p-3 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
               >
                 <HugeiconsIcon icon={SentIcon} size={26} />
