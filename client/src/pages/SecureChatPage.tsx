@@ -30,7 +30,7 @@ import {
   TickDouble02Icon,
   PaintBrush01Icon,
 } from '@hugeicons/core-free-icons';
-import EmojiPicker from 'emoji-picker-react';
+import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector, themes } from '../components/ThemeSelector';
 import { Loader } from '../components/Loader';
