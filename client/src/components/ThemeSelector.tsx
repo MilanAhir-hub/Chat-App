@@ -3,28 +3,29 @@ import { useTheme, type Accent } from '../context/ThemeContext';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PaintBrush01Icon } from '@hugeicons/core-free-icons';
 
+export const themes: { name: string; value: Accent; color: string }[] = [
+  { name: 'Deep Slate', value: '#1A1D27', color: '#1A1D27' },
+  { name: 'Dark Gray', value: '#1C1C1E', color: '#1C1C1E' },
+  { name: 'Navy Blue', value: '#0D2137', color: '#0D2137' },
+  { name: 'WhatsApp Green', value: '#005C4B', color: '#005C4B' },
+  { name: 'WhatsApp Teal', value: '#1F2C34', color: '#1F2C34' },
+  { name: 'Dark Blue-Gray', value: '#182229', color: '#182229' },
+  { name: 'Discord Dark', value: '#1E1F22', color: '#1E1F22' },
+  { name: 'Space Cadet', value: '#0F1117', color: '#0F1117' },
+  { name: 'Midnight Blue', value: '#1B1F3B', color: '#1B1F3B' },
+  { name: 'Dark Purple', value: '#1A0533', color: '#1A0533' },
+  { name: 'Deep Space', value: '#0A1628', color: '#0A1628' },
+  { name: 'Dark Plum', value: '#1F1B2E', color: '#1F1B2E' },
+  { name: 'Forest Green', value: '#0D1F12', color: '#0D1F12' },
+  { name: 'Steel Blue', value: '#162032', color: '#162032' },
+  { name: 'Gothic Purple', value: '#1C1A2E', color: '#1C1A2E' },
+];
+
 export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
   const { accent, setAccent } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const themes: { name: string; value: Accent; color: string }[] = [
-    { name: 'Deep Slate', value: '#1A1D27', color: '#1A1D27' },
-    { name: 'Dark Gray', value: '#1C1C1E', color: '#1C1C1E' },
-    { name: 'Navy Blue', value: '#0D2137', color: '#0D2137' },
-    { name: 'WhatsApp Green', value: '#005C4B', color: '#005C4B' },
-    { name: 'WhatsApp Teal', value: '#1F2C34', color: '#1F2C34' },
-    { name: 'Dark Blue-Gray', value: '#182229', color: '#182229' },
-    { name: 'Discord Dark', value: '#1E1F22', color: '#1E1F22' },
-    { name: 'Space Cadet', value: '#0F1117', color: '#0F1117' },
-    { name: 'Midnight Blue', value: '#1B1F3B', color: '#1B1F3B' },
-    { name: 'Dark Purple', value: '#1A0533', color: '#1A0533' },
-    { name: 'Deep Space', value: '#0A1628', color: '#0A1628' },
-    { name: 'Dark Plum', value: '#1F1B2E', color: '#1F1B2E' },
-    { name: 'Forest Green', value: '#0D1F12', color: '#0D1F12' },
-    { name: 'Steel Blue', value: '#162032', color: '#162032' },
-    { name: 'Gothic Purple', value: '#1C1A2E', color: '#1C1A2E' },
-  ];
 
   // Close when clicking outside
   useEffect(() => {

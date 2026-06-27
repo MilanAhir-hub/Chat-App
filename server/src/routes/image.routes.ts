@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import https from 'https';
 import { Message } from '../models/Message';
+import { SecureMessage } from '../models/SecureMessage';
 import { asyncHandler } from '../utils/asyncHandler';
 import { decrypt } from '../utils/crypto';
 import { decryptImageBuffer, IV_HEX_LENGTH } from '../utils/imageCrypto';
@@ -9,7 +10,11 @@ import { AppError } from '../utils/AppError';
 const router = Router();
 
 router.get('/:messageId', asyncHandler(async (req, res) => {
-  const message = await Message.findById(req.params.messageId);
+  let message = await Message.findById(req.params.messageId) as any;
+
+  if (!message) {
+    message = await SecureMessage.findById(req.params.messageId);
+  }
 
   if (!message || message.type !== 'file') {
     throw new AppError('Image not found.', 404);

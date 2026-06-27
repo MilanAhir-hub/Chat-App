@@ -3,6 +3,7 @@ import { Server, type Socket } from 'socket.io';
 import { env } from '../config/env';
 import { User } from '../models/User';
 import { Room } from '../models/Room';
+import { initializeSecureSocket } from './secureSocket';
 import {
   createFileMessage,
   createTextMessage,
@@ -392,6 +393,8 @@ export const initializeSocket = (server: http.Server) => {
       }
     });
   });
+
+  initializeSecureSocket(io);
 
   return io;
 };

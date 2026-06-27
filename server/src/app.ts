@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import roomRoutes from './routes/room.routes';
 import imageRoutes from './routes/image.routes';
+import secureChatRoutes from './routes/secureChat.routes';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware';
 
@@ -29,6 +30,7 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/secure-chats', secureChatRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

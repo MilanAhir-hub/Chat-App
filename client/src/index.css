@@ -586,12 +586,12 @@ body {
 }
 
 .message-bubble-mine .message-content::after {
-  width: 50px;
+  width: 75px;
   /* Space for time + ticks */
 }
 
 .message-bubble-other .message-content::after {
-  width: 35px;
+  width: 55px;
   /* Space for time only */
 }
 

@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ChatRoomPage } from './pages/ChatRoomPage';
+import { SecureChatPage } from './pages/SecureChatPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
@@ -23,6 +24,7 @@ function App() {
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/rooms/:roomId" element={<ChatRoomPage />} />
+              <Route path="/secure-chats/:chatId" element={<SecureChatPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
