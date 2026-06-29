@@ -583,6 +583,32 @@ export const SecureChatPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
+  // Manage visual viewport height to prevent keyboard overlapping input bar
+  useEffect(() => {
+    if (!window.visualViewport) return;
+
+    const handleResize = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
+      // Scroll to bottom when keyboard opens
+      setTimeout(() => {
+        scrollToBottom('auto');
+      }, 100);
+    };
+
+    window.visualViewport.addEventListener('resize', handleResize);
+    window.visualViewport.addEventListener('scroll', handleResize);
+    // Initial call
+    handleResize();
+
+    return () => {
+      window.visualViewport?.removeEventListener('resize', handleResize);
+      window.visualViewport?.removeEventListener('scroll', handleResize);
+      document.documentElement.style.removeProperty('--visual-viewport-height');
+    };
+  }, [scrollToBottom]);
+
   // Handle camera trigger
   useEffect(() => {
     if (!showCamera) return;
@@ -890,7 +916,10 @@ export const SecureChatPage = () => {
 
   // 3. UNLOCKED CHAT VIEW (Emerald / Purple Accent theme)
   return (
-    <main className="fixed inset-0 flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden">
+    <main
+      style={{ height: 'var(--visual-viewport-height, 100dvh)' }}
+      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden"
+    >
       <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/98 px-3 py-0 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/98 sm:px-6">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 sm:gap-4">
           {/* Identity */}
