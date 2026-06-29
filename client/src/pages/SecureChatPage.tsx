@@ -613,12 +613,15 @@ export const SecureChatPage = () => {
   useEffect(() => {
     if (!showCamera) return;
 
+    let activeStream: MediaStream | null = null;
     const currentVideo = videoRef.current;
+
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: facingMode } },
         });
+        activeStream = stream;
         if (currentVideo) {
           currentVideo.srcObject = stream;
         }
@@ -631,9 +634,11 @@ export const SecureChatPage = () => {
     void startCamera();
 
     return () => {
-      if (currentVideo?.srcObject) {
-        const stream = currentVideo.srcObject as MediaStream;
-        stream.getTracks().forEach((track) => track.stop());
+      if (activeStream) {
+        activeStream.getTracks().forEach((track) => track.stop());
+      }
+      if (currentVideo) {
+        currentVideo.srcObject = null;
       }
     };
   }, [showCamera, facingMode]);

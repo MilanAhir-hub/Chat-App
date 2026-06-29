@@ -592,13 +592,17 @@ export const ChatRoomPage = () => {
   useEffect(() => {
     if (!showCamera) return;
 
+    let activeStream: MediaStream | null = null;
+    const currentVideo = videoRef.current;
+
     const startCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: { ideal: facingMode } }
         });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        activeStream = stream;
+        if (currentVideo) {
+          currentVideo.srcObject = stream;
         }
       } catch (err) {
         console.error('Camera access error:', err);
@@ -609,9 +613,11 @@ export const ChatRoomPage = () => {
     void startCamera();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+      if (activeStream) {
+        activeStream.getTracks().forEach(track => track.stop());
+      }
+      if (currentVideo) {
+        currentVideo.srcObject = null;
       }
     };
   }, [showCamera, facingMode]);
