@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector } from '../components/ThemeSelector';
+import { GlassThemeToggle } from '../components/GlassThemeToggle';
 import { useAuth } from '../context/AuthContext';
 import { Loader } from '../components/Loader';
 import { getErrorMessage } from '../services/http';
@@ -171,6 +172,7 @@ export const DashboardPage = () => {
           </div>
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <ThemeSelector />
+            <GlassThemeToggle />
             <ThemeToggle />
             <button
               type="button"

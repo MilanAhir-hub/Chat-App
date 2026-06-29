@@ -33,6 +33,7 @@ import {
 import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector, themes } from '../components/ThemeSelector';
+import { GlassThemeToggle } from '../components/GlassThemeToggle';
 import { Loader } from '../components/Loader';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -970,6 +971,7 @@ export const SecureChatPage = () => {
 
             <div className="hidden items-center gap-0.5 lg:flex">
               <ThemeSelector />
+              <GlassThemeToggle />
               <ThemeToggle />
             </div>
 
