@@ -255,7 +255,12 @@ export const ChatRoomPage = () => {
   }, [soundEnabled]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    bottomRef.current?.scrollIntoView({ behavior });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior,
+      });
+    }
     setUnreadCount(0);
     setShowScrollButton(false);
     isAtBottomRef.current = true;
@@ -301,8 +306,13 @@ export const ChatRoomPage = () => {
 
   const scrollToMessage = (id: string) => {
     const element = document.getElementById(`msg-${id}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (element && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const elementTop = element.offsetTop;
+      container.scrollTo({
+        top: elementTop - container.clientHeight / 2 + element.clientHeight / 2,
+        behavior: 'smooth',
+      });
       // Add a temporary subtle highlight like WhatsApp
       element.classList.add('bg-primary-500/20', 'dark:bg-primary-500/30', 'transition-colors', 'duration-500');
       setTimeout(() => {
@@ -572,20 +582,31 @@ export const ChatRoomPage = () => {
       const vv = window.visualViewport;
       if (!vv) return;
       document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
       // Scroll to bottom when keyboard opens
       setTimeout(() => {
+        window.scrollTo(0, 0);
         scrollToBottom('auto');
       }, 100);
     };
 
+    const handleWindowScroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
     window.visualViewport.addEventListener('resize', handleResize);
     window.visualViewport.addEventListener('scroll', handleResize);
+    window.addEventListener('scroll', handleWindowScroll);
     // Initial call
     handleResize();
 
     return () => {
       window.visualViewport?.removeEventListener('resize', handleResize);
       window.visualViewport?.removeEventListener('scroll', handleResize);
+      window.removeEventListener('scroll', handleWindowScroll);
       document.documentElement.style.removeProperty('--visual-viewport-height');
     };
   }, [scrollToBottom]);
@@ -1606,6 +1627,13 @@ export const ChatRoomPage = () => {
                   ref={textareaRef}
                   value={messageText}
                   onChange={(event) => handleMessageChange(event.target.value)}
+                  onFocus={() => {
+                    window.scrollTo(0, 0);
+                    setTimeout(() => {
+                      window.scrollTo(0, 0);
+                      scrollToBottom('auto');
+                    }, 100);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {
                       event.preventDefault();

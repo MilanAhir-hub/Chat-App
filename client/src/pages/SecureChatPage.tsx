@@ -251,7 +251,12 @@ export const SecureChatPage = () => {
   }, [activeChatId]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    bottomRef.current?.scrollIntoView({ behavior });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior,
+      });
+    }
     setUnreadCount(0);
     setShowScrollButton(false);
     isAtBottomRef.current = true;
@@ -292,8 +297,13 @@ export const SecureChatPage = () => {
 
   const scrollToMessage = (id: string) => {
     const element = document.getElementById(`msg-${id}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (element && scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const elementTop = element.offsetTop;
+      container.scrollTo({
+        top: elementTop - container.clientHeight / 2 + element.clientHeight / 2,
+        behavior: 'smooth',
+      });
       element.classList.add('bg-emerald-500/20', 'dark:bg-emerald-500/30', 'transition-colors', 'duration-500');
       setTimeout(() => {
         element.classList.remove('bg-emerald-500/20', 'dark:bg-emerald-500/30');
@@ -592,20 +602,31 @@ export const SecureChatPage = () => {
       const vv = window.visualViewport;
       if (!vv) return;
       document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
       // Scroll to bottom when keyboard opens
       setTimeout(() => {
+        window.scrollTo(0, 0);
         scrollToBottom('auto');
       }, 100);
     };
 
+    const handleWindowScroll = () => {
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+
     window.visualViewport.addEventListener('resize', handleResize);
     window.visualViewport.addEventListener('scroll', handleResize);
+    window.addEventListener('scroll', handleWindowScroll);
     // Initial call
     handleResize();
 
     return () => {
       window.visualViewport?.removeEventListener('resize', handleResize);
       window.visualViewport?.removeEventListener('scroll', handleResize);
+      window.removeEventListener('scroll', handleWindowScroll);
       document.documentElement.style.removeProperty('--visual-viewport-height');
     };
   }, [scrollToBottom]);
@@ -1581,6 +1602,13 @@ export const SecureChatPage = () => {
                   ref={textareaRef}
                   value={messageText}
                   onChange={(event) => handleMessageChange(event.target.value)}
+                  onFocus={() => {
+                    window.scrollTo(0, 0);
+                    setTimeout(() => {
+                      window.scrollTo(0, 0);
+                      scrollToBottom('auto');
+                    }, 100);
+                  }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {
                       event.preventDefault();
