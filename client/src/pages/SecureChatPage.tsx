@@ -9,7 +9,9 @@ import {
 import { createPortal } from 'react-dom';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { AnimatedPlaceholder } from '../components/AnimatedPlaceholder';
 import { ThemeToggle } from '../components/ThemeToggle';
+import { ThemeSelector } from '../components/ThemeSelector';
 import { GlassThemeToggle } from '../components/GlassThemeToggle';
 import { Loader } from '../components/Loader';
 import { useTheme } from '../context/ThemeContext';
@@ -36,6 +38,7 @@ import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { getThemePureColor } from '../config/themes';
+import { AppSidebar } from '../components/AppSidebar';
 import { AmbientGradient } from '../components/AmbientGradient';
 import { triggerAmbientPulse } from '../hooks/useAmbientGradient';
 
@@ -147,6 +150,7 @@ interface SecureMessageBubbleProps {
   message: SecureChatMessage;
   isConsecutive: boolean;
   currentUserId: string;
+  showTimestamp: boolean;
   onReply: (message: SecureChatMessage) => void;
   onScrollToMessage: (id: string) => void;
   onOpenFullscreen: (url: string) => void;
@@ -156,6 +160,7 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
   message,
   isConsecutive,
   currentUserId,
+  showTimestamp,
   onReply,
   onScrollToMessage,
   onOpenFullscreen,
@@ -167,20 +172,20 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
   return (
     <article
       id={`msg-${message.id}`}
-      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-        isMine ? 'justify-end' : 'justify-start'
+      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 w-full ${
+        isMine ? 'justify-end pl-10 sm:pl-16' : 'justify-start pr-10 sm:pr-16'
       } ${isConsecutive ? 'mt-[3px]' : 'mt-4'}`}
     >
       <SwipeableMessage isMine={isMine} onReply={() => onReply(message)}>
         <div
-          className={`group relative flex flex-col transition-opacity duration-300 ${
+          className={`group relative flex flex-col transition-opacity duration-300 max-w-full ${
             isMine ? 'items-end' : 'items-start'
           } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
         >
           <div
             className={`message-bubble ${
               isMine ? 'message-bubble-mine' : 'message-bubble-other'
-            } ${
+            } ${showTimestamp ? 'has-timestamp' : ''} ${
               message.type === 'file' || isImageMessage(message)
                 ? 'message-bubble-media'
                 : isEmojiOnly
@@ -195,18 +200,21 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
                   onClick={() => message.replyTo && onScrollToMessage(message.replyTo.id)}
                   className="reply-preview-bubble text-left cursor-pointer"
                 >
-                  <p className="font-bold text-[var(--color-primary)] text-[11px] mb-0.5">
-                    {message.replyTo.senderName}
-                  </p>
-                  <div className="flex items-center gap-1.5 opacity-90">
+                  <div className="flex items-center gap-1">
+                    <MaterialIcon icon="reply" size={13} className="shrink-0 opacity-70" />
+                    <p className="reply-sender text-xs font-bold truncate">
+                      {message.replyTo.senderName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 opacity-85 pl-4">
                     {message.replyTo.content.includes('cloudinary.com') ||
                     /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content) ? (
                       <>
-                        <MaterialIcon icon="image" size={14} />
-                        <span className="text-[11px] italic">Photo</span>
+                        <MaterialIcon icon="image" size={13} />
+                        <span className="text-[11.5px] italic">Photo</span>
                       </>
                     ) : (
-                      <p className="truncate line-clamp-2 italic text-[11px]">
+                      <p className="truncate line-clamp-1 text-[11.5px]">
                         {message.replyTo.content}
                       </p>
                     )}
@@ -267,36 +275,21 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
                   </div>
                 </a>
               ) : (
-                <div className="block text-left">
+                <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-0.5 text-left">
                   <span className="message-content">{message.content}</span>
+                  {showTimestamp && (
+                    <span className="message-timestamp select-none ml-auto shrink-0 leading-none pb-0.5">
+                      {formatTime(message.createdAt)}
+                    </span>
+                  )}
                 </div>
               )}
 
-              {/* Timestamp & Status Indicator */}
-              <div className="message-meta">
-                <span className="message-timestamp">{formatTime(message.createdAt)}</span>
-                {isMine && (
-                  <div className="flex transition-all duration-300">
-                    <MaterialIcon
-                      icon={
-                        message.status === 'sending'
-                          ? 'schedule'
-                          : message.status === 'sent'
-                            ? 'check'
-                            : 'done_all'
-                      }
-                      size={14}
-                      className={
-                        message.status === 'seen'
-                          ? 'text-sky-400'
-                          : message.status === 'sending'
-                            ? 'animate-pulse opacity-75'
-                            : 'opacity-85'
-                      }
-                    />
-                  </div>
-                )}
-              </div>
+              {(isImageMessage(message) || message.type === 'file') && showTimestamp && (
+                <div className="message-meta">
+                  <span className="message-timestamp">{formatTime(message.createdAt)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -320,6 +313,45 @@ const SecureMessageList = memo(function SecureMessageList({
   onScrollToMessage,
   onOpenFullscreen,
 }: SecureMessageListProps) {
+  const lastSentMessage = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender.id === currentUserId) {
+        return messages[i];
+      }
+    }
+    return null;
+  }, [messages, currentUserId]);
+
+  const lastReceivedMessage = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].sender.id !== currentUserId) {
+        return messages[i];
+      }
+    }
+    return null;
+  }, [messages, currentUserId]);
+
+  // If the last sent message has been seen by the receiver, hide timestamp
+  const isLastSentSeen = useMemo(() => {
+    if (!lastSentMessage) return true;
+    return (
+      lastSentMessage.status === 'seen' ||
+      (Array.isArray(lastSentMessage.seenBy) &&
+        lastSentMessage.seenBy.some((id) => id !== currentUserId))
+    );
+  }, [lastSentMessage, currentUserId]);
+
+  // If the last received message has been seen, hide timestamp
+  const isLastReceivedSeen = useMemo(() => {
+    if (!lastReceivedMessage) return true;
+    return (
+      lastReceivedMessage.status === 'seen' ||
+      (Array.isArray(lastReceivedMessage.seenBy) &&
+        (lastReceivedMessage.seenBy.includes(currentUserId) ||
+          lastReceivedMessage.seenBy.length > 0))
+    );
+  }, [lastReceivedMessage, currentUserId]);
+
   return (
     <>
       {messages.map((message, index) => {
@@ -331,12 +363,17 @@ const SecureMessageList = memo(function SecureMessageList({
             new Date(prevMessage.createdAt).getTime() <
             5 * 60 * 1000;
 
+        const showTimestamp =
+          (!isLastSentSeen && message.id === lastSentMessage?.id) ||
+          (!isLastReceivedSeen && message.id === lastReceivedMessage?.id);
+
         return (
           <SecureMessageBubble
             key={message.id}
             message={message}
             isConsecutive={isConsecutive}
             currentUserId={currentUserId}
+            showTimestamp={showTimestamp}
             onReply={onReply}
             onScrollToMessage={onScrollToMessage}
             onOpenFullscreen={onOpenFullscreen}
@@ -351,7 +388,7 @@ export const SecureChatPage = () => {
   const { chatId } = useParams();
   const activeChatId = useMemo(() => (chatId || '').toLowerCase(), [chatId]);
   const { user } = useAuth();
-  const { themeId } = useTheme();
+  const { themeId, isDark } = useTheme();
   const navigate = useNavigate();
   const pureColor = getThemePureColor(themeId);
 
@@ -381,10 +418,10 @@ export const SecureChatPage = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(Boolean(unlockToken));
   const [isUploading, setIsUploading] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [replyingTo, setReplyingTo] = useState<SecureChatMessage | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showAppNavSidebar, setShowAppNavSidebar] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [showScrollButton, setShowScrollButton] = useState(false);
@@ -435,13 +472,10 @@ export const SecureChatPage = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
   const scrollRafRef = useRef<number | null>(null);
-
-  const placeholder = 'Type a secure message...';
 
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
@@ -478,11 +512,31 @@ export const SecureChatPage = () => {
   }, [activeChatId]);
 
   const scrollToBottom = useCallback((behavior: ScrollBehavior = 'smooth') => {
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTo({
-        top: scrollContainerRef.current.scrollHeight,
-        behavior,
-      });
+    const el = scrollContainerRef.current;
+    if (el) {
+      if (behavior === 'auto' || behavior === 'instant') {
+        el.scrollTop = el.scrollHeight;
+      } else {
+        // High-speed smooth scroll: 120ms-200ms cubic ease-out instead of sluggish 800ms browser default
+        const start = el.scrollTop;
+        const target = el.scrollHeight - el.clientHeight;
+        const distance = target - start;
+        if (Math.abs(distance) < 2) {
+          el.scrollTop = target;
+        } else {
+          const duration = Math.min(200, Math.max(120, Math.abs(distance) * 0.12));
+          const startTime = performance.now();
+          const step = (now: number) => {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const ease = 1 - Math.pow(1 - progress, 3);
+            el.scrollTop = start + distance * ease;
+            if (progress < 1) {
+              requestAnimationFrame(step);
+            }
+          };
+          requestAnimationFrame(step);
+        }
+      }
     }
     setUnreadCount(0);
     setShowScrollButton(false);
@@ -843,22 +897,6 @@ export const SecureChatPage = () => {
     };
   }, [activeChatId]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        showEmojiPicker &&
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        const isTrigger = (event.target as HTMLElement).closest('button')?.title === 'Emoji';
-        if (!isTrigger) {
-          setShowEmojiPicker(false);
-        }
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showEmojiPicker]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -1171,64 +1209,56 @@ export const SecureChatPage = () => {
 
   // 2. LOADING STATE
   if (isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-[var(--color-background)] text-[var(--color-text-primary)]">
-        <Loader size="lg" />
-      </div>
-    );
+    return <Loader fullScreen size="lg" />;
   }
 
-  // 3. UNLOCKED CHAT VIEW (Google Messages Pure Layout)
+  // 3. UNLOCKED CHAT VIEW (1:1 with ChatRoomPage)
   return (
     <main
       className="fixed inset-0 w-full h-dvh flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
     >
       <AmbientGradient />
-      {/* Flat Borderless Google Top App Bar */}
-      <header className="sticky top-0 z-20 flex-shrink-0 bg-transparent px-4 py-2.5 sm:px-6">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3">
-          {/* Identity */}
-          <div className="flex items-center gap-3 min-w-0">
+      {/* APP NAVIGATION SIDEBAR */}
+      <AppSidebar
+        isOpen={showAppNavSidebar}
+        onClose={() => setShowAppNavSidebar(false)}
+        actions={
+          <button
+            type="button"
+            onClick={() => {
+              setShowAppNavSidebar(false);
+              navigate('/secure-chats');
+            }}
+            className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] px-4 py-2 text-xs font-bold tracking-wide shadow-md hover:shadow-lg hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer"
+          >
+            <MaterialIcon
+              icon="arrow_back"
+              size={16}
+              className="text-[var(--color-on-primary)] transition-transform duration-300 group-hover:-translate-x-1"
+            />
+            <span className="whitespace-nowrap">All Chats</span>
+          </button>
+        }
+      />
+
+      {/* Header */}
+      <header className="sticky top-0 z-20 flex-shrink-0 bg-transparent px-4 py-0 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* App nav sidebar trigger */}
             <button
               type="button"
-              onClick={() => navigate('/secure-chats')}
-              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
-              title="Back to Secure Chats"
+              onClick={() => setShowAppNavSidebar(true)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
+              title="Open menu"
+              aria-label="Open navigation menu"
             >
-              <MaterialIcon icon="arrow_back" size={20} />
+              <MaterialIcon icon="drag_handle" size={24} />
             </button>
-
-            {/* Recipient Avatar */}
-            <div
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
-              style={{
-                backgroundColor: pureColor.bg,
-                color: pureColor.text,
-              }}
-            >
-              {chatInfo?.recipient.name?.slice(0, 2).toUpperCase() || 'U'}
-            </div>
-
-            <div className="flex flex-col justify-center min-w-0">
-              <div className="flex items-center gap-2 min-w-0">
-                <h1 className="text-[15px] font-semibold truncate text-[var(--color-text-primary)]">
-                  {chatInfo?.recipient.name}
-                </h1>
-                <span
-                  className={`h-2 w-2 rounded-full shrink-0 ${
-                    chatInfo?.isOnline ? 'bg-[var(--color-success)] animate-pulse' : 'bg-[var(--color-text-muted)]'
-                  }`}
-                  title={chatInfo?.isOnline ? 'Online' : 'Offline'}
-                />
-              </div>
-              <span className="text-[11px] text-[var(--color-text-secondary)] truncate">
-                {chatInfo?.isOnline ? 'Active now' : 'Encrypted conversation'}
-              </span>
-            </div>
           </div>
 
           {/* Action Toolbar */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-0.5 sm:gap-1">
             {/* Create Temp Room Shortcut */}
             <button
               type="button"
@@ -1241,29 +1271,180 @@ export const SecureChatPage = () => {
               <span className="hidden sm:inline">Temp Room</span>
             </button>
 
-            <button
-              type="button"
-              onClick={() => setSoundEnabled((current) => !current)}
-              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
-              title={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
-            >
-              <MaterialIcon icon={soundEnabled ? 'volume_up' : 'volume_off'} size={20} />
-            </button>
+            <div className="mx-1 hidden h-5 w-px bg-[var(--color-divider)] lg:block" />
+
+            <div className="hidden items-center gap-0.5 lg:flex">
+              <ThemeSelector />
+              <GlassThemeToggle />
+              <ThemeToggle />
+            </div>
+
+            <div className="mx-1 hidden h-5 w-px bg-[var(--color-divider)] sm:block" />
 
             <button
               type="button"
-              onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
-              title="Chat Details & Wallpaper"
+              onClick={() => setSoundEnabled((current) => !current)}
+              className="hidden rounded-full p-2 text-[var(--color-text-secondary)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 sm:block cursor-pointer"
+              title={soundEnabled ? 'Mute' : 'Unmute'}
             >
-              <MaterialIcon icon="info" size={20} />
+              <MaterialIcon icon={soundEnabled ? 'volume_up' : 'volume_off'} size={20} />
             </button>
           </div>
         </div>
       </header>
 
       {/* Main Conversation Body */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 min-h-0 overflow-hidden">
+      <section className="mx-auto flex w-full max-w-7xl flex-1 min-h-0 overflow-hidden lg:gap-4 lg:p-4">
+        {/* Sidebar Info Panel */}
+        <aside
+          className={`
+            fixed inset-y-0 left-0 z-30 w-72 transform border-r border-[var(--color-border)] bg-[var(--color-surface)] transition-transform duration-300 ease-in-out lg:static lg:block lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:border
+            ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
+          `}
+        >
+          <div className="flex h-full flex-col p-5 overflow-y-auto space-y-5">
+            <div className="sticky top-0 z-10 flex items-center justify-between bg-[var(--color-surface)] py-1">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+                <MaterialIcon icon="info" size={18} className="text-[var(--color-primary)]" />
+                Chat Info
+              </h2>
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="lg:hidden rounded-full p-1 hover:bg-[var(--color-hover)] text-[var(--color-text-secondary)] cursor-pointer"
+              >
+                <MaterialIcon icon="close" size={20} />
+              </button>
+            </div>
+
+            {/* Participants */}
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                Participants
+              </p>
+              {/* Recipient */}
+              <div className="flex items-center justify-between rounded-xl bg-[var(--color-hover)] p-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
+                    style={{ backgroundColor: pureColor.bg, color: pureColor.text }}
+                  >
+                    {chatInfo?.recipient.name?.slice(0, 2).toUpperCase() || 'U'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
+                      {chatInfo?.recipient.name}
+                    </p>
+                    <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
+                      {chatInfo?.recipient.email}
+                    </p>
+                  </div>
+                </div>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                    chatInfo?.isOnline
+                      ? 'bg-[var(--color-success)]/15 text-[var(--color-success)]'
+                      : 'bg-[var(--color-surface)] text-[var(--color-text-muted)]'
+                  }`}
+                >
+                  {chatInfo?.isOnline ? 'Online' : 'Offline'}
+                </span>
+              </div>
+
+              {/* You */}
+              <div className="flex items-center justify-between rounded-xl bg-[var(--color-hover)] p-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
+                    style={{ backgroundColor: pureColor.bg, color: pureColor.text }}
+                  >
+                    {user?.name?.slice(0, 2).toUpperCase() || 'U'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
+                      {user?.name} (You)
+                    </p>
+                    <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full px-2 py-0.5 text-[9px] font-bold bg-[var(--color-success)]/15 text-[var(--color-success)]">
+                  Online
+                </span>
+              </div>
+            </div>
+
+            {/* Wallpaper picker matching ChatRoomPage */}
+            <div className="space-y-2 border-t border-[var(--color-border)]/50 pt-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)] flex items-center gap-1.5">
+                  <MaterialIcon icon="image" size={15} className="text-[var(--color-primary)]" />
+                  Wallpaper
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowMobileWallpaperPicker(!showMobileWallpaperPicker)}
+                  className="text-[11px] font-bold text-[var(--color-primary)] hover:underline cursor-pointer"
+                >
+                  {showMobileWallpaperPicker ? 'Hide' : 'Change'}
+                </button>
+              </div>
+
+              {showMobileWallpaperPicker && (
+                <div className="grid grid-cols-3 gap-2 max-h-[180px] overflow-y-auto p-1 animate-in fade-in duration-200">
+                  {wallpapers.map((wp) => (
+                    <button
+                      key={wp.id}
+                      onClick={() => handleSelectWallpaper(wp.url)}
+                      className={`group relative flex flex-col items-center justify-center rounded-xl p-1.5 transition hover:scale-105 cursor-pointer ${
+                        selectedWallpaper === wp.url
+                          ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary-container)]/30'
+                          : 'hover:bg-[var(--color-hover)]'
+                      }`}
+                    >
+                      {wp.url ? (
+                        <img
+                          src={wp.url}
+                          alt={wp.name}
+                          className="h-14 w-10 rounded-lg object-cover shadow-2xs"
+                        />
+                      ) : (
+                        <div className="h-14 w-10 rounded-lg flex items-center justify-center bg-[var(--color-surface)] text-[9px] font-bold text-[var(--color-text-muted)] shadow-2xs">
+                          Default
+                        </div>
+                      )}
+                      <span className="text-[9px] mt-1 truncate max-w-full font-medium">
+                        {wp.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Mobile Appearance controls */}
+            <div className="mt-auto space-y-3 border-t border-[var(--color-border)]/50 pt-4 lg:hidden">
+              <div className="flex items-center justify-between rounded-2xl bg-[var(--color-hover)] p-3">
+                <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                  Appearance
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <GlassThemeToggle />
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile backdrop for sidebar */}
+        {showSidebar && (
+          <div
+            className="fixed inset-0 z-20 bg-slate-950/50 backdrop-blur-sm lg:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+
         {/* Chat Area */}
         <section
           style={
@@ -1275,7 +1456,7 @@ export const SecureChatPage = () => {
                 }
               : undefined
           }
-          className="relative flex flex-1 min-h-0 flex-col overflow-hidden bg-[var(--color-background)]"
+          className="relative flex flex-1 min-h-0 flex-col overflow-hidden lg:rounded-lg lg:border lg:border-slate-200/40 lg:dark:border-slate-800/40 chat-area-bg"
         >
           {error && (
             <div className="m-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--color-error)]/10 p-3.5 text-xs font-medium text-[var(--color-error)]">
@@ -1296,14 +1477,14 @@ export const SecureChatPage = () => {
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-smooth px-4 py-6"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
           >
-            <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end">
+            <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end px-4 py-6">
               {/* Security Pill */}
-              <div className="flex justify-center my-4">
-                <span className="rounded-full bg-[var(--color-hover)] px-4 py-1.5 text-center text-[11px] font-medium text-[var(--color-text-secondary)] flex items-center gap-1.5 shadow-2xs">
+              <div className="flex justify-center my-2">
+                <span className="rounded-full bg-[var(--color-surface)]/80 backdrop-blur-md border border-[var(--color-border)]/50 px-4 py-1.5 text-center text-[10px] font-semibold text-[var(--color-text-secondary)] flex items-center gap-1.5 shadow-xs">
                   <MaterialIcon icon="lock" size={13} className="text-[var(--color-primary)]" />
-                  Messages are end-to-end secured & persistent.
+                  Messages are end-to-end encrypted with your private key.
                 </span>
               </div>
 
@@ -1316,16 +1497,11 @@ export const SecureChatPage = () => {
               />
 
               {typingNames.length > 0 && (
-                <div className="flex items-center gap-2 py-2">
-                  <div className="flex gap-2 bg-[var(--color-hover)] rounded-full px-3.5 py-1.5 items-center">
-                    <span className="text-[11px] text-[var(--color-text-secondary)]">
-                      {typingNames[0]} is typing
-                    </span>
-                    <div className="flex gap-1">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)] [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)] [animation-delay:-0.15s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)]" />
-                    </div>
+                <div className="flex items-center py-2 animate-in fade-in duration-200">
+                  <div className="gemini-typing-container">
+                    <span className="gemini-typing-dot gemini-typing-dot-1" />
+                    <span className="gemini-typing-dot gemini-typing-dot-2" />
+                    <span className="gemini-typing-dot gemini-typing-dot-3" />
                   </div>
                 </div>
               )}
@@ -1337,12 +1513,18 @@ export const SecureChatPage = () => {
           {/* Scroll to Bottom Button */}
           {showScrollButton && (
             <button
-              onClick={() => scrollToBottom('smooth')}
-              className="absolute bottom-20 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xl ring-1 ring-[var(--color-primary)]/20 transition hover:scale-105 active:scale-95 cursor-pointer"
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                scrollToBottom('smooth');
+                textareaRef.current?.focus();
+              }}
+              className="absolute bottom-24 right-4 sm:right-8 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-lg border border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-all animate-in fade-in zoom-in-90 cursor-pointer"
+              title="Scroll to bottom"
             >
-              <MaterialIcon icon="arrow_downward" size={18} />
+              <MaterialIcon icon="arrow_downward" size={20} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-bold text-[var(--color-on-primary)] shadow-md animate-bounce">
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[var(--color-primary)] px-1 text-[10px] font-bold text-[var(--color-on-primary)] shadow-xs">
                   {unreadCount}
                 </span>
               )}
@@ -1362,14 +1544,14 @@ export const SecureChatPage = () => {
                 className="absolute inset-0 transition-all duration-700 ease-out"
                 style={{
                   background: 'radial-gradient(ellipse 130% 90% at 50% 125%, var(--color-primary) 0%, var(--color-accent, var(--color-primary)) 35%, transparent 70%)',
-                  opacity: 0.16,
+                  opacity: isDark ? 0.16 : 0.08,
                 }}
               />
               <div
                 className="absolute inset-0 transition-all duration-700 ease-out"
                 style={{
                   background: 'radial-gradient(ellipse 80% 60% at 50% 110%, var(--color-primary-container, var(--color-primary)) 0%, transparent 65%)',
-                  opacity: 0.12,
+                  opacity: isDark ? 0.12 : 0.05,
                 }}
               />
             </div>
@@ -1389,7 +1571,7 @@ export const SecureChatPage = () => {
                 <button
                   type="button"
                   onClick={() => setReplyingTo(null)}
-                  className="rounded-full p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
+                  className="rounded-full p-1.5 text-[var(--color-text-secondary)] transition hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] cursor-pointer"
                 >
                   <MaterialIcon icon="close" size={16} />
                 </button>
@@ -1407,19 +1589,34 @@ export const SecureChatPage = () => {
               onChange={sendFile}
             />
 
+            {/* Uploading Status Banner */}
+            {isUploading && (
+              <div className="mx-auto mb-2.5 flex w-fit items-center gap-2 rounded-full bg-[var(--color-surface)]/90 backdrop-blur-md px-4 py-1.5 shadow-md border border-[var(--color-primary)]/30 text-xs font-bold text-[var(--color-primary)] animate-in fade-in slide-in-from-bottom-2">
+                <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[var(--color-primary)] border-t-transparent" />
+                <span>Uploading & optimizing photo...</span>
+              </div>
+            )}
+
             {/* Google Gemini Single Floating Pill Capsule */}
             <div className="mx-auto flex w-full max-w-[832px] items-center gap-1.5 rounded-full bg-[var(--color-surface)]/85 backdrop-blur-2xl px-2.5 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[var(--color-border)]/50 focus-within:border-[var(--color-primary)]/50 focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 transition-all duration-200">
               {/* Attachment Plus Button (Inside Left) */}
               <div className="relative flex-shrink-0">
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setShowAttachmentMenu(!showAttachmentMenu);
+                    setShowAttachmentMenu((prev) => {
+                      const next = !prev;
+                      if (next) {
+                        textareaRef.current?.focus();
+                      }
+                      return next;
+                    });
                   }}
                   disabled={isUploading}
                   className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-90 transition cursor-pointer"
-                  title="Attach file"
+                  title="Share Media & Files"
                 >
                   <MaterialIcon
                     icon="add"
@@ -1431,42 +1628,64 @@ export const SecureChatPage = () => {
                 </button>
 
                 {showAttachmentMenu && (
-                  <div
-                    className="absolute bottom-full left-0 mb-3 w-48 overflow-hidden rounded-3xl bg-[var(--color-surface)]/95 backdrop-blur-xl border border-[var(--color-border)]/60 p-2 shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        fileInputRef.current?.click();
-                        setShowAttachmentMenu(false);
-                      }}
-                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
+                  <>
+                    {/* Backdrop Click-Catcher */}
+                    <div
+                      className="fixed inset-0 z-[55]"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowAttachmentMenu(false)}
+                    />
+
+                    {/* Floating Upload Options */}
+                    <div
+                      className="absolute bottom-full left-0 mb-3 w-52 sm:w-56 overflow-hidden rounded-2xl bg-[var(--color-surface)]/95 backdrop-blur-2xl border border-[var(--color-border)]/70 p-1.5 shadow-xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <MaterialIcon icon="image" size={20} className="text-[var(--color-primary)]" />
-                      <span>Device Media</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowCamera(true);
-                        setShowAttachmentMenu(false);
-                      }}
-                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
-                    >
-                      <MaterialIcon
-                        icon="photo_camera"
-                        size={20}
-                        className="text-[var(--color-primary)]"
-                      />
-                      <span>Camera</span>
-                    </button>
-                  </div>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          fileInputRef.current?.click();
+                          setShowAttachmentMenu(false);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition-all cursor-pointer group text-left"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/12 text-[var(--color-primary)] transition-transform group-hover:scale-105">
+                          <MaterialIcon icon="image" size={22} />
+                        </div>
+                        <span className="truncate text-sm font-semibold">Device Media</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setShowCamera(true);
+                          setShowAttachmentMenu(false);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition-all cursor-pointer group text-left"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary)]/12 text-[var(--color-primary)] transition-transform group-hover:scale-105">
+                          <MaterialIcon icon="photo_camera" size={22} />
+                        </div>
+                        <span className="truncate text-sm font-semibold">Camera</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
 
               {/* Text Area & Placeholder (Middle) */}
               <div className="relative flex-1 min-w-0 self-center">
+                {messageText.length === 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center text-[18px] sm:text-[19px] text-[var(--color-text-muted)] overflow-hidden whitespace-nowrap select-none"
+                  >
+                    <AnimatedPlaceholder />
+                  </div>
+                )}
                 <textarea
                   ref={textareaRef}
                   value={messageText}
@@ -1483,8 +1702,7 @@ export const SecureChatPage = () => {
                     }
                   }}
                   rows={1}
-                  className="flex-1 max-h-36 min-h-[38px] w-full resize-none bg-transparent py-2 px-1 text-[15px] sm:text-[16px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
-                  placeholder={placeholder}
+                  className="flex-1 max-h-36 min-h-[40px] w-full resize-none bg-transparent py-1.5 px-1 text-[18px] sm:text-[19px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] leading-normal"
                 />
               </div>
 
@@ -1505,170 +1723,7 @@ export const SecureChatPage = () => {
             </div>
           </form>
         </section>
-
-        {/* Sidebar Info Panel */}
-        <aside
-          className={`
-            fixed inset-y-0 right-0 z-40 w-80 transform bg-[var(--color-surface)] transition-transform duration-300 ease-in-out shadow-2xl lg:static lg:block lg:w-80 lg:translate-x-0 lg:shadow-none
-            ${showSidebar ? 'translate-x-0' : 'translate-x-full'}
-          `}
-        >
-          <div className="flex h-full flex-col p-6 space-y-6 overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[15px] font-bold text-[var(--color-text-primary)] flex items-center gap-2">
-                <MaterialIcon icon="info" size={20} className="text-[var(--color-primary)]" />
-                Conversation Info
-              </h2>
-              <button
-                onClick={() => setShowSidebar(false)}
-                className="rounded-full p-1.5 hover:bg-[var(--color-hover)] text-[var(--color-text-secondary)] lg:hidden cursor-pointer"
-              >
-                <MaterialIcon icon="close" size={20} />
-              </button>
-            </div>
-
-            {/* Participants */}
-            <div className="space-y-3">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Participants
-              </p>
-              <div className="space-y-2">
-                {/* Recipient */}
-                <div className="flex items-center justify-between rounded-2xl bg-[var(--color-hover)] p-3.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
-                      style={{
-                        backgroundColor: pureColor.bg,
-                        color: pureColor.text,
-                      }}
-                    >
-                      {chatInfo?.recipient.name?.slice(0, 2).toUpperCase() || 'U'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
-                        {chatInfo?.recipient.name}
-                      </p>
-                      <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
-                        {chatInfo?.recipient.email}
-                      </p>
-                    </div>
-                  </div>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                      chatInfo?.isOnline
-                        ? 'bg-[var(--color-success)]/15 text-[var(--color-success)]'
-                        : 'bg-[var(--color-hover)] text-[var(--color-text-muted)]'
-                    }`}
-                  >
-                    {chatInfo?.isOnline ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-
-                {/* You */}
-                <div className="flex items-center justify-between rounded-2xl bg-[var(--color-hover)] p-3.5">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
-                      style={{
-                        backgroundColor: pureColor.bg,
-                        color: pureColor.text,
-                      }}
-                    >
-                      {user?.name?.slice(0, 2).toUpperCase() || 'U'}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
-                        {user?.name} (You)
-                      </p>
-                      <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
-                        {user?.email}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="rounded-full px-2 py-0.5 text-[9px] font-bold bg-[var(--color-success)]/15 text-[var(--color-success)]">
-                    Online
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Customization Options */}
-            <div className="space-y-3 pt-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
-                Chat Theme & Vibe
-              </p>
-
-              {/* Wallpaper Picker */}
-              <div className="rounded-2xl bg-[var(--color-hover)] p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
-                    <MaterialIcon icon="image" size={16} className="text-[var(--color-primary)]" />
-                    Wallpaper
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowMobileWallpaperPicker(!showMobileWallpaperPicker)}
-                    className="text-[11px] font-bold text-[var(--color-primary)] hover:underline cursor-pointer"
-                  >
-                    {showMobileWallpaperPicker ? 'Hide' : 'Change'}
-                  </button>
-                </div>
-
-                {showMobileWallpaperPicker && (
-                  <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1 animate-in fade-in duration-200">
-                    {wallpapers.map((wp) => (
-                      <button
-                        key={wp.id}
-                        onClick={() => handleSelectWallpaper(wp.url)}
-                        className={`group relative flex flex-col items-center justify-center rounded-xl p-1.5 transition hover:scale-105 cursor-pointer ${
-                          selectedWallpaper === wp.url
-                            ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary-container)]/30'
-                            : 'hover:bg-[var(--color-hover)]'
-                        }`}
-                      >
-                        {wp.url ? (
-                          <img
-                            src={wp.url}
-                            alt={wp.name}
-                            className="h-14 w-10 rounded-lg object-cover shadow-2xs"
-                          />
-                        ) : (
-                          <div className="h-14 w-10 rounded-lg flex items-center justify-center bg-[var(--color-surface)] text-[9px] font-bold text-[var(--color-text-muted)] shadow-2xs">
-                            Default
-                          </div>
-                        )}
-                        <span className="text-[9px] mt-1 truncate max-w-full font-medium">
-                          {wp.name}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Theme Quick Toggle */}
-              <div className="rounded-2xl bg-[var(--color-hover)] p-4 flex items-center justify-between">
-                <span className="text-xs font-semibold text-[var(--color-text-primary)]">
-                  Appearance
-                </span>
-                <div className="flex items-center gap-2">
-                  <GlassThemeToggle />
-                  <ThemeToggle />
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Sidebar Mobile Backdrop */}
-        {showSidebar && (
-          <div
-            className="fixed inset-0 z-30 bg-black/50 backdrop-blur-xs lg:hidden"
-            onClick={() => setShowSidebar(false)}
-          />
-        )}
-      </div>
+      </section>
 
       {/* Camera Capture Modal */}
       {showCamera && (

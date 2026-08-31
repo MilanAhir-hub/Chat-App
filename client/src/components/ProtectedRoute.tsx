@@ -7,11 +7,7 @@ export const ProtectedRoute = () => {
   const location = useLocation();
 
   if (isCheckingAuth) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
-        <Loader size="lg" />
-      </div>
-    );
+    return <Loader fullScreen size="lg" />;
   }
 
   if (!user) {

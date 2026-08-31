@@ -20,6 +20,8 @@ type ThemeMode = 'light' | 'dark';
 export type Accent = string;
 type GlassTheme = 'default' | 'adaptive';
 
+export type MessageFontColor = 'theme' | 'black' | 'white';
+
 interface ThemeContextValue {
   themeId: ThemeId;
   currentTheme: ThemeMetadata;
@@ -32,6 +34,10 @@ interface ThemeContextValue {
   setAccent: (accent: Accent) => void;
   glassTheme: GlassTheme;
   toggleGlassTheme: () => void;
+  messageFontSize: number;
+  setMessageFontSize: (size: number) => void;
+  messageFontColor: MessageFontColor;
+  setMessageFontColor: (color: MessageFontColor) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
@@ -54,9 +60,30 @@ const getInitialGlassTheme = (): GlassTheme => {
   return saved === 'adaptive' ? 'adaptive' : 'default';
 };
 
+const getInitialMessageFontSize = (): number => {
+  const saved = localStorage.getItem('message-font-size');
+  if (saved) {
+    const parsed = Number(saved);
+    if (!isNaN(parsed) && parsed >= 12 && parsed <= 24) {
+      return parsed;
+    }
+  }
+  return 16; // default 16px
+};
+
+const getInitialMessageFontColor = (): MessageFontColor => {
+  const saved = localStorage.getItem('message-font-color') as MessageFontColor | null;
+  if (saved === 'black' || saved === 'white' || saved === 'theme') {
+    return saved;
+  }
+  return 'theme';
+};
+
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [themeId, setThemeIdState] = useState<ThemeId>(getInitialThemeId);
   const [glassTheme, setGlassTheme] = useState<GlassTheme>(getInitialGlassTheme);
+  const [messageFontSize, setMessageFontSizeState] = useState<number>(getInitialMessageFontSize);
+  const [messageFontColor, setMessageFontColorState] = useState<MessageFontColor>(getInitialMessageFontColor);
 
   const currentTheme = useMemo(() => getThemeById(themeId), [themeId]);
   const isDark = currentTheme.mode === 'dark';
@@ -74,8 +101,36 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('glassTheme', glassTheme);
   }, [glassTheme]);
 
+  // Apply message font size to document root CSS variable
+  useEffect(() => {
+    document.documentElement.style.setProperty('--message-font-size', `${messageFontSize}px`);
+    localStorage.setItem('message-font-size', String(messageFontSize));
+  }, [messageFontSize]);
+
+  // Apply message font color to document root attribute & CSS variable
+  useEffect(() => {
+    document.documentElement.setAttribute('data-font-color', messageFontColor);
+    if (messageFontColor === 'black') {
+      document.documentElement.style.setProperty('--message-custom-color', '#000000');
+    } else if (messageFontColor === 'white') {
+      document.documentElement.style.setProperty('--message-custom-color', '#FFFFFF');
+    } else {
+      document.documentElement.style.removeProperty('--message-custom-color');
+    }
+    localStorage.setItem('message-font-color', messageFontColor);
+  }, [messageFontColor]);
+
   const setThemeId = useCallback((id: ThemeId) => {
     setThemeIdState(id);
+  }, []);
+
+  const setMessageFontSize = useCallback((size: number) => {
+    const clamped = Math.min(24, Math.max(12, size));
+    setMessageFontSizeState(clamped);
+  }, []);
+
+  const setMessageFontColor = useCallback((color: MessageFontColor) => {
+    setMessageFontColorState(color);
   }, []);
 
   // Switches to the paired counterpart of the current active theme (e.g. M ↔ N, A ↔ B)
@@ -101,16 +156,30 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       setThemeId,
       toggleTheme,
       togglePairedTheme,
-      accent: currentTheme.previewTokens.primary,
+      accent: themeId,
       setAccent: (accentVal: string) => {
-        // If an accent string matches a theme's primary, switch to that theme
-        const match = THEMES.find((t) => t.previewTokens.primary.toLowerCase() === accentVal.toLowerCase());
+        // 1. Match by theme ID (e.g. 'A', 'B', 'C', 'D', etc.)
+        const matchById = THEMES.find((t) => t.id.toLowerCase() === accentVal.toLowerCase());
+        if (matchById) {
+          setThemeIdState(matchById.id);
+          return;
+        }
+        // 2. Match by primary or outgoing hex color
+        const match = THEMES.find(
+          (t) =>
+            t.previewTokens.primary.toLowerCase() === accentVal.toLowerCase() ||
+            t.previewTokens.outgoing.toLowerCase() === accentVal.toLowerCase()
+        );
         if (match) {
           setThemeIdState(match.id);
         }
       },
       glassTheme,
       toggleGlassTheme,
+      messageFontSize,
+      setMessageFontSize,
+      messageFontColor,
+      setMessageFontColor,
     }),
     [
       themeId,
@@ -121,6 +190,10 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
       togglePairedTheme,
       glassTheme,
       toggleGlassTheme,
+      messageFontSize,
+      setMessageFontSize,
+      messageFontColor,
+      setMessageFontColor,
     ]
   );
 

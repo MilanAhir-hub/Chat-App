@@ -44,9 +44,7 @@ function App() {
         <BrowserRouter>
           <Suspense
             fallback={
-              <div className="flex min-h-dvh items-center justify-center bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white">
-                <Loader size="lg" />
-              </div>
+              <Loader fullScreen size="lg" />
             }
           >
             <Routes>

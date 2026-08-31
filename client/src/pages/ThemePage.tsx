@@ -72,41 +72,59 @@ export const ThemePage = () => {
   );
 
   return (
-    <div className="mx-auto max-w-[720px] px-4 py-6 sm:px-6 sm:py-8 space-y-6">
-      {/* 2 Mode Options (Light / Dark) */}
-      <div className="grid grid-cols-2 gap-2 p-1.5 rounded-2xl bg-[var(--color-surface)] shadow-xs">
-        <button
-          type="button"
-          onClick={() => handleModeSelect('light')}
-          className={`flex items-center justify-center gap-2 py-6 px-8 rounded-full text-sm font-bold transition-all cursor-pointer ${
-            selectedMode === 'light'
-              ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm'
-              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-hover)]'
-          }`}
-        >
-          <MaterialIcon icon="light_mode" size={20} />
-          <span>Light</span>
-        </button>
+    <div className="mx-auto max-w-[720px] px-4 py-4 sm:px-6 sm:py-6 flex flex-col min-h-full">
+      {/* Sticky / Fixed Mode Options (Light / Dark) */}
+      <div className="sticky top-0 z-20 pb-4 bg-[var(--color-background)]/95 backdrop-blur-md pt-2">
+        <div className="grid grid-cols-2 gap-2 p-1.5 rounded-4xl sm:rounded-3xl bg-[var(--color-surface)] shadow-xs border border-[var(--color-border)]/40">
+          <button
+            type="button"
+            onClick={() => handleModeSelect('light')}
+            style={
+              selectedMode === 'light'
+                ? {
+                    backgroundColor: currentTheme.previewTokens.outgoing,
+                    color: currentTheme.previewTokens.outgoingText,
+                  }
+                : {}
+            }
+            className={`flex items-center justify-center gap-2 py-6 sm:py-5 px-6 sm:px-8 rounded-full text-sm font-bold transition-all duration-300 cursor-pointer ${
+              selectedMode === 'light'
+                ? 'shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-hover)]'
+            }`}
+          >
+            <MaterialIcon icon="light_mode" size={20} />
+            <span>Light</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => handleModeSelect('dark')}
-          className={`flex items-center justify-center gap-2 py-6 px-8 rounded-full text-sm font-bold transition-all cursor-pointer ${
-            selectedMode === 'dark'
-              ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-sm'
-              : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-hover)]'
-          }`}
-        >
-          <MaterialIcon icon="dark_mode" size={20} />
-          <span>Dark</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => handleModeSelect('dark')}
+            style={
+              selectedMode === 'dark'
+                ? {
+                    backgroundColor: currentTheme.previewTokens.outgoing,
+                    color: currentTheme.previewTokens.outgoingText,
+                  }
+                : {}
+            }
+            className={`flex items-center justify-center gap-2 py-4 sm:py-5 px-6 sm:px-8 rounded-full text-sm font-bold transition-all duration-300 cursor-pointer ${
+              selectedMode === 'dark'
+                ? 'shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-hover)]'
+            }`}
+          >
+            <MaterialIcon icon="dark_mode" size={20} />
+            <span>Dark</span>
+          </button>
+        </div>
       </div>
 
       {/* Full-width split color bars (Left: Receiver / Right: Sender, Checkmark directly on middle dividing line) */}
-      <div className="space-y-4 pt-1">
+      <div className="space-y-4 pt-1 pb-10 flex-1">
         {filteredThemes.map((theme) => {
           const isSelected = themeId === theme.id;
-          const { incoming, outgoing } = theme.previewTokens;
+          const { incoming, outgoing, outgoingText } = theme.previewTokens;
 
           return (
             <div
@@ -134,9 +152,15 @@ export const ThemePage = () => {
                 style={{ backgroundColor: outgoing }}
               />
 
-              {/* Center Checkmark / Right icon right above the middle separate line */}
+              {/* Center Checkmark right above the middle separate line */}
               {isSelected && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-xl ring-4 ring-[var(--color-surface)] animate-in zoom-in-75 duration-200">
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full shadow-xl ring-4 ring-[var(--color-surface)] animate-in zoom-in-75 duration-200"
+                  style={{
+                    backgroundColor: outgoing,
+                    color: outgoingText,
+                  }}
+                >
                   <MaterialIcon icon="check" size={22} />
                 </div>
               )}

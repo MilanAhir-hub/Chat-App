@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Google Sans", "Google Sans Text", "Google Sans Flex", "Product Sans", "Plus Jakarta Sans", "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
   --color-primary-50: var(--primary-50);
   --color-primary-100: var(--primary-100);
@@ -496,6 +496,378 @@
   --color-link: #8AB4F8;
 }
 
+/* --- Theme O: Google Chrome Coral Light --- */
+[data-theme="O"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFF5F5;
+  --color-primary: #EA4335;
+  --color-primary-container: #FCE8E6;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #B31412;
+  --color-secondary: #5F6368;
+  --color-accent: #EA4335;
+  --color-text-primary: #202124;
+  --color-text-secondary: #5F6368;
+  --color-text-muted: #80868B;
+  --color-border: #FCE8E6;
+  --color-divider: #FAD2CF;
+  --color-hover: #FDF2F1;
+  --color-selected: #FCE8E6;
+  --color-focus: #EA4335;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #EA4335;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #EA4335;
+}
+
+/* --- Theme P: Google Chrome Coral Dark --- */
+[data-theme="P"] {
+  --color-background: #202124;
+  --color-surface: #292A2D;
+  --color-surface-elevated: #352B2B;
+  --color-primary: #F28B82;
+  --color-primary-container: #5C1D1D;
+  --color-on-primary: #202124;
+  --color-on-primary-container: #FCE8E6;
+  --color-secondary: #9AA0A6;
+  --color-accent: #F28B82;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #493838;
+  --color-divider: #493838;
+  --color-hover: #342D2D;
+  --color-selected: #45342A;
+  --color-focus: #F28B82;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #303134;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #F28B82;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #292A2D;
+  --color-link: #F28B82;
+}
+
+/* --- Theme Q: Android Mint & Drive Light --- */
+[data-theme="Q"] {
+  --color-background: #F8FBF9;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F1F8F3;
+  --color-primary: #188038;
+  --color-primary-container: #E6F4EA;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #0D3B2E;
+  --color-secondary: #5F6368;
+  --color-accent: #34A853;
+  --color-text-primary: #202124;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #CEEAD6;
+  --color-divider: #CEEAD6;
+  --color-hover: #F1F8F3;
+  --color-selected: #E6F4EA;
+  --color-focus: #188038;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #188038;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #188038;
+}
+
+/* --- Theme R: Android Mint & Drive Dark --- */
+[data-theme="R"] {
+  --color-background: #191E1A;
+  --color-surface: #202622;
+  --color-surface-elevated: #29332C;
+  --color-primary: #81C995;
+  --color-primary-container: #0D3B2E;
+  --color-on-primary: #191E1A;
+  --color-on-primary-container: #E6F4EA;
+  --color-secondary: #9AA0A6;
+  --color-accent: #81C995;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #36453B;
+  --color-divider: #36453B;
+  --color-hover: #263029;
+  --color-selected: #314035;
+  --color-focus: #81C995;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #2B322D;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #81C995;
+  --color-message-outgoing-text: #191E1A;
+  --color-composer: #202622;
+  --color-link: #81C995;
+}
+
+/* --- Theme S: Google Play Teal Light --- */
+[data-theme="S"] {
+  --color-background: #F4FAFB;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #EBF6F8;
+  --color-primary: #00838F;
+  --color-primary-container: #E0F7FA;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #004D40;
+  --color-secondary: #5F6368;
+  --color-accent: #00ACC1;
+  --color-text-primary: #202124;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #B2EBF2;
+  --color-divider: #B2EBF2;
+  --color-hover: #EBF6F8;
+  --color-selected: #E0F7FA;
+  --color-focus: #00838F;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #00838F;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #00838F;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #00838F;
+}
+
+/* --- Theme T: Google Play Teal Dark --- */
+[data-theme="T"] {
+  --color-background: #131E20;
+  --color-surface: #1A282B;
+  --color-surface-elevated: #22353A;
+  --color-primary: #4DD0E1;
+  --color-primary-container: #004D40;
+  --color-on-primary: #131E20;
+  --color-on-primary-container: #E0F7FA;
+  --color-secondary: #9AA0A6;
+  --color-accent: #4DD0E1;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #2C464C;
+  --color-divider: #2C464C;
+  --color-hover: #22353A;
+  --color-selected: #2A4349;
+  --color-focus: #4DD0E1;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #4DD0E1;
+  --color-message-incoming: #223336;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #4DD0E1;
+  --color-message-outgoing-text: #131E20;
+  --color-composer: #1A282B;
+  --color-link: #4DD0E1;
+}
+
+/* --- Theme U: Google Pixel Sunset Light --- */
+[data-theme="U"] {
+  --color-background: #FDF9F7;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFF2EB;
+  --color-primary: #E8710A;
+  --color-primary-container: #FFEDE5;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #5C2817;
+  --color-secondary: #5F6368;
+  --color-accent: #FA7B17;
+  --color-text-primary: #202124;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #F6D6C8;
+  --color-divider: #F6D6C8;
+  --color-hover: #FFF2EB;
+  --color-selected: #FFEDE5;
+  --color-focus: #E8710A;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F3EBE6;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #E8710A;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #E8710A;
+}
+
+/* --- Theme V: Google Pixel Sunset Dark --- */
+[data-theme="V"] {
+  --color-background: #211B18;
+  --color-surface: #2B231E;
+  --color-surface-elevated: #382C26;
+  --color-primary: #FFB59D;
+  --color-primary-container: #5C2817;
+  --color-on-primary: #211B18;
+  --color-on-primary-container: #FFEDE5;
+  --color-secondary: #9AA0A6;
+  --color-accent: #FFB59D;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #4C372D;
+  --color-divider: #4C372D;
+  --color-hover: #352B24;
+  --color-selected: #45342A;
+  --color-focus: #FFB59D;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #332A24;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #FFB59D;
+  --color-message-outgoing-text: #211B18;
+  --color-composer: #2B231E;
+  --color-link: #FFB59D;
+}
+
+/* --- Theme W: YouTube Studio Red Light --- */
+[data-theme="W"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFF5F5;
+  --color-primary: #CC0000;
+  --color-primary-container: #FEEAE9;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #4C1210;
+  --color-secondary: #606060;
+  --color-accent: #FF0000;
+  --color-text-primary: #0F0F0F;
+  --color-text-secondary: #606060;
+  --color-text-muted: #909090;
+  --color-border: #E5E5E5;
+  --color-divider: #E5E5E5;
+  --color-hover: #F2F2F2;
+  --color-selected: #FEEAE9;
+  --color-focus: #CC0000;
+  --color-error: #CC0000;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #065FD4;
+  --color-message-incoming: #F2F2F2;
+  --color-message-incoming-text: #0F0F0F;
+  --color-message-outgoing: #CC0000;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #065FD4;
+}
+
+/* --- Theme X: YouTube Studio Red Dark --- */
+[data-theme="X"] {
+  --color-background: #0F0F0F;
+  --color-surface: #1F1F1F;
+  --color-surface-elevated: #282828;
+  --color-primary: #FF4E45;
+  --color-primary-container: #4C1210;
+  --color-on-primary: #0F0F0F;
+  --color-on-primary-container: #FEEAE9;
+  --color-secondary: #AAAAAA;
+  --color-accent: #FF4E45;
+  --color-text-primary: #F1F1F1;
+  --color-text-secondary: #AAAAAA;
+  --color-text-muted: #717171;
+  --color-border: #383838;
+  --color-divider: #383838;
+  --color-hover: #272727;
+  --color-selected: #383838;
+  --color-focus: #FF4E45;
+  --color-error: #FF4E45;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #3EA6FF;
+  --color-message-incoming: #272727;
+  --color-message-incoming-text: #F1F1F1;
+  --color-message-outgoing: #FF4E45;
+  --color-message-outgoing-text: #0F0F0F;
+  --color-composer: #1F1F1F;
+  --color-link: #3EA6FF;
+}
+
+/* --- Theme Y: Pixel Porcelain Monochrome Light --- */
+[data-theme="Y"] {
+  --color-background: #F9F9FB;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1F1F1F;
+  --color-primary-container: #E8EAED;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #1F1F1F;
+  --color-secondary: #5F6368;
+  --color-accent: #1F1F1F;
+  --color-text-primary: #1F1F1F;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #E0E0E0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #E8EAED;
+  --color-focus: #1F1F1F;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #1F1F1F;
+  --color-message-outgoing: #1F1F1F;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #1F1F1F;
+}
+
+/* --- Theme Z: Pixel Obsidian True OLED Black --- */
+[data-theme="Z"] {
+  --color-background: #000000;
+  --color-surface: #121214;
+  --color-surface-elevated: #1C1C20;
+  --color-primary: #8AB4F8;
+  --color-primary-container: #1A2840;
+  --color-on-primary: #000000;
+  --color-on-primary-container: #D2E3FC;
+  --color-secondary: #9AA0A6;
+  --color-accent: #8AB4F8;
+  --color-text-primary: #F0F4F9;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #2E3036;
+  --color-divider: #2E3036;
+  --color-hover: #1C1C20;
+  --color-selected: #292B30;
+  --color-focus: #8AB4F8;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #1E1F24;
+  --color-message-incoming-text: #F0F4F9;
+  --color-message-outgoing: #8AB4F8;
+  --color-message-outgoing-text: #000000;
+  --color-composer: #121214;
+  --color-link: #8AB4F8;
+}
+
 /* ============================================================
    GLOBAL BASE & BRIDGE STYLES
    ============================================================ */
@@ -759,42 +1131,78 @@ body {
   outline: none;
 }
 
-/* Message Bubbles */
+/* ─────────────────────────────────────────────────────────────
+   Message Bubble — Material 3 / Google Messages Style
+   Smooth continuous corners, soft elevation, no hard tail shards.
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. Base Container Shape & Fit */
 .message-bubble {
   position: relative;
   width: fit-content;
-  min-width: 90px;
-  max-width: 82%;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  max-width: 100%;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 1px 1px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.message-bubble:hover {
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* 2. Text Message Bubble — corner radii tuned to Material 3 scale */
+.message-bubble-text {
+  padding: 18px 24px;
 }
 
 .message-bubble-text.message-bubble-mine {
-  padding: 12px 16px;
-  border-radius: 24px 4px 24px 24px;
+  border-radius: 22px 4px 22px 22px; /* swapped: right top = 4px, bottom right = 22px */
 }
 
 .message-bubble-text.message-bubble-other {
-  padding: 12px 16px;
-  border-radius: 4px 24px 24px 24px;
+  border-radius: 4px 22px 22px 22px;
 }
 
+/* Consecutive messages from the same sender: soften the tucked corner
+   on all but the last bubble in the group for that "stacked" Google look */
+.message-bubble-mine.message-bubble-grouped {
+  border-radius: 22px 8px 22px 22px;
+}
+
+.message-bubble-other.message-bubble-grouped {
+  border-radius: 8px 22px 22px 8px;
+}
+
+.message-bubble-mine.message-bubble-grouped-last {
+  border-radius: 22px 4px 22px 22px;
+}
+
+.message-bubble-other.message-bubble-grouped-last {
+  border-radius: 4px 22px 22px 22px;
+}
+
+/* 3. Media Message Bubble Corner Radii */
 .message-bubble-media {
   padding: 4px;
+  overflow: hidden;
 }
 
 .message-bubble-media.message-bubble-mine {
-  border-radius: 24px 4px 24px 24px;
+  border-radius: 22px 4px 22px 22px;
 }
 
 .message-bubble-media.message-bubble-other {
-  border-radius: 4px 24px 24px 24px;
+  border-radius: 4px 22px 22px 22px;
 }
 
 /* Outgoing Message Bubble — uses active theme outgoing tokens */
 .message-bubble-mine {
   background: var(--color-message-outgoing) !important;
   color: var(--color-message-outgoing-text) !important;
-  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
 /* Incoming Message Bubble — uses active theme incoming tokens */
@@ -805,54 +1213,48 @@ body {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Tails */
+/* 4. No tail shards — the tucked 4px corner above IS the tail.
+   This matches Google Messages / Gemini's current visual language:
+   clean, soft, no floating triangle artifacts. */
 .message-bubble::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  width: 8px;
-  height: 13px;
-  background: inherit;
-  z-index: 1;
-}
-
-.message-bubble-mine::before {
-  right: -8px;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
-}
-
-.message-bubble-other::before {
-  left: -8px;
-  clip-path: polygon(100% 0, 0 0, 100% 100%);
+  content: none;
 }
 
 .message-content {
-  font-size: 16px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  font-size: var(--message-font-size, 16px);
+  color: var(--message-custom-color, inherit);
+  line-height: 1.45;
   white-space: pre-wrap;
-  display: inline;
-}
-
-@media (min-width: 640px) {
-  .message-content {
-    font-size: 17px;
-  }
-}
-
-.message-content::after {
-  content: '';
+  word-break: normal;
+  overflow-wrap: break-word;
   display: inline-block;
-  height: 12px;
+  max-width: 100%;
 }
 
-.message-bubble-mine .message-content::after {
-  width: 75px;
+[data-font-color="black"] .message-content,
+[data-font-color="black"] .message-content * {
+  color: #000000 !important;
 }
 
-.message-bubble-other .message-content::after {
-  width: 55px;
+[data-font-color="black"] .message-timestamp,
+[data-font-color="black"] .message-meta .message-timestamp,
+[data-font-color="black"] .message-bubble-mine .message-timestamp,
+[data-font-color="black"] .message-bubble-other .message-timestamp {
+  color: #000000 !important;
+  opacity: 0.75;
+}
+
+[data-font-color="white"] .message-content,
+[data-font-color="white"] .message-content * {
+  color: #FFFFFF !important;
+}
+
+[data-font-color="white"] .message-timestamp,
+[data-font-color="white"] .message-meta .message-timestamp,
+[data-font-color="white"] .message-bubble-mine .message-timestamp,
+[data-font-color="white"] .message-bubble-other .message-timestamp {
+  color: #FFFFFF !important;
+  opacity: 0.75;
 }
 
 .message-meta {
@@ -874,20 +1276,24 @@ body {
   font-size: 11px;
   font-weight: 500;
   color: var(--color-text-secondary);
-  opacity: 0.8;
+  opacity: 0.75;
 }
 
 .message-bubble-mine .message-timestamp {
   color: var(--color-message-outgoing-text);
-  opacity: 0.85;
+  opacity: 0.75;
 }
 
-.message-bubble-mine .message-meta svg {
+.message-bubble-mine .message-meta svg,
+.message-bubble-mine .message-meta span,
+.message-bubble-mine .message-meta .material-symbols-outlined {
   color: var(--color-message-outgoing-text) !important;
   opacity: 0.85;
 }
 
-.message-bubble-mine .message-meta svg.text-sky-400 {
+.message-bubble-mine .message-meta svg.text-sky-400,
+.message-bubble-mine .message-meta span.text-sky-400,
+.message-bubble-mine .message-meta .material-symbols-outlined.text-sky-400 {
   color: var(--color-accent, #38bdf8) !important;
   opacity: 1;
 }
@@ -916,23 +1322,66 @@ body {
   opacity: 0.9;
 }
 
-/* Reply Preview */
+/* ─────────────────────────────────────────────────────────────
+   Reply Preview (Modern Material 3 / Google Glass Capsule Style)
+   ───────────────────────────────────────────────────────────── */
 .reply-preview-bubble {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   cursor: pointer;
   border-radius: 12px;
-  border-left-width: 4px;
+  padding: 2px 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  user-select: none;
+  border-left: 3px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.reply-preview-bubble:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+.reply-preview-bubble:active {
+  transform: scale(0.98);
+}
+
+/* Outgoing Message Reply Preview */
+.message-bubble-mine .reply-preview-bubble {
+  border-left-color: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.16);
+  border-top-color: rgba(255, 255, 255, 0.18);
+  border-right-color: rgba(255, 255, 255, 0.18);
+  border-bottom-color: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.message-bubble-mine .reply-preview-bubble:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.message-bubble-mine .reply-preview-bubble p,
+.message-bubble-mine .reply-preview-bubble span {
+  color: inherit !important;
+}
+
+/* Incoming Message Reply Preview */
+.message-bubble-other .reply-preview-bubble {
   border-left-color: var(--color-primary);
-  padding: 10px;
-  font-size: 11px;
-  line-height: 1.25;
-  transition: all 0.2s ease;
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
-.message-bubble-mine .reply-preview-bubble {
-  background: color-mix(in srgb, var(--color-message-outgoing-text) 12%, transparent);
-  border-left-color: var(--color-message-outgoing-text);
+.message-bubble-other .reply-preview-bubble .reply-sender {
+  color: var(--color-primary) !important;
 }
 
 /* Media Messages */
@@ -1048,4 +1497,313 @@ body {
 .message-bubble-emoji-only .message-meta svg {
   color: var(--color-text-secondary) !important;
   opacity: 0.85 !important;
+}
+
+/* ============================================================
+   GEMINI-STYLE TYPING INDICATOR (High Jumps + Triangle Orbit)
+   ============================================================ */
+.gemini-typing-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 20px;
+  min-width: 28px;
+  padding: 0 2px;
+  position: relative;
+}
+
+.gemini-typing-dot {
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  will-change: transform, opacity;
+  box-shadow: 0 0 5px var(--color-primary);
+}
+
+.gemini-typing-dot-1 {
+  animation: gemini-dot-1 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.gemini-typing-dot-2 {
+  animation: gemini-dot-2 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+.gemini-typing-dot-3 {
+  animation: gemini-dot-3 3.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+@keyframes gemini-dot-1 {
+  /* Wave Jump 1 */
+  0%, 100% { transform: translate(0, 0); opacity: 0.7; }
+  5% { transform: translate(0, -9px); opacity: 1; }
+  10% { transform: translate(0, 0); opacity: 0.7; }
+  
+  /* Wave Jump 2 */
+  16% { transform: translate(0, -9px); opacity: 1; }
+  21% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Wave Jump 3 */
+  27% { transform: translate(0, -9px); opacity: 1; }
+  32% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Transition to Triangle Top Vertex */
+  45% { transform: translate(5px, -5.5px) scale(1.15); opacity: 1; }
+
+  /* Triangle Orbit 1 */
+  57% { transform: translate(10.5px, 3.5px) scale(1.15); opacity: 1; }
+  69% { transform: translate(-0.5px, 3.5px) scale(1.15); opacity: 1; }
+  81% { transform: translate(5px, -5.5px) scale(1.15); opacity: 1; }
+
+  /* Return to Row */
+  93% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+}
+
+@keyframes gemini-dot-2 {
+  /* Wave Jump 1 */
+  0%, 100% { transform: translate(0, 0); opacity: 0.7; }
+  5% { transform: translate(0, 0); opacity: 0.7; }
+  10% { transform: translate(0, -9px); opacity: 1; }
+  15% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Wave Jump 2 */
+  21% { transform: translate(0, -9px); opacity: 1; }
+  26% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Wave Jump 3 */
+  32% { transform: translate(0, -9px); opacity: 1; }
+  37% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Transition to Triangle Bottom-Left Vertex */
+  45% { transform: translate(-5.5px, 3.5px) scale(1.15); opacity: 1; }
+
+  /* Triangle Orbit 1 */
+  57% { transform: translate(0, -5.5px) scale(1.15); opacity: 1; }
+  69% { transform: translate(5.5px, 3.5px) scale(1.15); opacity: 1; }
+  81% { transform: translate(-5.5px, 3.5px) scale(1.15); opacity: 1; }
+
+  /* Return to Row */
+  93% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+}
+
+@keyframes gemini-dot-3 {
+  /* Wave Jump 1 */
+  0%, 100% { transform: translate(0, 0); opacity: 0.7; }
+  10% { transform: translate(0, 0); opacity: 0.7; }
+  15% { transform: translate(0, -9px); opacity: 1; }
+  20% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Wave Jump 2 */
+  26% { transform: translate(0, -9px); opacity: 1; }
+  31% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Wave Jump 3 */
+  37% { transform: translate(0, -9px); opacity: 1; }
+  42% { transform: translate(0, 0); opacity: 0.7; }
+
+  /* Transition to Triangle Bottom-Right Vertex */
+  45% { transform: translate(-0.5px, 3.5px) scale(1.15); opacity: 1; }
+
+  /* Triangle Orbit 1 */
+  57% { transform: translate(-10.5px, 3.5px) scale(1.15); opacity: 1; }
+  69% { transform: translate(-5px, -5.5px) scale(1.15); opacity: 1; }
+  81% { transform: translate(-0.5px, 3.5px) scale(1.15); opacity: 1; }
+
+  /* Return to Row */
+  93% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+}
+
+/* ==========================================================================
+   GEOMETRIC SHAPE LOADER (Triangle, Square, Circle Morphing Animation)
+   ========================================================================== */
+
+.shape-loader-svg {
+  overflow: visible;
+  display: block;
+}
+
+/* Background Orbiting Track */
+.shape-loader-track-circ {
+  transform-origin: 50px 50px;
+  animation: shapeTrackSpin 8s linear infinite;
+}
+
+.shape-loader-track-poly {
+  transform-origin: 50px 50px;
+  animation: shapeTrackCounterSpin 12s linear infinite;
+}
+
+@keyframes shapeTrackSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes shapeTrackCounterSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+/* 1. TRIANGLE ANIMATION (Moves along Triangle/Circle/Square vertices) */
+.shape-node-triangle {
+  animation: shapePathTriangle 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 50px 50px;
+}
+
+.shape-node-triangle polygon {
+  animation: shapeSelfRotateTriangle 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 0 0;
+}
+
+@keyframes shapePathTriangle {
+  0% {
+    transform: translate(50px, 20px);
+  }
+  33.33% {
+    transform: translate(76px, 66px);
+  }
+  66.67% {
+    transform: translate(24px, 66px);
+  }
+  100% {
+    transform: translate(50px, 20px);
+  }
+}
+
+@keyframes shapeSelfRotateTriangle {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  16.66% {
+    transform: rotate(60deg) scale(1.18);
+  }
+  33.33% {
+    transform: rotate(120deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.18);
+  }
+  66.67% {
+    transform: rotate(240deg) scale(1);
+  }
+  83.33% {
+    transform: rotate(300deg) scale(1.18);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* 2. SQUARE ANIMATION */
+.shape-node-square {
+  animation: shapePathSquare 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 50px 50px;
+}
+
+.shape-node-square rect {
+  animation: shapeSelfRotateSquare 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 0 0;
+}
+
+@keyframes shapePathSquare {
+  0% {
+    transform: translate(76px, 66px);
+  }
+  33.33% {
+    transform: translate(24px, 66px);
+  }
+  66.67% {
+    transform: translate(50px, 20px);
+  }
+  100% {
+    transform: translate(76px, 66px);
+  }
+}
+
+@keyframes shapeSelfRotateSquare {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  16.66% {
+    transform: rotate(45deg) scale(0.9);
+  }
+  33.33% {
+    transform: rotate(90deg) scale(1);
+  }
+  50% {
+    transform: rotate(135deg) scale(0.9);
+  }
+  66.67% {
+    transform: rotate(180deg) scale(1);
+  }
+  83.33% {
+    transform: rotate(225deg) scale(0.9);
+  }
+  100% {
+    transform: rotate(270deg) scale(1);
+  }
+}
+
+/* 3. CIRCLE ANIMATION */
+.shape-node-circle {
+  animation: shapePathCircle 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 50px 50px;
+}
+
+.shape-node-circle circle {
+  animation: shapeSelfPulseCircle 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  transform-origin: 0 0;
+}
+
+@keyframes shapePathCircle {
+  0% {
+    transform: translate(24px, 66px);
+  }
+  33.33% {
+    transform: translate(50px, 20px);
+  }
+  66.67% {
+    transform: translate(76px, 66px);
+  }
+  100% {
+    transform: translate(24px, 66px);
+  }
+}
+
+@keyframes shapeSelfPulseCircle {
+  0%, 100% {
+    transform: scale(1);
+  }
+  16.66% {
+    transform: scale(1.3);
+  }
+  33.33% {
+    transform: scale(0.85);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  66.67% {
+    transform: scale(0.85);
+  }
+  83.33% {
+    transform: scale(1.3);
+  }
+}
+
+/* Ambient Pulse for Shape Core Glow */
+.shape-core-pulse {
+  transform-origin: 50px 50px;
+  animation: shapeCoreBreathing 2.4s ease-in-out infinite;
+}
+
+@keyframes shapeCoreBreathing {
+  0%, 100% {
+    transform: scale(0.85);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.6;
+  }
 }

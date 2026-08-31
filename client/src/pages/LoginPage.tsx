@@ -2,12 +2,15 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { MaterialIcon } from '../components/MaterialIcon';
-import { AuthShell } from '../components/AuthShell';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { getThemePureColor } from '../config/themes';
 import { Loader } from '../components/Loader';
 
 export const LoginPage = () => {
   const { login } = useAuth();
+  const { themeId } = useTheme();
+  const pureColor = getThemePureColor(themeId);
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = location.state as { from?: { pathname?: string } } | null;
@@ -39,97 +42,160 @@ export const LoginPage = () => {
   };
 
   return (
-    <AuthShell
-      title="Welcome back"
-      subtitle="Login to create a room or continue to a shared room."
-    >
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <label className="block text-left text-xs font-semibold text-[var(--color-text-primary)] sm:text-sm">
-          Email
-          <div className="relative mt-1.5 sm:mt-2">
-            <MaterialIcon
-              icon="mail"
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] sm:left-5"
-            />
-            <input
-              type="text"
-              inputMode="email"
-              autoComplete="email"
-              required
-              value={form.email}
-              onChange={(event) =>
-                setForm((current) => ({ ...current, email: event.target.value }))
-              }
-              className="design-input w-full py-2.5 pl-11 pr-4 text-sm text-[var(--color-text-primary)] outline-none transition sm:py-3 sm:pl-13 sm:text-base"
-              placeholder="you@example.com"
-            />
+    <div className="fixed inset-0 h-dvh overflow-hidden flex flex-col justify-between bg-[var(--color-background)] text-[var(--color-text-primary)] transition-colors duration-200 select-none">
+      <div />
+
+      {/* Main Center Area: Centered Branding + Google Keep Note Card */}
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-4 py-6 sm:px-6">
+        {/* Centered Chattogram Branding */}
+        <div className="flex items-center justify-center gap-3 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-2xl shadow-xs transition-transform hover:scale-105"
+            style={{
+              backgroundColor: pureColor.bg,
+              color: pureColor.text,
+            }}
+          >
+            <MaterialIcon icon="lightbulb" size={24} />
           </div>
-        </label>
+          <span className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            Chattogram
+          </span>
+        </div>
 
-        <label className="block text-left text-xs font-semibold text-[var(--color-text-primary)] sm:text-sm">
-          Password
-          <div className="relative mt-1.5 sm:mt-2">
-            <MaterialIcon
-              icon="lock"
-              size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] sm:left-5"
-            />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              autoComplete="current-password"
-              required
-              value={form.password}
-              onChange={(event) =>
-                setForm((current) => ({
-                  ...current,
-                  password: event.target.value,
-                }))
-              }
-              className="design-input w-full py-2.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] outline-none transition sm:py-3 sm:pl-13 sm:text-base"
-              placeholder="Your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-muted)] transition hover:text-[var(--color-text-primary)]"
-              title={showPassword ? 'Hide password' : 'Show password'}
-            >
-              <MaterialIcon icon={showPassword ? "visibility_off" : "visibility"} size={18} />
-            </button>
+        <div className="w-full max-w-md rounded-3xl bg-[var(--color-surface)] shadow-xl p-6 sm:p-8 space-y-6 relative animate-in fade-in zoom-in-95 duration-300">
+          {/* Keep Note Pin */}
+          <div
+            className="absolute top-5 right-5 text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors cursor-pointer"
+            title="Pinned Note"
+          >
+            <MaterialIcon icon="push_pin" size={20} />
           </div>
-        </label>
 
-        {error && (
-          <p className="rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/10 px-3 py-2.5 text-xs font-medium text-[var(--color-error)] sm:px-4 sm:py-3 sm:text-sm">
-            {error}
-          </p>
-        )}
+          {/* Note Card Header */}
+          <div className="space-y-2 text-left pr-8">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] px-3 py-1 text-xs font-semibold">
+              <MaterialIcon icon="lock" size={13} />
+              <span>Secure Authentication</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)]">
+              Welcome back
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--color-text-secondary)] leading-relaxed">
+              Login to access your temporary rooms & encrypted conversations.
+            </p>
+          </div>
 
-        {success && (
-          <p className="rounded-xl border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-3 py-2.5 text-xs font-medium text-[var(--color-success)] sm:px-4 sm:py-3 sm:text-sm">
-            {success}
-          </p>
-        )}
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4 text-left">
+            {/* Email Field */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                Email address
+              </label>
+              <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-hover)]/70 px-4 py-2.5 sm:py-3 focus-within:bg-[var(--color-surface)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30 transition-all">
+                <MaterialIcon
+                  icon="mail"
+                  size={18}
+                  className="text-[var(--color-primary)] shrink-0"
+                />
+                <input
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  required
+                  value={form.email}
+                  onChange={(event) =>
+                    setForm((current) => ({ ...current, email: event.target.value }))
+                  }
+                  className="w-full bg-transparent text-sm sm:text-base outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                  placeholder="you@example.com"
+                />
+              </div>
+            </div>
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--color-on-primary)] transition hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:py-3 cursor-pointer shadow-md"
-        >
-          {isSubmitting ? <Loader size="sm" light /> : 'Login'}
-        </button>
-      </form>
+            {/* Password Field */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-[var(--color-text-secondary)]">
+                Password
+              </label>
+              <div className="flex items-center gap-3 rounded-2xl bg-[var(--color-hover)]/70 px-4 py-2.5 sm:py-3 focus-within:bg-[var(--color-surface)] focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30 transition-all">
+                <MaterialIcon
+                  icon="lock"
+                  size={18}
+                  className="text-[var(--color-primary)] shrink-0"
+                />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  required
+                  value={form.password}
+                  onChange={(event) =>
+                    setForm((current) => ({
+                      ...current,
+                      password: event.target.value,
+                    }))
+                  }
+                  className="w-full bg-transparent text-sm sm:text-base outline-none text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)]"
+                  placeholder="Your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="p-1 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition cursor-pointer"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  <MaterialIcon icon={showPassword ? 'visibility_off' : 'visibility'} size={18} />
+                </button>
+              </div>
+            </div>
 
-      <p className="mt-5 text-center text-xs text-[var(--color-text-secondary)] sm:mt-6 sm:text-sm">
-        New here?{' '}
-        <Link
-          to="/signup"
-          className="font-semibold text-[var(--color-primary)] hover:underline"
-        >
-          Create an account
-        </Link>
-      </p>
-    </AuthShell>
+            {/* Feedback Alerts */}
+            {error && (
+              <div className="flex items-center gap-2 rounded-2xl bg-[var(--color-error)]/10 px-4 py-2.5 text-xs font-medium text-[var(--color-error)] animate-in fade-in">
+                <MaterialIcon icon="error" size={16} className="shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            {success && (
+              <div className="flex items-center gap-2 rounded-2xl bg-[var(--color-success)]/10 px-4 py-2.5 text-xs font-medium text-[var(--color-success)] animate-in fade-in">
+                <MaterialIcon icon="check_circle" size={16} className="shrink-0" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* Action Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-bold text-[var(--color-on-primary)] shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? <Loader size="sm" light /> : 'Login'}
+              </button>
+            </div>
+          </form>
+
+          {/* Footer Link */}
+          <div className="border-t border-[var(--color-border)]/50 pt-4 text-center">
+            <p className="text-xs sm:text-sm text-[var(--color-text-secondary)]">
+              New here?{' '}
+              <Link
+                to="/signup"
+                className="font-semibold text-[var(--color-primary)] hover:underline"
+              >
+                Create an account
+              </Link>
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Keep Footer */}
+      <footer className="flex-shrink-0 py-3 text-center text-[11px] text-[var(--color-text-muted)]">
+        Chattogram • Ephemeral rooms & encrypted private messaging
+      </footer>
+    </div>
   );
 };

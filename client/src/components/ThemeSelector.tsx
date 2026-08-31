@@ -7,7 +7,7 @@ import { THEMES, type ThemeId } from '../config/themes';
 export const themes = THEMES.map((t) => ({
   name: t.name,
   value: t.id,
-  color: t.previewTokens.primary,
+  color: t.previewTokens.outgoing,
   theme: t,
 }));
 
@@ -73,11 +73,15 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
                       : 'hover:bg-[var(--color-hover)] text-[var(--color-text-primary)]'
                   }`}
                 >
-                  {/* Theme swatch showing primary + outgoing preview */}
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full overflow-hidden border border-black/10 shadow-xs relative">
+                  {/* Theme swatch showing incoming + outgoing bubble colors */}
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full overflow-hidden border border-black/10 dark:border-white/10 shadow-xs relative">
                     <span
-                      className="absolute inset-0"
-                      style={{ backgroundColor: theme.previewTokens.primary }}
+                      className="absolute inset-y-0 left-0 w-1/2"
+                      style={{ backgroundColor: theme.previewTokens.incoming }}
+                    />
+                    <span
+                      className="absolute inset-y-0 right-0 w-1/2"
+                      style={{ backgroundColor: theme.previewTokens.outgoing }}
                     />
                   </div>
 
@@ -120,13 +124,19 @@ export const ThemeSelector = ({ isInline = false }: { isInline?: boolean }) => {
                 }`}
                 title={`${theme.name} (${theme.mode})`}
               >
-                <span
-                  className="h-full w-full rounded-full shadow-sm border border-[var(--color-border)]"
-                  style={{ backgroundColor: theme.previewTokens.primary }}
-                />
+                <span className="h-full w-full rounded-full shadow-sm border border-[var(--color-border)] overflow-hidden relative block">
+                  <span
+                    className="absolute inset-y-0 left-0 w-1/2"
+                    style={{ backgroundColor: theme.previewTokens.incoming }}
+                  />
+                  <span
+                    className="absolute inset-y-0 right-0 w-1/2"
+                    style={{ backgroundColor: theme.previewTokens.outgoing }}
+                  />
+                </span>
                 {isSelected && (
                   <span className="absolute inset-0 flex items-center justify-center">
-                    <span className="h-1.5 w-1.5 rounded-full bg-white shadow-sm" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-white shadow-sm ring-1 ring-black/20" />
                   </span>
                 )}
               </button>

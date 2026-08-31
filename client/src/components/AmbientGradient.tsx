@@ -2,8 +2,8 @@ import { memo, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { getThemeGradients, type ThemeGradients } from '../hooks/useAmbientGradient';
 
-const ACTIVE_PULSE_DURATION = 3500; // Visible for 3 to 4 seconds (3.5s)
-const COOLDOWN_DURATION = 45000;    // 45-second strict cooldown between triggers
+const ACTIVE_PULSE_DURATION = 7000; // Visible for 7 seconds (7s)
+const COOLDOWN_DURATION = 35000;    // 35-second strict cooldown between triggers
 
 /**
  * AmbientGradient

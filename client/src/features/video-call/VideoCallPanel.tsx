@@ -81,7 +81,7 @@ const VideoTile = ({
           autoPlay
           playsInline
           muted={isLocal}
-          className={`h-full w-full object-cover transition-opacity duration-700 ${isLocal ? 'scale-x-[-1]' : ''} ${showVideo ? 'opacity-100' : 'opacity-0'}`}
+          className={`h-full w-full object-cover transition-opacity duration-700 ${showVideo ? 'opacity-100' : 'opacity-0'}`}
         />
 
         {/* Avatar fallback shown when video is off */}

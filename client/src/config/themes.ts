@@ -12,7 +12,19 @@ export type ThemeId =
   | 'K'
   | 'L'
   | 'M'
-  | 'N';
+  | 'N'
+  | 'O'
+  | 'P'
+  | 'Q'
+  | 'R'
+  | 'S'
+  | 'T'
+  | 'U'
+  | 'V'
+  | 'W'
+  | 'X'
+  | 'Y'
+  | 'Z';
 
 export type ThemeFamily =
   | 'Material'
@@ -23,7 +35,13 @@ export type ThemeFamily =
   | 'Google Blue'
   | 'Multi-color'
   | 'Minimal'
-  | 'Messages';
+  | 'Messages'
+  | 'Chrome Coral'
+  | 'Android Mint'
+  | 'Google Play'
+  | 'Pixel Sunset'
+  | 'YouTube Red'
+  | 'Pixel Obsidian';
 
 export interface ThemeMetadata {
   id: ThemeId;
@@ -331,6 +349,246 @@ export const THEMES: ThemeMetadata[] = [
       border: '#3C4043',
     },
   },
+
+  // --- Chrome Coral ---
+  {
+    id: 'O',
+    name: 'Google Chrome Coral Light',
+    family: 'Chrome Coral',
+    mode: 'light',
+    description: 'Official Google Red 500 (#EA4335) accent with clean porcelain surfaces and vibrant coral bubbles.',
+    closestProduct: 'Google Chrome / Coral Theme (Light)',
+    pairedTheme: 'P',
+    previewTokens: {
+      background: '#FFFFFF',
+      surface: '#FFFFFF',
+      primary: '#EA4335',
+      incoming: '#F1F3F4',
+      outgoing: '#EA4335',
+      outgoingText: '#FFFFFF',
+      text: '#202124',
+      border: '#FCE8E6',
+    },
+  },
+  {
+    id: 'P',
+    name: 'Google Chrome Coral Dark',
+    family: 'Chrome Coral',
+    mode: 'dark',
+    description: 'Deep #202124 canvas paired with official Google Red 300 (#F28B82) outgoing bubbles.',
+    closestProduct: 'Google Chrome / Coral Theme (Dark)',
+    pairedTheme: 'O',
+    previewTokens: {
+      background: '#202124',
+      surface: '#292A2D',
+      primary: '#F28B82',
+      incoming: '#303134',
+      outgoing: '#F28B82',
+      outgoingText: '#202124',
+      text: '#E8EAED',
+      border: '#493838',
+    },
+  },
+
+  // --- Android Mint & Drive ---
+  {
+    id: 'Q',
+    name: 'Android Mint & Drive Light',
+    family: 'Android Mint',
+    mode: 'light',
+    description: 'Official Google Green 700 (#188038) and Drive container tints with crisp modern contrast.',
+    closestProduct: 'Android 14/15 Mint & Google Drive (Light)',
+    pairedTheme: 'R',
+    previewTokens: {
+      background: '#F8FBF9',
+      surface: '#FFFFFF',
+      primary: '#188038',
+      incoming: '#F1F3F4',
+      outgoing: '#188038',
+      outgoingText: '#FFFFFF',
+      text: '#202124',
+      border: '#CEEAD6',
+    },
+  },
+  {
+    id: 'R',
+    name: 'Android Mint & Drive Dark',
+    family: 'Android Mint',
+    mode: 'dark',
+    description: 'Subtle forest dark canvas (#191E1A) with Google Green 300 (#81C995) outgoing bubbles.',
+    closestProduct: 'Android Mint / Drive (Dark)',
+    pairedTheme: 'Q',
+    previewTokens: {
+      background: '#191E1A',
+      surface: '#202622',
+      primary: '#81C995',
+      incoming: '#2B322D',
+      outgoing: '#81C995',
+      outgoingText: '#191E1A',
+      text: '#E8EAED',
+      border: '#36453B',
+    },
+  },
+
+  // --- Google Play Teal ---
+  {
+    id: 'S',
+    name: 'Google Play Teal Light',
+    family: 'Google Play',
+    mode: 'light',
+    description: 'Google Cyan 700 (#00838F) and Play Store cyan accents with refreshing ocean tone.',
+    closestProduct: 'Google Play Store / Teal (Light)',
+    pairedTheme: 'T',
+    previewTokens: {
+      background: '#F4FAFB',
+      surface: '#FFFFFF',
+      primary: '#00838F',
+      incoming: '#F1F3F4',
+      outgoing: '#00838F',
+      outgoingText: '#FFFFFF',
+      text: '#202124',
+      border: '#B2EBF2',
+    },
+  },
+  {
+    id: 'T',
+    name: 'Google Play Teal Dark',
+    family: 'Google Play',
+    mode: 'dark',
+    description: 'Deep oceanic dark (#131E20) paired with Google Cyan 300 (#4DD0E1) outgoing bubbles.',
+    closestProduct: 'Google Play Store / Teal (Dark)',
+    pairedTheme: 'S',
+    previewTokens: {
+      background: '#131E20',
+      surface: '#1A282B',
+      primary: '#4DD0E1',
+      incoming: '#223336',
+      outgoing: '#4DD0E1',
+      outgoingText: '#131E20',
+      text: '#E8EAED',
+      border: '#2C464C',
+    },
+  },
+
+  // --- Pixel Sunset Terracotta ---
+  {
+    id: 'U',
+    name: 'Google Pixel Sunset Light',
+    family: 'Pixel Sunset',
+    mode: 'light',
+    description: 'Official Pixel Orange 700 (#E8710A) and warm terracotta sunset tones from Material You.',
+    closestProduct: 'Google Pixel 8/9 Sunset Coral (Light)',
+    pairedTheme: 'V',
+    previewTokens: {
+      background: '#FDF9F7',
+      surface: '#FFFFFF',
+      primary: '#E8710A',
+      incoming: '#F3EBE6',
+      outgoing: '#E8710A',
+      outgoingText: '#FFFFFF',
+      text: '#202124',
+      border: '#F6D6C8',
+    },
+  },
+  {
+    id: 'V',
+    name: 'Google Pixel Sunset Dark',
+    family: 'Pixel Sunset',
+    mode: 'dark',
+    description: 'Warm obsidian terracotta canvas (#211B18) with Pixel Sunset Coral 300 (#FFB59D) bubbles.',
+    closestProduct: 'Google Pixel 8/9 Sunset Coral (Dark)',
+    pairedTheme: 'U',
+    previewTokens: {
+      background: '#211B18',
+      surface: '#2B231E',
+      primary: '#FFB59D',
+      incoming: '#332A24',
+      outgoing: '#FFB59D',
+      outgoingText: '#211B18',
+      text: '#E8EAED',
+      border: '#4C372D',
+    },
+  },
+
+  // --- YouTube Red ---
+  {
+    id: 'W',
+    name: 'YouTube Studio Red Light',
+    family: 'YouTube Red',
+    mode: 'light',
+    description: 'Official YouTube Red (#CC0000) primary with clean white cards and high-contrast styling.',
+    closestProduct: 'YouTube / YouTube Music (Light)',
+    pairedTheme: 'X',
+    previewTokens: {
+      background: '#FFFFFF',
+      surface: '#FFFFFF',
+      primary: '#CC0000',
+      incoming: '#F2F2F2',
+      outgoing: '#CC0000',
+      outgoingText: '#FFFFFF',
+      text: '#0F0F0F',
+      border: '#E5E5E5',
+    },
+  },
+  {
+    id: 'X',
+    name: 'YouTube Studio Red Dark',
+    family: 'YouTube Red',
+    mode: 'dark',
+    description: 'Official YouTube OLED dark canvas (#0F0F0F) with YouTube Red accent (#FF4E45) bubbles.',
+    closestProduct: 'YouTube / YouTube Music (Dark)',
+    pairedTheme: 'W',
+    previewTokens: {
+      background: '#0F0F0F',
+      surface: '#1F1F1F',
+      primary: '#FF4E45',
+      incoming: '#272727',
+      outgoing: '#FF4E45',
+      outgoingText: '#0F0F0F',
+      text: '#F1F1F1',
+      border: '#383838',
+    },
+  },
+
+  // --- Pixel Obsidian (True OLED Black) ---
+  {
+    id: 'Y',
+    name: 'Pixel Porcelain Monochrome Light',
+    family: 'Pixel Obsidian',
+    mode: 'light',
+    description: 'Ultra-minimal Pixel 9 Porcelain look with deep graphite (#1F1F1F) bubbles.',
+    closestProduct: 'Google Pixel 9 Porcelain Edition (Light)',
+    pairedTheme: 'Z',
+    previewTokens: {
+      background: '#F9F9FB',
+      surface: '#FFFFFF',
+      primary: '#1F1F1F',
+      incoming: '#F1F3F4',
+      outgoing: '#1F1F1F',
+      outgoingText: '#FFFFFF',
+      text: '#1F1F1F',
+      border: '#E0E0E0',
+    },
+  },
+  {
+    id: 'Z',
+    name: 'Pixel Obsidian True OLED Black',
+    family: 'Pixel Obsidian',
+    mode: 'dark',
+    description: 'Pure 0% OLED Black (#000000) battery-saver canvas with Google Blue 300 (#8AB4F8) bubbles.',
+    closestProduct: 'Google Pixel Obsidian AMOLED Edition (Dark)',
+    pairedTheme: 'Y',
+    previewTokens: {
+      background: '#000000',
+      surface: '#121214',
+      primary: '#8AB4F8',
+      incoming: '#1E1F24',
+      outgoing: '#8AB4F8',
+      outgoingText: '#000000',
+      text: '#F0F4F9',
+      border: '#2E3036',
+    },
+  },
 ];
 
 export const DEFAULT_THEME_ID: ThemeId = 'M';
@@ -353,15 +611,34 @@ export const getThemePureColor = (themeId: ThemeId): { bg: string; text: string 
       return { bg: '#0B57D0', text: '#FFFFFF' };
     case 'G':
     case 'H':
-      return { bg: '#1A73E8', text: '#FFFFFF' };
+      return { bg: '#00AC47', text: '#FFFFFF' };
     case 'I':
       return { bg: '#1A73E8', text: '#FFFFFF' };
     case 'J':
       return { bg: '#1A73E8', text: '#FFFFFF' };
     case 'K':
-      return { bg: '#4285F4', text: '#FFFFFF' };
+      return { bg: '#EA4335', text: '#FFFFFF' };
     case 'L':
-      return { bg: '#1A73E8', text: '#FFFFFF' };
+      return { bg: '#5F6368', text: '#FFFFFF' };
+    case 'O':
+    case 'P':
+      return { bg: '#EA4335', text: '#FFFFFF' };
+    case 'Q':
+    case 'R':
+      return { bg: '#188038', text: '#FFFFFF' };
+    case 'S':
+    case 'T':
+      return { bg: '#00838F', text: '#FFFFFF' };
+    case 'U':
+    case 'V':
+      return { bg: '#E8710A', text: '#FFFFFF' };
+    case 'W':
+    case 'X':
+      return { bg: '#CC0000', text: '#FFFFFF' };
+    case 'Y':
+      return { bg: '#1F1F1F', text: '#FFFFFF' };
+    case 'Z':
+      return { bg: '#8AB4F8', text: '#000000' };
     case 'M':
     case 'N':
     default:
