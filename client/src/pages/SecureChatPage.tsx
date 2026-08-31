@@ -1,8 +1,5 @@
-/* eslint-disable react-hooks/set-state-in-effect */
 import {
   memo,
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -41,9 +38,6 @@ import { MaterialIcon } from '../components/MaterialIcon';
 import { getThemePureColor } from '../config/themes';
 import { AmbientGradient } from '../components/AmbientGradient';
 import { triggerAmbientPulse } from '../hooks/useAmbientGradient';
-
-// Loaded on demand: renders only when the user opens the emoji picker.
-const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
 
 const wallpapers = [
   { id: 'default', name: 'Default', url: '' },
@@ -357,7 +351,7 @@ export const SecureChatPage = () => {
   const { chatId } = useParams();
   const activeChatId = useMemo(() => (chatId || '').toLowerCase(), [chatId]);
   const { user } = useAuth();
-  const { theme, themeId } = useTheme();
+  const { themeId } = useTheme();
   const navigate = useNavigate();
   const pureColor = getThemePureColor(themeId);
 

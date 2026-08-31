@@ -1,7 +1,5 @@
 import {
   memo,
-  lazy,
-  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -39,9 +37,6 @@ import { MaterialIcon } from '../components/MaterialIcon';
 import { AppSidebar } from '../components/AppSidebar';
 import { AmbientGradient } from '../components/AmbientGradient';
 import { triggerAmbientPulse } from '../hooks/useAmbientGradient';
-
-// Loaded on demand: renders only when the user opens the emoji picker.
-const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
 
 const wallpapers = [
   { id: 'default', name: 'Default', url: '' },
@@ -505,7 +500,7 @@ export const ChatRoomPage = () => {
   const { roomId } = useParams();
   const activeRoomId = useMemo(() => (roomId || '').toUpperCase(), [roomId]);
   const { user } = useAuth();
-  const { theme, isDark, accent, setAccent } = useTheme();
+  const { isDark, accent, setAccent } = useTheme();
   const [showMobileColorPicker, setShowMobileColorPicker] = useState(false);
   const navigate = useNavigate();
 
@@ -518,7 +513,6 @@ export const ChatRoomPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [activeReactionMessageId, setActiveReactionMessageId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
@@ -570,7 +564,6 @@ export const ChatRoomPage = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const emojiPickerRef = useRef<HTMLDivElement | null>(null);
   const reactionPickerRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
