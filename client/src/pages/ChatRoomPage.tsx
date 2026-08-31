@@ -11,28 +11,6 @@ import {
 import { createPortal } from 'react-dom';
 import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  ArrowLeft02Icon,
-  Cancel01Icon,
-  Copy01Icon,
-  SmileIcon,
-  ImageAdd01Icon,
-  Menu01Icon,
-  SentIcon,
-  UserGroupIcon,
-  VolumeHighIcon,
-  VolumeMuteIcon,
-  ArrowTurnBackwardIcon,
-  Camera01Icon,
-  Image01Icon,
-  Add01Icon,
-  ArrowDown01Icon,
-  Clock01Icon,
-  Tick02Icon,
-  TickDouble02Icon,
-  PaintBrush01Icon
-} from '@hugeicons/core-free-icons';
 import { AnimatedPlaceholder } from '../components/AnimatedPlaceholder';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector, themes } from '../components/ThemeSelector';
@@ -57,6 +35,7 @@ import {
 } from '../utils/file';
 import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
+import { MaterialIcon } from '../components/MaterialIcon';
 
 // Loaded on demand: renders only when the user opens the emoji picker.
 const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
@@ -175,7 +154,7 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
         style={{ opacity: 0, transform: 'scale(0.5)' }}
         className="pointer-events-none absolute left-[-36px] top-1/2 z-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-200 text-slate-500 will-change-transform dark:bg-slate-700 dark:text-slate-400"
       >
-        <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={15} />
+        <MaterialIcon icon="reply" size={15} />
       </div>
 
       {/* The actual message bubble — translates horizontally on swipe */}
@@ -188,6 +167,7 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
 
 interface MessageBubbleProps {
   message: ChatMessage;
+  isConsecutive: boolean;
   currentUserId: string;
   isReactionPickerOpen: boolean;
   reactionPickerRef: RefObject<HTMLDivElement | null>;
@@ -207,6 +187,7 @@ interface MessageBubbleProps {
  */
 const MessageBubble = memo(function MessageBubble({
   message,
+  isConsecutive,
   currentUserId,
   isReactionPickerOpen,
   reactionPickerRef,
@@ -223,14 +204,14 @@ const MessageBubble = memo(function MessageBubble({
   return (
     <article
       id={`msg-${message.id}`}
-      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
+      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'} ${isConsecutive ? 'mt-[2px]' : 'mt-4'}`}
     >
       <SwipeableMessage isMine={isMine} onReply={() => onReply(message)}>
         <div
           className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
             } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
         >
-          {!isMine && (
+          {!isMine && !isConsecutive && (
             <p className="mb-1 ml-2 text-[10px] font-bold text-slate-400">
               {message.sender.name}
             </p>
@@ -259,7 +240,7 @@ const MessageBubble = memo(function MessageBubble({
                   <div className="flex items-center gap-1.5 opacity-90">
                     {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
                       <>
-                        <HugeiconsIcon icon={Image01Icon} size={14} />
+                        <MaterialIcon icon="image" size={14} />
                         <span className="text-[11px] italic">Photo</span>
                       </>
                     ) : (
@@ -278,7 +259,7 @@ const MessageBubble = memo(function MessageBubble({
                   className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
                   title="React"
                 >
-                  <HugeiconsIcon icon={SmileIcon} size={20} />
+                  <MaterialIcon icon="mood" size={20} />
                 </button>
                 <button
                   type="button"
@@ -286,7 +267,7 @@ const MessageBubble = memo(function MessageBubble({
                   className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
                   title="Reply"
                 >
-                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={20} />
+                  <MaterialIcon icon="reply" size={20} />
                 </button>
               </div>
 
@@ -297,7 +278,7 @@ const MessageBubble = memo(function MessageBubble({
                   onClick={() => onReply(message)}
                   className="rounded-full bg-slate-900/50 p-1.5 text-white backdrop-blur-sm"
                 >
-                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} />
+                  <MaterialIcon icon="reply" size={14} />
                 </button>
               </div>
 
@@ -353,7 +334,7 @@ const MessageBubble = memo(function MessageBubble({
                   className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
                 >
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
-                    <HugeiconsIcon icon={ImageAdd01Icon} size={20} />
+                    <MaterialIcon icon="add_photo_alternate" size={20} />
                   </div>
                   <div className="overflow-hidden">
                     <p className="truncate font-bold">{message.fileName || 'Shared file'}</p>
@@ -371,13 +352,12 @@ const MessageBubble = memo(function MessageBubble({
                     </span>
                     {isMine && (
                       <div className="flex transition-all duration-300">
-                        <HugeiconsIcon
-                          icon={
+                        <MaterialIcon icon={
                             message.status === 'sending'
-                              ? Clock01Icon
+                              ? "schedule"
                               : message.status === 'sent'
-                                ? Tick02Icon
-                                : TickDouble02Icon
+                                ? "check"
+                                : "done_all"
                           }
                           size={14}
                           className={`
@@ -398,13 +378,12 @@ const MessageBubble = memo(function MessageBubble({
                   </span>
                   {isMine && (
                     <div className="flex transition-all duration-300">
-                      <HugeiconsIcon
-                        icon={
+                      <MaterialIcon icon={
                           message.status === 'sending'
-                            ? Clock01Icon
+                            ? "schedule"
                             : message.status === 'sent'
-                              ? Tick02Icon
-                              : TickDouble02Icon
+                              ? "check"
+                              : "done_all"
                         }
                         size={14}
                         className={`
@@ -491,22 +470,30 @@ const MessageList = memo(function MessageList({
         </div>
       ))}
 
-      {messages.map((message) => (
-        <MessageBubble
-          key={message.id}
-          message={message}
-          currentUserId={currentUserId}
-          isReactionPickerOpen={activeReactionMessageId === message.id}
-          reactionPickerRef={reactionPickerRef}
-          onReply={onReply}
-          onScrollToMessage={onScrollToMessage}
-          onToggleReaction={onToggleReaction}
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          onSetReactionPicker={onSetReactionPicker}
-          onOpenFullscreen={onOpenFullscreen}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const prevMessage = index > 0 ? messages[index - 1] : null;
+        const isConsecutive = prevMessage !== null && 
+          prevMessage.sender.id === message.sender.id && 
+          new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime() < 5 * 60 * 1000;
+
+        return (
+          <MessageBubble
+            key={message.id}
+            message={message}
+            isConsecutive={isConsecutive}
+            currentUserId={currentUserId}
+            isReactionPickerOpen={activeReactionMessageId === message.id}
+            reactionPickerRef={reactionPickerRef}
+            onReply={onReply}
+            onScrollToMessage={onScrollToMessage}
+            onToggleReaction={onToggleReaction}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            onSetReactionPicker={onSetReactionPicker}
+            onOpenFullscreen={onOpenFullscreen}
+          />
+        );
+      })}
     </>
   );
 });
@@ -1301,35 +1288,35 @@ export const ChatRoomPage = () => {
   return (
     <main
       style={{ height: 'var(--visual-viewport-height, 100dvh)' }}
-      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden"
+      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
     >
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/98 px-3 py-0 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/98 sm:px-6">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 sm:gap-4">
+      <header className="sticky top-0 z-20 border-b border-[var(--color-divider)] bg-[var(--color-surface)]/95 px-4 py-0 shadow-sm backdrop-blur-md sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 sm:gap-4">
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
+              className="rounded-full p-2 text-[var(--color-text-secondary)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 lg:hidden cursor-pointer"
               title="Toggle Sidebar"
             >
-              <HugeiconsIcon icon={Menu01Icon} size={20} />
+              <MaterialIcon icon="menu" size={20} />
             </button>
 
             <div className="flex flex-col justify-center">
-              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-primary-600 dark:text-primary-400">
+              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[var(--color-primary)]">
                 Live Chat
               </p>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base font-extrabold tracking-widest text-slate-900 dark:text-white sm:text-lg">
+                <h1 className="text-base font-extrabold tracking-widest text-[var(--color-text-primary)] sm:text-lg">
                   {activeRoomId}
                 </h1>
                 <button
                   type="button"
                   onClick={copyRoomId}
-                  className="rounded-full p-1 text-slate-400 transition-all duration-150 hover:bg-slate-100 hover:text-slate-700 active:scale-90 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+                  className="rounded-full p-1 text-[var(--color-text-muted)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-90 cursor-pointer"
                   title="Copy Room ID"
                 >
-                  <HugeiconsIcon icon={Copy01Icon} size={14} />
+                  <MaterialIcon icon="content_copy" size={14} />
                 </button>
               </div>
             </div>
@@ -1339,7 +1326,7 @@ export const ChatRoomPage = () => {
           <div className="flex items-center gap-0.5 sm:gap-1">
             <VideoCallPanel roomId={activeRoomId} currentUser={user} />
 
-            <div className="mx-1 hidden h-5 w-px bg-slate-200 dark:bg-slate-700 lg:block" />
+            <div className="mx-1 hidden h-5 w-px bg-[var(--color-divider)] lg:block" />
 
             <div className="hidden items-center gap-0.5 lg:flex">
               <ThemeSelector />
@@ -1347,15 +1334,15 @@ export const ChatRoomPage = () => {
               <ThemeToggle />
             </div>
 
-            <div className="mx-1 hidden h-5 w-px bg-slate-200 dark:bg-slate-700 sm:block" />
+            <div className="mx-1 hidden h-5 w-px bg-[var(--color-divider)] sm:block" />
 
             <button
               type="button"
               onClick={() => setSoundEnabled((current) => !current)}
-              className="hidden rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
+              className="hidden rounded-full p-2 text-[var(--color-text-secondary)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 sm:block cursor-pointer"
               title={soundEnabled ? 'Mute' : 'Unmute'}
             >
-              <HugeiconsIcon icon={soundEnabled ? VolumeHighIcon : VolumeMuteIcon} size={20} />
+              <MaterialIcon icon={soundEnabled  ? "volume_up" : "volume_off"} size={20} />
             </button>
 
             {isCreator && (
@@ -1363,19 +1350,19 @@ export const ChatRoomPage = () => {
                 type="button"
                 onClick={closeRoom}
                 disabled={isClosing}
-                className="rounded-full p-2 text-red-500 transition-all duration-150 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:pointer-events-none disabled:opacity-40 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                className="rounded-full p-2 text-[var(--color-error)] transition-all duration-150 hover:bg-[var(--color-error)]/10 active:scale-95 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
                 title="Close Room"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
+                <MaterialIcon icon="close" size={20} />
               </button>
             )}
 
             <button
               type="button"
               onClick={leaveRoom}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
+              className="ml-1 flex items-center gap-1.5 rounded-full bg-[var(--color-primary)] px-3 py-2 text-xs font-semibold text-[var(--color-on-primary)] shadow-sm transition-all duration-150 hover:opacity-90 active:scale-95 sm:px-4 sm:text-sm cursor-pointer"
             >
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
+              <MaterialIcon icon="arrow_back" size={16} />
               <span className="hidden sm:inline">Leave</span>
             </button>
           </div>
@@ -1387,21 +1374,21 @@ export const ChatRoomPage = () => {
         {/* Sidebar */}
         <aside
           className={`
-            fixed inset-y-0 left-0 z-30 w-72 transform border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:w-72 lg:translate-x-0 lg:rounded-lg lg:border
+            fixed inset-y-0 left-0 z-30 w-72 transform border-r border-[var(--color-border)] bg-[var(--color-surface)] transition-transform duration-300 ease-in-out lg:static lg:block lg:w-72 lg:translate-x-0 lg:rounded-2xl lg:border
             ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
           `}
         >
           <div className="flex h-full flex-col p-5">
-            <div className="sticky top-0 z-10 mb-6 flex items-center justify-between bg-white py-1 dark:bg-slate-950">
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                <HugeiconsIcon icon={UserGroupIcon} size={18} />
+            <div className="sticky top-0 z-10 mb-6 flex items-center justify-between bg-[var(--color-surface)] py-1">
+              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-[var(--color-text-muted)]">
+                <MaterialIcon icon="group" size={18} />
                 Online ({room?.users.length || 0})
               </h2>
               <button
                 onClick={() => setShowSidebar(false)}
                 className="lg:hidden"
               >
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
+                <MaterialIcon icon="close" size={20} />
               </button>
             </div>
             <div className="flex-1 space-y-2 overflow-y-auto">
@@ -1437,7 +1424,7 @@ export const ChatRoomPage = () => {
                   <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl bg-white border border-slate-200 p-4 dark:bg-slate-950 dark:border-slate-800 shadow-xl z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <HugeiconsIcon icon={PaintBrush01Icon} size={14} />
+                        <MaterialIcon icon="brush" size={14} />
                         Choose Vibe
                       </p>
                       <button
@@ -1447,7 +1434,7 @@ export const ChatRoomPage = () => {
                         }}
                         className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
                       >
-                        <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                        <MaterialIcon icon="close" size={16} />
                       </button>
                     </div>
                     <div className="grid grid-cols-5 gap-2 max-h-[160px] overflow-y-auto p-1">
@@ -1488,7 +1475,7 @@ export const ChatRoomPage = () => {
                       className="h-6 w-6 rounded-full border border-slate-200 dark:border-slate-700 shadow-sm"
                       style={{ backgroundColor: themes.find((t) => t.value === accent)?.color || accent }}
                     />
-                    <HugeiconsIcon icon={PaintBrush01Icon} size={16} className="text-slate-400" />
+                    <MaterialIcon icon="brush" size={16} className="text-slate-400" />
                   </div>
                 </div>
               </div>
@@ -1499,7 +1486,7 @@ export const ChatRoomPage = () => {
                   <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl bg-white border border-slate-200 p-4 dark:bg-slate-950 dark:border-slate-800 shadow-xl z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <HugeiconsIcon icon={Image01Icon} size={14} className="text-primary-500" />
+                        <MaterialIcon icon="image" size={14} className="text-primary-500" />
                         Choose Wallpaper
                       </p>
                       <button
@@ -1509,7 +1496,7 @@ export const ChatRoomPage = () => {
                         }}
                         className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
                       >
-                        <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                        <MaterialIcon icon="close" size={16} />
                       </button>
                     </div>
                     <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto p-1">
@@ -1566,7 +1553,7 @@ export const ChatRoomPage = () => {
                     ) : (
                       <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-bold dark:text-slate-400">Default</span>
                     )}
-                    <HugeiconsIcon icon={Image01Icon} size={16} className="text-slate-400" />
+                    <MaterialIcon icon="image" size={16} className="text-slate-400" />
                   </div>
                 </div>
               </div>
@@ -1607,7 +1594,7 @@ export const ChatRoomPage = () => {
           <div className="chat-bg-gradient" />
           {error && (
             <div className="m-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
-              <HugeiconsIcon icon={Cancel01Icon} size={18} />
+              <MaterialIcon icon="close" size={18} />
               <p>{error}</p>
             </div>
           )}
@@ -1617,7 +1604,7 @@ export const ChatRoomPage = () => {
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
           >
-            <div className="flex min-h-full flex-col justify-end px-4 py-6 space-y-2">
+            <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end px-4 py-6">
               {notices.map((notice) => (
                 <div
                   key={`${notice.createdAt}-${notice.message}`}
@@ -1664,7 +1651,7 @@ export const ChatRoomPage = () => {
               onClick={() => scrollToBottom('smooth')}
               className="absolute bottom-24 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-xl transition-all hover:bg-slate-50 hover:scale-110 active:scale-95 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 animate-in fade-in slide-in-from-bottom-4"
             >
-              <HugeiconsIcon icon={ArrowDown01Icon} size={20} />
+              <MaterialIcon icon="arrow_downward" size={20} />
               {unreadCount > 0 && (
                 <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-[10px] font-black text-white shadow-lg animate-bounce">
                   {unreadCount > 9 ? '9+' : unreadCount}
@@ -1679,7 +1666,7 @@ export const ChatRoomPage = () => {
           >
             {/* Reply Preview */}
             {replyingTo && (
-              <div className="mx-auto mb-3 flex max-w-7xl items-center gap-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-3 animate-in slide-in-from-bottom-2 dark:border-slate-800 dark:bg-slate-900/50">
+              <div className="mx-auto mb-3 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-3 animate-in slide-in-from-bottom-2 dark:border-slate-800 dark:bg-slate-900/50">
                 <div className="h-10 w-1 rounded-full bg-primary-500" />
                 <div className="flex-1 overflow-hidden">
                   <p className="text-xs font-bold text-primary-600 dark:text-primary-400">
@@ -1688,7 +1675,7 @@ export const ChatRoomPage = () => {
                   <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                     {(replyingTo.content.includes('cloudinary.com') || isImageMessage(replyingTo)) ? (
                       <>
-                        <HugeiconsIcon icon={Image01Icon} size={14} />
+                        <MaterialIcon icon="image" size={14} />
                         <span className="text-sm italic">Photo</span>
                       </>
                     ) : (
@@ -1703,7 +1690,7 @@ export const ChatRoomPage = () => {
                   onClick={() => setReplyingTo(null)}
                   className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={18} />
+                  <MaterialIcon icon="close" size={18} />
                 </button>
               </div>
             )}
@@ -1729,7 +1716,7 @@ export const ChatRoomPage = () => {
               </div>
             )}
 
-            <div className="mx-auto flex max-w-7xl items-end gap-2 sm:gap-3">
+            <div className="mx-auto flex w-full max-w-[832px] items-end gap-2 sm:gap-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -1759,7 +1746,7 @@ export const ChatRoomPage = () => {
                     }`}
                   title="Attachments"
                 >
-                  <HugeiconsIcon icon={Add01Icon} size={24} className={`transition-transform duration-300 ${showAttachmentMenu ? 'rotate-45' : ''}`} />
+                  <MaterialIcon icon="add" size={24} className={`transition-transform duration-300 ${showAttachmentMenu ? 'rotate-45' : ''}`} />
                 </button>
 
                 {showAttachmentMenu && (
@@ -1776,7 +1763,7 @@ export const ChatRoomPage = () => {
                       className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-blue-600">
-                        <HugeiconsIcon icon={Image01Icon} size={20} />
+                        <MaterialIcon icon="image" size={20} />
                       </div>
                       Device
                     </button>
@@ -1789,7 +1776,7 @@ export const ChatRoomPage = () => {
                       className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                       <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
-                        <HugeiconsIcon icon={Camera01Icon} size={20} />
+                        <MaterialIcon icon="photo_camera" size={20} />
                       </div>
                       Camera
                     </button>
@@ -1797,24 +1784,24 @@ export const ChatRoomPage = () => {
                 )}
               </div>
 
-              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-full px-3 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
+              <div className="relative flex-1 flex items-end bg-[var(--color-composer)] border border-[var(--color-border)] rounded-[24px] px-4 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[var(--color-focus)]">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker((current) => !current)}
-                  className={`flex-shrink-0 p-2.5 transition-all ${showEmojiPicker
-                    ? 'text-primary-600'
-                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                  className={`flex-shrink-0 p-2.5 transition-all cursor-pointer ${showEmojiPicker
+                    ? 'text-[var(--color-primary)]'
+                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
                     }`}
                   title="Emoji"
                 >
-                  <HugeiconsIcon icon={SmileIcon} size={24} />
+                  <MaterialIcon icon="mood" size={24} />
                 </button>
 
                 <div className="relative flex-1 self-stretch">
                   {messageText.length === 0 && (
                     <div
                       aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center py-2.5 text-[16px] text-slate-500 dark:text-slate-400 sm:text-[17px]"
+                      className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center py-2.5 text-[16px] text-[var(--color-text-muted)] sm:text-[17px]"
                     >
                       <AnimatedPlaceholder />
                     </div>
@@ -1837,7 +1824,7 @@ export const ChatRoomPage = () => {
                       }
                     }}
                     rows={1}
-                    className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400 sm:text-[17px]"
+                    className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] sm:text-[17px]"
                   />
                 </div>
               </div>
@@ -1846,9 +1833,9 @@ export const ChatRoomPage = () => {
                 type="submit"
                 disabled={!messageText.trim()}
                 onMouseDown={(e) => e.preventDefault()}
-                className="flex-shrink-0 mb-0.5 rounded-full bg-primary-600 p-3 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
+                className="flex-shrink-0 mb-0.5 rounded-full bg-[var(--color-primary)] p-3 text-[var(--color-on-primary)] shadow-md transition-all hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:shadow-none cursor-pointer"
               >
-                <HugeiconsIcon icon={SentIcon} size={26} />
+                <MaterialIcon icon="send" size={26} />
               </button>
             </div>
           </form>
@@ -1862,7 +1849,7 @@ export const ChatRoomPage = () => {
               onClick={() => setShowCamera(false)}
               className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={24} />
+              <MaterialIcon icon="close" size={24} />
             </button>
             <span className="font-semibold text-white">Camera</span>
             <button
@@ -1870,7 +1857,7 @@ export const ChatRoomPage = () => {
               className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
               title="Switch Camera"
             >
-              <HugeiconsIcon icon={Camera01Icon} size={24} />
+              <MaterialIcon icon="photo_camera" size={24} />
             </button>
           </div>
 
@@ -1900,7 +1887,7 @@ export const ChatRoomPage = () => {
         <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="w-full max-w-sm rounded-3xl bg-white p-8 text-center shadow-2xl dark:bg-slate-900 animate-in zoom-in-95 duration-300">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
-              <HugeiconsIcon icon={Cancel01Icon} size={40} />
+              <MaterialIcon icon="close" size={40} />
             </div>
             <h2 className="mb-2 text-2xl font-bold text-slate-950 dark:text-white">Room Terminated</h2>
             <p className="mb-8 text-slate-600 dark:text-slate-400">
@@ -1928,7 +1915,7 @@ export const ChatRoomPage = () => {
             className="absolute top-6 right-6 z-[1001] rounded-full bg-white/10 p-3 text-white transition-all hover:bg-white/20 active:scale-95"
             onClick={() => setFullscreenImage(null)}
           >
-            <HugeiconsIcon icon={Cancel01Icon} size={24} />
+            <MaterialIcon icon="close" size={24} />
           </button>
 
           <div className="relative h-full w-full flex items-center justify-center p-4 sm:p-12">

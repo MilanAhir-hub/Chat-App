@@ -5,6 +5,7 @@ import { Loader } from './components/Loader';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { AppLayout } from './layouts/AppLayout';
 
 // Route-level code splitting: each page ships in its own chunk and is
 // fetched on first navigation instead of one eager bundle.
@@ -14,14 +15,26 @@ const LoginPage = lazy(() =>
 const SignupPage = lazy(() =>
   import('./pages/SignupPage').then((m) => ({ default: m.SignupPage }))
 );
-const DashboardPage = lazy(() =>
-  import('./pages/DashboardPage').then((m) => ({ default: m.DashboardPage }))
+const HomePage = lazy(() =>
+  import('./pages/HomePage').then((m) => ({ default: m.HomePage }))
+);
+const TemporaryRoomsPage = lazy(() =>
+  import('./pages/TemporaryRoomsPage').then((m) => ({ default: m.TemporaryRoomsPage }))
+);
+const SecureChatsListPage = lazy(() =>
+  import('./pages/SecureChatsListPage').then((m) => ({ default: m.SecureChatsListPage }))
 );
 const ChatRoomPage = lazy(() =>
   import('./pages/ChatRoomPage').then((m) => ({ default: m.ChatRoomPage }))
 );
 const SecureChatPage = lazy(() =>
   import('./pages/SecureChatPage').then((m) => ({ default: m.SecureChatPage }))
+);
+const ThemePage = lazy(() =>
+  import('./pages/ThemePage').then((m) => ({ default: m.ThemePage }))
+);
+const AccountPage = lazy(() =>
+  import('./pages/AccountPage').then((m) => ({ default: m.AccountPage }))
 );
 
 function App() {
@@ -43,8 +56,14 @@ function App() {
               </Route>
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route path="/home" element={<HomePage />} />
+                  <Route path="/rooms" element={<TemporaryRoomsPage />} />
+                  <Route path="/secure-chats" element={<SecureChatsListPage />} />
+                  <Route path="/theme" element={<ThemePage />} />
+                  <Route path="/account" element={<AccountPage />} />
+                </Route>
                 <Route path="/rooms/:roomId" element={<ChatRoomPage />} />
                 <Route path="/secure-chats/:chatId" element={<SecureChatPage />} />
               </Route>

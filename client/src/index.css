@@ -15,7 +15,36 @@
   --color-primary-900: var(--primary-900);
   --color-primary-950: var(--primary-950);
 
-  /* DESIGN SYSTEM v2 Base Colors */
+  /* Semantic Theme Design Tokens */
+  --color-app-bg: var(--color-background);
+  --color-app-surface: var(--color-surface);
+  --color-app-surface-elevated: var(--color-surface-elevated);
+  --color-app-primary: var(--color-primary);
+  --color-app-primary-container: var(--color-primary-container);
+  --color-app-on-primary: var(--color-on-primary);
+  --color-app-on-primary-container: var(--color-on-primary-container);
+  --color-app-secondary: var(--color-secondary);
+  --color-app-accent: var(--color-accent);
+  --color-app-text: var(--color-text-primary);
+  --color-app-text-secondary: var(--color-text-secondary);
+  --color-app-text-muted: var(--color-text-muted);
+  --color-app-border: var(--color-border);
+  --color-app-divider: var(--color-divider);
+  --color-app-hover: var(--color-hover);
+  --color-app-selected: var(--color-selected);
+  --color-app-focus: var(--color-focus);
+  --color-app-error: var(--color-error);
+  --color-app-warning: var(--color-warning);
+  --color-app-success: var(--color-success);
+  --color-app-info: var(--color-info);
+  --color-app-msg-in: var(--color-message-incoming);
+  --color-app-msg-in-text: var(--color-message-incoming-text);
+  --color-app-msg-out: var(--color-message-outgoing);
+  --color-app-msg-out-text: var(--color-message-outgoing-text);
+  --color-app-composer: var(--color-composer);
+  --color-app-link: var(--color-link);
+
+  /* DESIGN SYSTEM Base Bridge */
   --color-base-summary: var(--base-color);
   --color-base-elevated: var(--elevated-color);
   --color-base-elevated-rgb: var(--elevated-color-rgb);
@@ -27,358 +56,498 @@
   --color-text-tertiary: var(--text-tertiary);
 }
 
-:root {
-  /* Default Cyan Accent */
-  --primary-50: var(--color-cyan-50);
-  --primary-100: var(--color-cyan-100);
-  --primary-200: var(--color-cyan-200);
-  --primary-300: var(--color-cyan-300);
-  --primary-400: var(--color-cyan-400);
-  --primary-500: var(--color-cyan-500);
-  --primary-600: var(--color-cyan-600);
-  --primary-700: var(--color-cyan-700);
-  --primary-800: var(--color-cyan-800);
-  --primary-900: var(--color-cyan-900);
-  --primary-950: var(--color-cyan-950);
+/* ============================================================
+   14 COMPLETE THEME DEFINITIONS (A through N)
+   Source of Truth: colors.md
+   ============================================================ */
 
-  /* DESIGN SYSTEM v2 Base */
-  --base-color: #f4f4f5;
-  --elevated-color: rgba(255, 255, 255, 0.85);
+/* --- Default Fallback & Theme M: Google Messages Light --- */
+:root,
+[data-theme="M"] {
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #0B57D0;
+  --color-primary-container: #D3E3FD;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #041E49;
+  --color-secondary: #5F6368;
+  --color-accent: #4285F4;
+  --color-text-primary: #1F1F1F;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #D3E3FD;
+  --color-focus: #0B57D0;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #0B57D0;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #1F1F1F;
+  --color-message-outgoing: #0B57D0;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #0B57D0;
+}
+
+/* --- Theme A: Google Material Light (M3 baseline) --- */
+[data-theme="A"] {
+  --color-background: #FEF7FF;
+  --color-surface: #FEF7FF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #6750A4;
+  --color-primary-container: #EADDFF;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #21005D;
+  --color-secondary: #625B71;
+  --color-accent: #7D5260;
+  --color-text-primary: #1D1B20;
+  --color-text-secondary: #49454F;
+  --color-text-muted: #49454F;
+  --color-border: #CAC4D0;
+  --color-divider: #E7E0EC;
+  --color-hover: #F3EDF7;
+  --color-selected: #EADDFF;
+  --color-focus: #6750A4;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #E6E0E9;
+  --color-message-incoming-text: #1D1B20;
+  --color-message-outgoing: #EADDFF;
+  --color-message-outgoing-text: #21005D;
+  --color-composer: #F7F2FA;
+  --color-link: #6750A4;
+}
+
+/* --- Theme B: Google Material Dark (M3 baseline dark) --- */
+[data-theme="B"] {
+  --color-background: #141218;
+  --color-surface: #141218;
+  --color-surface-elevated: #36343B;
+  --color-primary: #D0BCFF;
+  --color-primary-container: #4F378B;
+  --color-on-primary: #381E72;
+  --color-on-primary-container: #EADDFF;
+  --color-secondary: #CCC2DC;
+  --color-accent: #EFB8C8;
+  --color-text-primary: #E6E0E9;
+  --color-text-secondary: #CAC4D0;
+  --color-text-muted: #938F99;
+  --color-border: #49454F;
+  --color-divider: #36343B;
+  --color-hover: #1D1B20;
+  --color-selected: #4A4458;
+  --color-focus: #D0BCFF;
+  --color-error: #F2B8B5;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #2B2930;
+  --color-message-incoming-text: #E6E0E9;
+  --color-message-outgoing: #4F378B;
+  --color-message-outgoing-text: #EADDFF;
+  --color-composer: #211F26;
+  --color-link: #D0BCFF;
+}
+
+/* --- Theme C: Google Keep-inspired Light --- */
+[data-theme="C"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #FEF7E0;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #202124;
+  --color-secondary: #5F6368;
+  --color-accent: #FBBC05;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #FEF7E0;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #FEF7E0;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme D: Google Keep-inspired Dark --- */
+[data-theme="D"] {
+  --color-background: #202124;
+  --color-surface: #202124;
+  --color-surface-elevated: #292A2D;
+  --color-primary: #8AB4F8;
+  --color-primary-container: #174EA6;
+  --color-on-primary: #202124;
+  --color-on-primary-container: #D2E3FC;
+  --color-secondary: #9AA0A6;
+  --color-accent: #F9AB00;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #3C4043;
+  --color-divider: #3C4043;
+  --color-hover: #303134;
+  --color-selected: #3C4043;
+  --color-focus: #8AB4F8;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #292A2D;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #F9AB00;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #303134;
+  --color-link: #8AB4F8;
+}
+
+/* --- Theme E: Gemini-inspired Light --- */
+[data-theme="E"] {
+  --color-background: #F0F4F9;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #0B57D0;
+  --color-primary-container: #D3E3FD;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #041E49;
+  --color-secondary: #444746;
+  --color-accent: #A8C7FA;
+  --color-text-primary: #1F1F1F;
+  --color-text-secondary: #444746;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #E8EAED;
+  --color-selected: #D3E3FD;
+  --color-focus: #0B57D0;
+  --color-error: #B3261E;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #0B57D0;
+  --color-message-incoming: #FFFFFF;
+  --color-message-incoming-text: #1F1F1F;
+  --color-message-outgoing: #D3E3FD;
+  --color-message-outgoing-text: #1F1F1F;
+  --color-composer: #FFFFFF;
+  --color-link: #0B57D0;
+}
+
+/* --- Theme F: Gemini-inspired Dark --- */
+[data-theme="F"] {
+  --color-background: #131314;
+  --color-surface: #1E1F20;
+  --color-surface-elevated: #333537;
+  --color-primary: #A8C7FA;
+  --color-primary-container: #004A77;
+  --color-on-primary: #041E49;
+  --color-on-primary-container: #D3E3FD;
+  --color-secondary: #C4C7C5;
+  --color-accent: #9B72CB;
+  --color-text-primary: #E3E3E3;
+  --color-text-secondary: #C4C7C5;
+  --color-text-muted: #9AA0A6;
+  --color-border: #3C4043;
+  --color-divider: #3C4043;
+  --color-hover: #282A2C;
+  --color-selected: #333537;
+  --color-focus: #A8C7FA;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #282A2C;
+  --color-message-incoming-text: #E3E3E3;
+  --color-message-outgoing: #333537;
+  --color-message-outgoing-text: #E3E3E3;
+  --color-composer: #282A2C;
+  --color-link: #A8C7FA;
+}
+
+/* --- Theme G: Google Chat-inspired Light --- */
+[data-theme="G"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #E8F0FE;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #174EA6;
+  --color-secondary: #5F6368;
+  --color-accent: #00AC47;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #E8F0FE;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #D2E3FC;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme H: Google Chat-inspired Dark --- */
+[data-theme="H"] {
+  --color-background: #202124;
+  --color-surface: #202124;
+  --color-surface-elevated: #292A2D;
+  --color-primary: #8AB4F8;
+  --color-primary-container: #174EA6;
+  --color-on-primary: #202124;
+  --color-on-primary-container: #D2E3FC;
+  --color-secondary: #9AA0A6;
+  --color-accent: #81C995;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #5F6368;
+  --color-divider: #3C4043;
+  --color-hover: #303134;
+  --color-selected: #3C4043;
+  --color-focus: #8AB4F8;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #292A2D;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #174EA6;
+  --color-message-outgoing-text: #D2E3FC;
+  --color-composer: #292A2D;
+  --color-link: #8AB4F8;
+}
+
+/* --- Theme I: Neutral Google Workspace Light --- */
+[data-theme="I"] {
+  --color-background: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #E8F0FE;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #174EA6;
+  --color-secondary: #5F6368;
+  --color-accent: #1E8E3E;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #E8F0FE;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #D2E3FC;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme J: Blue-focused Google Light --- */
+[data-theme="J"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #D2E3FC;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #174EA6;
+  --color-secondary: #5F6368;
+  --color-accent: #4285F4;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #D2E3FC;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #1A73E8;
+  --color-message-outgoing-text: #FFFFFF;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme K: Multi-color Google Light --- */
+[data-theme="K"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #E8F0FE;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #174EA6;
+  --color-secondary: #5F6368;
+  --color-accent: #FBBC05;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #E8F0FE;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #F1F3F4;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #D2E3FC;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme L: Minimal monochrome Google Light --- */
+[data-theme="L"] {
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #FFFFFF;
+  --color-primary: #1A73E8;
+  --color-primary-container: #E8F0FE;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #174EA6;
+  --color-secondary: #5F6368;
+  --color-accent: #1A73E8;
+  --color-text-primary: #202124;
+  --color-text-secondary: #3C4043;
+  --color-text-muted: #5F6368;
+  --color-border: #DADCE0;
+  --color-divider: #E8EAED;
+  --color-hover: #F1F3F4;
+  --color-selected: #E8F0FE;
+  --color-focus: #1A73E8;
+  --color-error: #D93025;
+  --color-warning: #B06000;
+  --color-success: #188038;
+  --color-info: #1A73E8;
+  --color-message-incoming: #FFFFFF;
+  --color-message-incoming-text: #202124;
+  --color-message-outgoing: #E8EAED;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #FFFFFF;
+  --color-link: #1A73E8;
+}
+
+/* --- Theme N: Google Messages-inspired Dark --- */
+[data-theme="N"] {
+  --color-background: #202124;
+  --color-surface: #202124;
+  --color-surface-elevated: #292A2D;
+  --color-primary: #8AB4F8;
+  --color-primary-container: #174EA6;
+  --color-on-primary: #202124;
+  --color-on-primary-container: #D2E3FC;
+  --color-secondary: #9AA0A6;
+  --color-accent: #4285F4;
+  --color-text-primary: #E8EAED;
+  --color-text-secondary: #BDC1C6;
+  --color-text-muted: #9AA0A6;
+  --color-border: #3C4043;
+  --color-divider: #3C4043;
+  --color-hover: #303134;
+  --color-selected: #3C4043;
+  --color-focus: #8AB4F8;
+  --color-error: #F28B82;
+  --color-warning: #FDD663;
+  --color-success: #81C995;
+  --color-info: #8AB4F8;
+  --color-message-incoming: #303134;
+  --color-message-incoming-text: #E8EAED;
+  --color-message-outgoing: #8AB4F8;
+  --color-message-outgoing-text: #202124;
+  --color-composer: #292A2D;
+  --color-link: #8AB4F8;
+}
+
+/* ============================================================
+   GLOBAL BASE & BRIDGE STYLES
+   ============================================================ */
+
+:root {
+  /* Dynamic Bridge Mappings to Active Theme Semantic Tokens */
+  --base-color: var(--color-background);
+  --elevated-color: var(--color-surface-elevated);
   --elevated-color-rgb: 255, 255, 255;
-  --input-color: #ffffff;
-  --border-color: rgba(0, 0, 0, 0.06);
-  --border-color-hover: rgba(0, 0, 0, 0.10);
-  --text-primary: #0c0c0e;
-  --text-secondary: rgba(12, 12, 14, 0.55);
-  --text-tertiary: rgba(12, 12, 14, 0.35);
+  --input-color: var(--color-surface);
+  --border-color: var(--color-border);
+  --border-color-hover: var(--color-border);
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: var(--color-text-muted);
+
+  --primary-50: var(--color-primary-container);
+  --primary-100: var(--color-primary-container);
+  --primary-200: var(--color-primary-container);
+  --primary-300: var(--color-primary);
+  --primary-400: var(--color-primary);
+  --primary-500: var(--color-primary);
+  --primary-600: var(--color-primary);
+  --primary-700: var(--color-primary);
+  --primary-800: var(--color-primary);
+  --primary-900: var(--color-primary);
+  --primary-950: var(--color-primary);
 
   /* Glassmorphism Default Theme tokens */
-  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-bg: color-mix(in srgb, var(--color-surface) 85%, transparent);
   --glass-backdrop-filter: blur(12px);
-  --glass-border-color: rgba(0, 0, 0, 0.06);
+  --glass-border-color: var(--color-border);
   --glass-box-shadow: none;
-  --glass-border-hover: rgba(0, 0, 0, 0.10);
-  --glass-header-bg: color-mix(in srgb, rgba(255, 255, 255, 0.85) 90%, transparent);
-  --glass-header-border: rgba(0, 0, 0, 0.06);
-}
+  --glass-border-hover: var(--color-primary);
+  --glass-header-bg: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  --glass-header-border: var(--color-divider);
 
-[data-accent="indigo"] {
-  --primary-50: var(--color-indigo-50);
-  --primary-100: var(--color-indigo-100);
-  --primary-200: var(--color-indigo-200);
-  --primary-300: var(--color-indigo-300);
-  --primary-400: var(--color-indigo-400);
-  --primary-500: var(--color-indigo-500);
-  --primary-600: var(--color-indigo-600);
-  --primary-700: var(--color-indigo-700);
-  --primary-800: var(--color-indigo-800);
-  --primary-900: var(--color-indigo-900);
-  --primary-950: var(--color-indigo-950);
-}
+  /* Layout Tokens */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  
+  --page-padding: var(--space-6);
+  --message-gap-consecutive: 2px;
+  --message-gap-group: var(--space-4);
+  --composer-padding-x: var(--space-4);
+  --composer-padding-y: var(--space-3);
 
-[data-accent="emerald"] {
-  --primary-50: var(--color-emerald-50);
-  --primary-100: var(--color-emerald-100);
-  --primary-200: var(--color-emerald-200);
-  性爱-300: var(--color-emerald-300);
-  --primary-400: var(--color-emerald-400);
-  --primary-500: var(--color-emerald-500);
-  --primary-600: var(--color-emerald-600);
-  --primary-700: var(--color-emerald-700);
-  --primary-800: var(--color-emerald-800);
-  --primary-900: var(--color-emerald-900);
-  --primary-950: var(--color-emerald-950);
-}
-
-[data-accent="rose"] {
-  --primary-50: var(--color-rose-50);
-  --primary-100: var(--color-rose-100);
-  --primary-200: var(--color-rose-200);
-  --primary-300: var(--color-rose-300);
-  --primary-400: var(--color-rose-400);
-  --primary-500: var(--color-rose-500);
-  --primary-600: var(--color-rose-600);
-  --primary-700: var(--color-rose-700);
-  --primary-800: var(--color-rose-800);
-  --primary-900: var(--color-rose-900);
-  --primary-950: var(--color-rose-950);
-}
-
-[data-accent="amber"] {
-  --primary-50: var(--color-amber-50);
-  --primary-100: var(--color-amber-100);
-  --primary-200: var(--color-amber-200);
-  --primary-300: var(--color-amber-300);
-  --primary-400: var(--color-amber-400);
-  --primary-500: var(--color-amber-500);
-  --primary-600: var(--color-amber-600);
-  --primary-700: var(--color-amber-700);
-  --primary-800: var(--color-amber-800);
-  --primary-900: var(--color-amber-900);
-  --primary-950: var(--color-amber-950);
-}
-
-[data-accent="teal"] {
-  --primary-50: var(--color-teal-50);
-  --primary-100: var(--color-teal-100);
-  --primary-200: var(--color-teal-200);
-  --primary-300: var(--color-teal-300);
-  --primary-400: var(--color-teal-400);
-  --primary-500: var(--color-teal-500);
-  --primary-600: var(--color-teal-600);
-  --primary-700: var(--color-teal-700);
-  --primary-800: var(--color-teal-800);
-  --primary-900: var(--color-teal-900);
-  --primary-950: var(--color-teal-950);
-}
-
-[data-accent="green"] {
-  --primary-50: var(--color-green-50);
-  --primary-100: var(--color-green-100);
-  --primary-200: var(--color-green-200);
-  --primary-300: var(--color-green-300);
-  --primary-400: var(--color-green-400);
-  --primary-500: var(--color-green-500);
-  --primary-600: var(--color-green-600);
-  --primary-700: var(--color-green-700);
-  --primary-800: var(--color-green-800);
-  --primary-900: var(--color-green-900);
-  --primary-950: var(--color-green-950);
-}
-
-[data-accent="blue"] {
-  --primary-50: var(--color-blue-50);
-  --primary-100: var(--color-blue-100);
-  --primary-200: var(--color-blue-200);
-  --primary-300: var(--color-blue-300);
-  --primary-400: var(--color-blue-400);
-  --primary-500: var(--color-blue-500);
-  --primary-600: var(--color-blue-600);
-  --primary-700: var(--color-blue-700);
-  --primary-800: var(--color-blue-800);
-  --primary-900: var(--color-blue-900);
-  --primary-950: var(--color-blue-950);
-}
-
-[data-accent="violet"] {
-  --primary-50: var(--color-violet-50);
-  --primary-100: var(--color-violet-100);
-  --primary-200: var(--color-violet-200);
-  --primary-300: var(--color-violet-300);
-  --primary-400: var(--color-violet-400);
-  --primary-500: var(--color-violet-500);
-  --primary-600: var(--color-violet-600);
-  --primary-700: var(--color-violet-700);
-  --primary-800: var(--color-violet-800);
-  --primary-900: var(--color-violet-900);
-  --primary-950: var(--color-violet-950);
-}
-
-[data-accent="orange"] {
-  --primary-50: var(--color-orange-50);
-  --primary-100: var(--color-orange-100);
-  --primary-200: var(--color-orange-200);
-  --primary-300: var(--color-orange-300);
-  病死-400: var(--color-orange-400);
-  --primary-500: var(--color-orange-500);
-  --primary-600: var(--color-orange-600);
-  --primary-700: var(--color-orange-700);
-  --primary-800: var(--color-orange-800);
-  --primary-900: var(--color-orange-900);
-  --primary-950: var(--color-orange-950);
-}
-
-[data-accent="fuchsia"] {
-  --primary-50: var(--color-fuchsia-50);
-  --primary-100: var(--color-fuchsia-100);
-  --primary-200: var(--color-fuchsia-200);
-  --primary-300: var(--color-fuchsia-300);
-  --primary-400: var(--color-fuchsia-400);
-  --primary-500: var(--color-fuchsia-500);
-  --primary-600: var(--color-fuchsia-600);
-  --primary-700: var(--color-fuchsia-700);
-  --primary-800: var(--color-fuchsia-800);
-  --primary-900: var(--color-fuchsia-900);
-  --primary-950: var(--color-fuchsia-950);
-}
-
-[data-accent="sky"] {
-  --primary-50: var(--color-sky-50);
-  --primary-100: var(--color-sky-100);
-  --primary-200: var(--color-sky-200);
-  --primary-300: var(--color-sky-300);
-  --primary-400: var(--color-sky-400);
-  --primary-500: var(--color-sky-500);
-  --primary-600: var(--color-sky-600);
-  --primary-700: var(--color-sky-700);
-  --primary-800: var(--color-sky-800);
-  --primary-900: var(--color-sky-900);
-  --primary-950: var(--color-sky-950);
-}
-
-[data-accent="lime"] {
-  --primary-50: var(--color-lime-50);
-  --primary-100: var(--color-lime-100);
-  --primary-200: var(--color-lime-200);
-  --primary-300: var(--color-lime-300);
-  --primary-400: var(--color-lime-400);
-  --primary-500: var(--color-lime-500);
-  --primary-600: var(--color-lime-600);
-  --primary-700: var(--color-lime-700);
-  --primary-800: var(--color-lime-800);
-  --primary-900: var(--color-lime-900);
-  --primary-950: var(--color-lime-950);
-}
-
-[data-accent="yellow"] {
-  --primary-50: var(--color-yellow-50);
-  --primary-100: var(--color-yellow-100);
-  --primary-200: var(--color-yellow-200);
-  --primary-300: var(--color-yellow-300);
-  --primary-400: var(--color-yellow-400);
-  --primary-500: var(--color-yellow-500);
-  --primary-600: var(--color-yellow-600);
-  --primary-700: var(--color-yellow-700);
-  --primary-800: var(--color-yellow-800);
-  --primary-900: var(--color-yellow-900);
-  --primary-950: var(--color-yellow-950);
-}
-
-[data-accent="pink"] {
-  --primary-50: var(--color-pink-50);
-  --primary-100: var(--color-pink-100);
-  --primary-200: var(--color-pink-200);
-  --primary-300: var(--color-pink-300);
-  --primary-400: var(--color-pink-400);
-  --primary-500: var(--color-pink-500);
-  --primary-600: var(--color-pink-600);
-  --primary-700: var(--color-pink-700);
-  --primary-800: var(--color-pink-800);
-  --primary-900: var(--color-pink-900);
-  --primary-950: var(--color-pink-950);
-}
-
-/* Dark mode overrides for design system v2 tokens */
-.dark {
-  --base-color: #0c0c0e;
-  --elevated-color: rgba(22, 22, 25, 0.8);
-  --elevated-color-rgb: 22, 22, 25;
-  --input-color: rgba(30, 30, 33, 0.9);
-  --border-color: rgba(255, 255, 255, 0.06);
-  --border-color-hover: rgba(255, 255, 255, 0.10);
-  --text-primary: #f5f5f5;
-  --text-secondary: rgba(245, 245, 245, 0.55);
-  --text-tertiary: rgba(245, 245, 245, 0.35);
-
-  /* Glassmorphism Dark Theme tokens */
-  --glass-bg: rgba(22, 22, 25, 0.8);
-  --glass-backdrop-filter: blur(12px);
-  --glass-border-color: rgba(255, 255, 255, 0.06);
-  --glass-box-shadow: none;
-  --glass-border-hover: rgba(255, 255, 255, 0.10);
-  --glass-header-bg: color-mix(in srgb, rgba(22, 22, 25, 0.8) 90%, transparent);
-  --glass-header-border: rgba(255, 255, 255, 0.06);
-}
-
-html[data-accent="1a1d27"] {
-  --primary-400: #1A1D27;
-  --primary-500: #1A1D27;
-  --primary-600: #1A1D27;
-}
-
-html[data-accent="1c1c1e"] {
-  --primary-400: #1C1C1E;
-  --primary-500: #1C1C1E;
-  --primary-600: #1C1C1E;
-}
-
-html[data-accent="0d2137"] {
-  --primary-400: #0D2137;
-  --primary-500: #0D2137;
-  --primary-600: #0D2137;
-}
-
-html[data-accent="005c4b"] {
-  --primary-400: #005C4B;
-  --primary-500: #005C4B;
-  --primary-600: #005C4B;
-}
-
-html[data-accent="1f2c34"] {
-  --primary-400: #1F2C34;
-  --primary-500: #1F2C34;
-  --primary-600: #1F2C34;
-}
-
-html[data-accent="182229"] {
-  --primary-400: #182229;
-  --primary-500: #182229;
-  --primary-600: #182229;
-}
-
-html[data-accent="1e1f22"] {
-  --primary-400: #1E1F22;
-  --primary-500: #1E1F22;
-  --primary-600: #1E1F22;
-}
-
-html[data-accent="0f1117"] {
-  --primary-400: #0F1117;
-  --primary-500: #0F1117;
-  --primary-600: #0F1117;
-}
-
-html[data-accent="1b1f3b"] {
-  --primary-400: #1B1F3B;
-  --primary-500: #1B1F3B;
-  --primary-600: #1B1F3B;
-}
-
-html[data-accent="1a0533"] {
-  --primary-400: #1A0533;
-  --primary-500: #1A0533;
-  --primary-600: #1A0533;
-}
-
-html[data-accent="0a1628"] {
-  --primary-400: #0A1628;
-  --primary-500: #0A1628;
-  --primary-600: #0A1628;
-}
-
-html[data-accent="1f1b2e"] {
-  --primary-400: #1F1B2E;
-  --primary-500: #1F1B2E;
-  --primary-600: #1F1B2E;
-}
-
-html[data-accent="0d1f12"] {
-  --primary-400: #0D1F12;
-  --primary-500: #0D1F12;
-  --primary-600: #0D1F12;
-}
-
-html[data-accent="162032"] {
-  --primary-400: #162032;
-  --primary-500: #162032;
-  --primary-600: #162032;
-}
-
-html[data-accent="1c1a2e"] {
-  --primary-400: #1C1A2E;
-  --primary-500: #1C1A2E;
-  --primary-600: #1C1A2E;
-}
-
-
-
-/* Light mode defaults are set in :root above */
-
-/* Enable class-based dark mode for Tailwind v4 */
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Custom styles */
-:root {
   font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
@@ -387,7 +556,12 @@ html[data-accent="1c1a2e"] {
 
 .dark {
   color-scheme: dark;
+  --glass-bg: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  --glass-header-bg: color-mix(in srgb, var(--color-surface) 90%, transparent);
 }
+
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
 
 * {
   box-sizing: border-box;
@@ -395,6 +569,9 @@ html[data-accent="1c1a2e"] {
 
 html {
   font-size: 17px;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 html,
@@ -409,11 +586,12 @@ body,
 
 body {
   min-width: 320px;
-  background-color: var(--base-color);
-  color: var(--text-primary);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Static Gradient for Chat Area - Design System v2 Updated */
+/* Static Gradient for Chat Area */
 .chat-bg-gradient {
   position: absolute;
   top: 50%;
@@ -422,60 +600,30 @@ body {
   width: 100%;
   height: 100%;
   background: radial-gradient(circle at center,
-      var(--primary-400) 0%,
+      var(--color-primary) 0%,
       transparent 70%);
-  opacity: 0.05;
+  opacity: 0.04;
   pointer-events: none;
   z-index: 0;
   filter: blur(40px);
 }
 
-.dark .chat-bg-gradient {
-  background: radial-gradient(circle at center,
-      var(--primary-500) 0%,
-      transparent 70%);
-  opacity: 0.08;
-}
-
 .chat-area-bg {
-  background-color: var(--base-color) !important;
-  transition: background-color 0.3s ease;
-}
-
-/* Mobile chat background styling */
-@media (max-width: 1023px) {
-  .chat-area-bg {
-    background-image: url('/chat-bg-light.png');
-    background-repeat: no-repeat;
-    background-position: top center;
-    background-size: cover;
-  }
-
-  .dark .chat-area-bg {
-    background-image: url('/chat-bg-dark.jpg');
-    background-repeat: no-repeat;
-    background-position: top center;
-    background-size: cover;
-  }
-
-  .chat-bg-gradient {
-    display: none;
-  }
+  background-color: var(--color-background) !important;
+  transition: background-color 0.2s ease;
 }
 
 /* Glassmorphism Card Base */
 .glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop-filter);
-  -webkit-backdrop-filter: var(--glass-backdrop-filter);
-  border: 1px solid var(--glass-border-color);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 20px;
   box-shadow: var(--glass-box-shadow);
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease, border 0.4s ease;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .glass-card:hover {
-  border-color: var(--glass-border-hover);
+  border-color: var(--color-primary);
 }
 
 /* Glass Header */
@@ -483,84 +631,41 @@ body {
   background: var(--glass-header-bg);
   backdrop-filter: var(--glass-backdrop-filter);
   -webkit-backdrop-filter: var(--glass-backdrop-filter);
-  border-bottom: 1px solid var(--glass-header-border);
-  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.4s ease, background 0.4s ease, backdrop-filter 0.4s ease, border-bottom 0.4s ease;
+  transition: background-color 0.2s ease;
 }
 
-/* Adaptive Glass Theme Styling */
-html[data-theme-style="adaptive-glass"] {
-  /* Light Mode values */
-  --glass-bg: rgba(255, 255, 255, 0.16);
-  --glass-backdrop-filter: blur(40px) saturate(170%) brightness(1.1);
-  --glass-border-color: rgba(255, 255, 255, 0.45);
-  --glass-box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  --glass-border-hover: rgba(255, 255, 255, 0.65);
-  --glass-header-bg: rgba(255, 255, 255, 0.16);
-  --glass-header-border: rgba(255, 255, 255, 0.35);
-}
-
-html[data-theme-style="adaptive-glass"].dark {
-  /* Dark Mode values */
-  --glass-bg: rgba(45, 35, 95, 0.18);
-  --glass-backdrop-filter: blur(40px) saturate(180%) brightness(1.05);
-  --glass-border-color: rgba(255, 255, 255, 0.08);
-  --glass-box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-  --glass-border-hover: rgba(255, 255, 255, 0.18);
-  --glass-header-bg: rgba(45, 35, 95, 0.18);
-  --glass-header-border: rgba(255, 255, 255, 0.08);
-}
-
-/* Add desktop wallpapers when Adaptive Glass is enabled */
-html[data-theme-style="adaptive-glass"] body {
-  background-image: radial-gradient(circle at 10% 20%, rgba(200, 235, 255, 0.4) 0%, transparent 40%),
-                    radial-gradient(circle at 90% 80%, rgba(253, 225, 233, 0.4) 0%, transparent 40%),
-                    linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  background-size: cover;
-  background-attachment: fixed;
-  transition: background 0.4s ease, background-image 0.4s ease;
-}
-
-html[data-theme-style="adaptive-glass"].dark body {
-  background-image: radial-gradient(circle at 15% 15%, rgba(68, 56, 125, 0.35) 0%, transparent 50%),
-                    radial-gradient(circle at 85% 85%, rgba(29, 38, 115, 0.3) 0%, transparent 50%),
-                    linear-gradient(135deg, #09090b 0%, #020205 100%);
-  background-size: cover;
-  background-attachment: fixed;
-  transition: background 0.4s ease, background-image 0.4s ease;
-}
-
-/* Input Field - Design System v2 */
+/* Input Field */
 .design-input {
-  background: var(--input-color);
-  border: 1px solid var(--border-color);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: 9999px;
-  color: var(--text-primary);
-  transition: all 0.2s ease;
+  color: var(--color-text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .design-input:focus {
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-500) 10%, transparent);
+  border-color: var(--color-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-focus) 15%, transparent);
   outline: none;
 }
 
-/* Modern Chat Bubbles - Design System v2 Updated */
+/* Message Bubbles */
 .message-bubble {
   position: relative;
   width: fit-content;
-  min-width: 100px;
-  max-width: 80%;
-  transition: all 0.2s ease;
+  min-width: 90px;
+  max-width: 82%;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .message-bubble-text.message-bubble-mine {
-  padding: 6px 16px 6px 12px;
-  border-radius: 8px 0px 8px 8px;
+  padding: 12px 16px;
+  border-radius: 24px 4px 24px 24px;
 }
 
 .message-bubble-text.message-bubble-other {
-  padding: 6px 16px 6px 12px;
-  border-radius: 0px 8px 8px 8px;
+  padding: 12px 16px;
+  border-radius: 4px 24px 24px 24px;
 }
 
 .message-bubble-media {
@@ -568,43 +673,29 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .message-bubble-media.message-bubble-mine {
-  border-radius: 8px 0px 8px 8px;
+  border-radius: 24px 4px 24px 24px;
 }
 
 .message-bubble-media.message-bubble-other {
-  border-radius: 0px 8px 8px 8px;
+  border-radius: 4px 24px 24px 24px;
 }
 
-/* Beautiful Gradients for Bubbles */
+/* Outgoing Message Bubble — uses active theme outgoing tokens */
 .message-bubble-mine {
-  background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%);
-  color: #ffffff;
-  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.08),
-    0 0 10px color-mix(in srgb, var(--primary-500) 8%, transparent);
+  background: var(--color-message-outgoing) !important;
+  color: var(--color-message-outgoing-text) !important;
+  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.08);
 }
 
-.dark .message-bubble-mine {
-  background: linear-gradient(135deg, var(--primary-400) 0%, var(--primary-600) 100%);
-  color: #ffffff;
-  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.18),
-    0 0 12px color-mix(in srgb, var(--primary-500) 12%, transparent);
-}
-
+/* Incoming Message Bubble — uses active theme incoming tokens */
 .message-bubble-other {
-  background: linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  background: var(--color-message-incoming) !important;
+  border: 1px solid var(--color-border);
+  color: var(--color-message-incoming-text) !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.dark .message-bubble-other {
-  background: linear-gradient(135deg, rgba(30, 30, 33, 0.9) 0%, rgba(20, 20, 22, 0.85) 100%);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-  box-shadow: 0 1.5px 3px rgba(0, 0, 0, 0.15);
-}
-
-/* WhatsApp Style tails */
+/* Tails */
 .message-bubble::before {
   content: '';
   position: absolute;
@@ -626,7 +717,7 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .message-content {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.5;
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -636,11 +727,10 @@ html[data-theme-style="adaptive-glass"].dark body {
 
 @media (min-width: 640px) {
   .message-content {
-    font-size: 20px;
+    font-size: 17px;
   }
 }
 
-/* Telegram-style inline spacer to wrap text around absolute timestamp */
 .message-content::after {
   content: '';
   display: inline-block;
@@ -649,12 +739,10 @@ html[data-theme-style="adaptive-glass"].dark body {
 
 .message-bubble-mine .message-content::after {
   width: 75px;
-  /* Space for time + ticks */
 }
 
 .message-bubble-other .message-content::after {
   width: 55px;
-  /* Space for time only */
 }
 
 .message-meta {
@@ -674,31 +762,30 @@ html[data-theme-style="adaptive-glass"].dark body {
 
 .message-timestamp {
   font-size: 11px;
-  /* slightly larger for readability */
   font-weight: 500;
-  color: var(--text-secondary);
-  opacity: 0.75;
+  color: var(--color-text-secondary);
+  opacity: 0.8;
 }
 
 .message-bubble-mine .message-timestamp {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--color-message-outgoing-text);
   opacity: 0.85;
 }
 
 .message-bubble-mine .message-meta svg {
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: var(--color-message-outgoing-text) !important;
   opacity: 0.85;
 }
 
 .message-bubble-mine .message-meta svg.text-sky-400 {
-  color: #38bdf8 !important;
+  color: var(--color-accent, #38bdf8) !important;
   opacity: 1;
 }
 
-/* Media Overlay Style for Telegram-like Photo Timestamps */
+/* Media Overlay Style */
 .message-bubble-media .message-meta {
   position: absolute;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 3px 8px;
@@ -709,47 +796,40 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .message-bubble-media .message-meta .message-timestamp {
-  color: rgba(255, 255, 255, 0.95) !important;
+  color: #ffffff !important;
   font-weight: 600;
-  opacity: 1;
+  opacity: 0.95;
 }
 
 .message-bubble-media .message-meta svg {
-  color: rgba(255, 255, 255, 0.9) !important;
-  opacity: 1;
+  color: #ffffff !important;
+  opacity: 0.9;
 }
 
-.message-bubble-media .message-meta svg.text-sky-400 {
-  color: #38bdf8 !important;
-}
-
-/* Reply Preview Polishing */
+/* Reply Preview */
 .reply-preview-bubble {
   margin-bottom: 8px;
   cursor: pointer;
   border-radius: 12px;
   border-left-width: 4px;
-  border-left-color: var(--primary-500);
+  border-left-color: var(--color-primary);
   padding: 10px;
   font-size: 11px;
   line-height: 1.25;
   transition: all 0.2s ease;
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.dark .reply-preview-bubble {
-  background: rgba(255, 255, 255, 0.05);
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 }
 
 .message-bubble-mine .reply-preview-bubble {
-  background: rgba(0, 0, 0, 0.15);
+  background: color-mix(in srgb, var(--color-message-outgoing-text) 12%, transparent);
+  border-left-color: var(--color-message-outgoing-text);
 }
 
 /* Media Messages */
 .media-container {
   position: relative;
   overflow: hidden;
-  background: rgba(0, 0, 0, 0.05);
+  background: color-mix(in srgb, var(--color-text-primary) 5%, transparent);
   margin: 0 0 4px;
 }
 
@@ -763,10 +843,10 @@ html[data-theme-style="adaptive-glass"].dark body {
   border-radius: 0 6px 6px 6px;
 }
 
-/* Design System v2 Button Patterns */
+/* Button Patterns */
 .btn-primary {
-  background: var(--primary-500);
-  color: #000000;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
   border-radius: 9999px;
   font-weight: 700;
   padding: 10px 24px;
@@ -776,18 +856,18 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .btn-primary:hover {
-  background: color-mix(in srgb, var(--primary-500) 90%, white);
-  box-shadow: 0 0 15px color-mix(in srgb, var(--primary-500) 30%, transparent);
+  filter: brightness(1.08);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
 
 .btn-primary:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 .btn-outline {
   background: transparent;
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
   border-radius: 9999px;
   font-weight: 600;
   padding: 10px 24px;
@@ -796,7 +876,8 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-hover);
+  border-color: var(--color-primary);
 }
 
 /* Status Badges */
@@ -850,16 +931,11 @@ html[data-theme-style="adaptive-glass"].dark body {
 }
 
 .message-bubble-emoji-only .message-timestamp {
-  color: var(--text-secondary) !important;
+  color: var(--color-text-secondary) !important;
   opacity: 0.85 !important;
 }
 
 .message-bubble-emoji-only .message-meta svg {
-  color: var(--text-secondary) !important;
+  color: var(--color-text-secondary) !important;
   opacity: 0.85 !important;
-}
-
-.message-bubble-emoji-only .message-meta svg.text-sky-400 {
-  color: #38bdf8 !important;
-  opacity: 1 !important;
 }

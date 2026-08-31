@@ -12,35 +12,17 @@ import {
 import { createPortal } from 'react-dom';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  ArrowLeft02Icon,
-  Cancel01Icon,
-  SmileIcon,
-  ImageAdd01Icon,
-  Menu01Icon,
-  SentIcon,
-  UserGroupIcon,
-  VolumeHighIcon,
-  VolumeMuteIcon,
-  ArrowTurnBackwardIcon,
-  Camera01Icon,
-  Image01Icon,
-  Add01Icon,
-  ArrowDown01Icon,
-  Clock01Icon,
-  Tick02Icon,
-  TickDouble02Icon,
-  PaintBrush01Icon,
-} from '@hugeicons/core-free-icons';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { ThemeSelector, themes } from '../components/ThemeSelector';
 import { GlassThemeToggle } from '../components/GlassThemeToggle';
 import { Loader } from '../components/Loader';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL, getErrorMessage } from '../services/http';
-import { secureChatService, type SecureChatMessage, type SecureChat } from '../services/secureChat.service';
+import {
+  secureChatService,
+  type SecureChatMessage,
+  type SecureChat,
+} from '../services/secureChat.service';
 import { roomService } from '../services/room.service';
 import {
   connectSecureSocket,
@@ -55,6 +37,8 @@ import {
 } from '../utils/file';
 import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
+import { MaterialIcon } from '../components/MaterialIcon';
+import { getThemePureColor } from '../config/themes';
 
 // Loaded on demand: renders only when the user opens the emoji picker.
 const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
@@ -78,8 +62,6 @@ const wallpapers = [
   { id: 'wp15', name: 'Flowers & Book', url: '/wallpaper15.png' },
 ];
 
-// One formatter + result cache instead of a new Intl.DateTimeFormat per
-// message per render (locale resolution is not cheap at scale).
 const timeFormatter = new Intl.DateTimeFormat(undefined, {
   hour: '2-digit',
   minute: '2-digit',
@@ -101,9 +83,9 @@ const resolveMediaUrl = (url: string) => {
   return `${API_BASE_URL.replace(/\/api\/?$/, '')}${url}`;
 };
 
-// Hoisted regexes (built once) + result cache; these run per message.
 const FLAG_REGEX = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
-const EMOJI_REGEX = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
+const EMOJI_REGEX =
+  /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
 const singleEmojiCache = new Map<string, boolean>();
 
 const isSingleEmoji = (str: string): boolean => {
@@ -153,9 +135,9 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
       <div
         ref={iconRef}
         style={{ opacity: 0, transform: 'scale(0.5)' }}
-        className="pointer-events-none absolute left-[-36px] top-1/2 z-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-slate-200 text-slate-500 will-change-transform dark:bg-slate-700 dark:text-slate-400"
+        className="pointer-events-none absolute left-[-36px] top-1/2 z-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-[var(--color-hover)] text-[var(--color-text-secondary)] will-change-transform"
       >
-        <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={15} />
+        <MaterialIcon icon="reply" size={16} />
       </div>
 
       <div ref={wrapperRef} className="relative z-10 w-fit will-change-transform">
@@ -167,19 +149,16 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
 
 interface SecureMessageBubbleProps {
   message: SecureChatMessage;
+  isConsecutive: boolean;
   currentUserId: string;
   onReply: (message: SecureChatMessage) => void;
   onScrollToMessage: (id: string) => void;
   onOpenFullscreen: (url: string) => void;
 }
 
-/**
- * Memoized per-message bubble. With stable handler props, page-level state
- * changes (keystrokes, typing indicators, scroll button) no longer
- * re-render existing messages.
- */
 const SecureMessageBubble = memo(function SecureMessageBubble({
   message,
+  isConsecutive,
   currentUserId,
   onReply,
   onScrollToMessage,
@@ -192,11 +171,15 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
   return (
     <article
       id={`msg-${message.id}`}
-      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
+      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+        isMine ? 'justify-end' : 'justify-start'
+      } ${isConsecutive ? 'mt-[3px]' : 'mt-4'}`}
     >
       <SwipeableMessage isMine={isMine} onReply={() => onReply(message)}>
         <div
-          className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'} ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
+          className={`group relative flex flex-col transition-opacity duration-300 ${
+            isMine ? 'items-end' : 'items-start'
+          } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
         >
           <div
             className={`message-bubble ${
@@ -214,16 +197,17 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
               {message.replyTo && (
                 <div
                   onClick={() => message.replyTo && onScrollToMessage(message.replyTo.id)}
-                  className="reply-preview-bubble text-left"
+                  className="reply-preview-bubble text-left cursor-pointer"
                 >
-                  <p className="font-extrabold text-emerald-600 dark:text-emerald-400 mb-0.5">
+                  <p className="font-bold text-[var(--color-primary)] text-[11px] mb-0.5">
                     {message.replyTo.senderName}
                   </p>
                   <div className="flex items-center gap-1.5 opacity-90">
-                    {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
+                    {message.replyTo.content.includes('cloudinary.com') ||
+                    /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content) ? (
                       <>
-                        <HugeiconsIcon icon={Image01Icon} size={14} />
-                        <span className="text-[11px] italic text-slate-350">Photo</span>
+                        <MaterialIcon icon="image" size={14} />
+                        <span className="text-[11px] italic">Photo</span>
                       </>
                     ) : (
                       <p className="truncate line-clamp-2 italic text-[11px]">
@@ -237,29 +221,29 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
               {/* Reply Action Trigger */}
               <div
                 className={`absolute top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                  isMine ? '-left-12' : '-right-12'
+                  isMine ? '-left-10' : '-right-10'
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => onReply(message)}
-                  className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white transition active:scale-90"
+                  className="rounded-full bg-[var(--color-surface)] p-1.5 text-[var(--color-text-secondary)] shadow-sm hover:text-[var(--color-text-primary)] transition active:scale-90 cursor-pointer"
                   title="Reply"
                 >
-                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={16} />
+                  <MaterialIcon icon="reply" size={16} />
                 </button>
               </div>
 
-              {/* Message rendering */}
+              {/* Message Content */}
               {isImageMessage(message) ? (
                 <div
                   onClick={() => onOpenFullscreen(resolveMediaUrl(message.content))}
-                  className="media-container group/media"
+                  className="media-container group/media cursor-pointer rounded-2xl overflow-hidden"
                 >
                   <img
                     src={resolveMediaUrl(message.content)}
                     alt={message.fileName || 'Image'}
-                    className="max-h-[300px] w-full min-w-[180px] object-cover transition-all duration-500 group-hover/media:scale-105"
+                    className="max-h-[320px] w-full min-w-[200px] object-cover transition-all duration-500 group-hover/media:scale-105"
                     loading="lazy"
                   />
                   {message.status === 'sending' && (
@@ -274,77 +258,49 @@ const SecureMessageBubble = memo(function SecureMessageBubble({
                 <a
                   href={message.content}
                   download={message.fileName}
-                  className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
+                  className="flex items-center gap-3 rounded-2xl bg-[var(--color-hover)] p-3 text-sm font-medium transition hover:opacity-90 mb-2 cursor-pointer"
                 >
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-                    <HugeiconsIcon icon={ImageAdd01Icon} size={18} />
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)]">
+                    <MaterialIcon icon="attachment" size={18} />
                   </div>
                   <div className="overflow-hidden text-left">
-                    <p className="truncate font-bold text-slate-200">{message.fileName || 'file'}</p>
-                    <p className="text-[9px] opacity-75 uppercase font-black tracking-wider">{formatFileSize(message.fileSize)}</p>
+                    <p className="truncate font-semibold text-xs">{message.fileName || 'file'}</p>
+                    <p className="text-[10px] opacity-75 uppercase font-medium tracking-wider">
+                      {formatFileSize(message.fileSize)}
+                    </p>
                   </div>
                 </a>
               ) : (
                 <div className="block text-left">
-                  <span className="message-content">
-                    {message.content}
-                  </span>
+                  <span className="message-content">{message.content}</span>
                 </div>
               )}
 
-              {/* Timestamp & Seen Ticks */}
-              {!isEmojiOnly && (
-                <div className="message-meta">
-                  <span className="message-timestamp">
-                    {formatTime(message.createdAt)}
-                  </span>
-                  {isMine && (
-                    <div className="flex transition-all duration-300">
-                      <HugeiconsIcon
-                        icon={
-                          message.status === 'sending'
-                            ? Clock01Icon
-                            : message.status === 'sent'
-                              ? Tick02Icon
-                              : TickDouble02Icon
-                        }
-                        size={14}
-                        className={`
-                          ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
-                          ${message.status === 'sending' ? 'animate-pulse' : ''}
-                        `}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Emoji-only Meta */}
-              {isEmojiOnly && (
-                <div className="message-meta">
-                  <span className="message-timestamp">
-                    {formatTime(message.createdAt)}
-                  </span>
-                  {isMine && (
-                    <div className="flex transition-all duration-300">
-                      <HugeiconsIcon
-                        icon={
-                          message.status === 'sending'
-                            ? Clock01Icon
-                            : message.status === 'sent'
-                              ? Tick02Icon
-                              : TickDouble02Icon
-                        }
-                        size={14}
-                        className={`
-                          ${message.status === 'seen' ? 'text-sky-400' : 'text-slate-400'}
-                          ${message.status === 'sending' ? 'animate-pulse' : ''}
-                        `}
-                      />
-                    </div>
-                  )}
-                </div>
-              )}
+              {/* Timestamp & Status Indicator */}
+              <div className="message-meta">
+                <span className="message-timestamp">{formatTime(message.createdAt)}</span>
+                {isMine && (
+                  <div className="flex transition-all duration-300">
+                    <MaterialIcon
+                      icon={
+                        message.status === 'sending'
+                          ? 'schedule'
+                          : message.status === 'sent'
+                            ? 'check'
+                            : 'done_all'
+                      }
+                      size={14}
+                      className={
+                        message.status === 'seen'
+                          ? 'text-sky-400'
+                          : message.status === 'sending'
+                            ? 'animate-pulse opacity-75'
+                            : 'opacity-85'
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -361,10 +317,6 @@ interface SecureMessageListProps {
   onOpenFullscreen: (url: string) => void;
 }
 
-/**
- * Memoized message list. When `messages` is unchanged the whole list is
- * skipped, so keystrokes/typing/scroll state never touch message DOM.
- */
 const SecureMessageList = memo(function SecureMessageList({
   messages,
   currentUserId,
@@ -374,16 +326,27 @@ const SecureMessageList = memo(function SecureMessageList({
 }: SecureMessageListProps) {
   return (
     <>
-      {messages.map((message) => (
-        <SecureMessageBubble
-          key={message.id}
-          message={message}
-          currentUserId={currentUserId}
-          onReply={onReply}
-          onScrollToMessage={onScrollToMessage}
-          onOpenFullscreen={onOpenFullscreen}
-        />
-      ))}
+      {messages.map((message, index) => {
+        const prevMessage = index > 0 ? messages[index - 1] : null;
+        const isConsecutive =
+          prevMessage !== null &&
+          prevMessage.sender.id === message.sender.id &&
+          new Date(message.createdAt).getTime() -
+            new Date(prevMessage.createdAt).getTime() <
+            5 * 60 * 1000;
+
+        return (
+          <SecureMessageBubble
+            key={message.id}
+            message={message}
+            isConsecutive={isConsecutive}
+            currentUserId={currentUserId}
+            onReply={onReply}
+            onScrollToMessage={onScrollToMessage}
+            onOpenFullscreen={onOpenFullscreen}
+          />
+        );
+      })}
     </>
   );
 });
@@ -392,8 +355,9 @@ export const SecureChatPage = () => {
   const { chatId } = useParams();
   const activeChatId = useMemo(() => (chatId || '').toLowerCase(), [chatId]);
   const { user } = useAuth();
-  const { theme } = useTheme();
+  const { theme, themeId } = useTheme();
   const navigate = useNavigate();
+  const pureColor = getThemePureColor(themeId);
 
   // Access check state
   const [unlockToken, setUnlockToken] = useState<string | null>(() => {
@@ -431,8 +395,6 @@ export const SecureChatPage = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
-  const [showMobileColorPicker, setShowMobileColorPicker] = useState(false);
-  const { accent, setAccent } = useTheme();
 
   // Mobile Wallpaper Selector States
   const [selectedWallpaper, setSelectedWallpaper] = useState<string>(() => {
@@ -440,8 +402,6 @@ export const SecureChatPage = () => {
   });
   const [showMobileWallpaperPicker, setShowMobileWallpaperPicker] = useState(false);
 
-  // matchMedia fires only when the viewport crosses the breakpoint instead
-  // of on every resize frame, so no debouncing is needed.
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia('(max-width: 1023px)').matches
   );
@@ -485,14 +445,12 @@ export const SecureChatPage = () => {
   const soundEnabledRef = useRef(soundEnabled);
   const scrollRafRef = useRef<number | null>(null);
 
-  // typing placeholders
   const placeholder = 'Type a secure message...';
 
   useEffect(() => {
     soundEnabledRef.current = soundEnabled;
   }, [soundEnabled]);
 
-  // Track when the user leaves the secure chat, allowing it to stay unlocked only for 20 seconds.
   useEffect(() => {
     const token = sessionStorage.getItem(`secure_unlock_${activeChatId}`);
     const leftAtStr = sessionStorage.getItem(`secure_unlock_left_at_${activeChatId}`);
@@ -514,9 +472,11 @@ export const SecureChatPage = () => {
     }
 
     return () => {
-      // Cleanup run when leaving the activeChatId context
       if (activeChatId && sessionStorage.getItem(`secure_unlock_${activeChatId}`)) {
-        sessionStorage.setItem(`secure_unlock_left_at_${activeChatId}`, Date.now().toString());
+        sessionStorage.setItem(
+          `secure_unlock_left_at_${activeChatId}`,
+          Date.now().toString()
+        );
       }
     };
   }, [activeChatId]);
@@ -533,8 +493,6 @@ export const SecureChatPage = () => {
     isAtBottomRef.current = true;
   }, []);
 
-  // rAF-throttled: the scroll handler runs at most once per frame instead of
-  // once per scroll event, and only updates state when the bottom state flips.
   const handleScroll = useCallback(() => {
     if (scrollRafRef.current !== null) return;
 
@@ -564,7 +522,6 @@ export const SecureChatPage = () => {
     };
   }, []);
 
-  // Typing indicators must not scroll the chat — only new content should.
   useEffect(() => {
     if (isAtBottomRef.current && unlockToken) {
       scrollToBottom('smooth');
@@ -580,9 +537,9 @@ export const SecureChatPage = () => {
         top: elementTop - container.clientHeight / 2 + element.clientHeight / 2,
         behavior: 'smooth',
       });
-      element.classList.add('bg-emerald-500/20', 'dark:bg-emerald-500/30', 'transition-colors', 'duration-500');
+      element.classList.add('bg-[var(--color-primary-container)]/30', 'transition-colors', 'duration-500');
       setTimeout(() => {
-        element.classList.remove('bg-emerald-500/20', 'dark:bg-emerald-500/30');
+        element.classList.remove('bg-[var(--color-primary-container)]/30');
       }, 1500);
     }
   }, []);
@@ -606,7 +563,6 @@ export const SecureChatPage = () => {
     }
   }, [activeChatId]);
 
-  // Handle Unlock Action
   const handleUnlock = async (e: FormEvent) => {
     e.preventDefault();
     setUnlockError('');
@@ -632,18 +588,14 @@ export const SecureChatPage = () => {
     );
   }
 
-  // Load chat info and message history once unlocked
   useEffect(() => {
-    if (!unlockToken) {
-      return;
-    }
+    if (!unlockToken) return;
 
     let isMounted = true;
 
     const loadChatData = async () => {
       setIsLoading(true);
       try {
-        // Fetch secure chats to find this specific one details
         const chats = await secureChatService.getSecureChats();
         const thisChat = chats.find((c) => c.id === activeChatId);
 
@@ -660,7 +612,6 @@ export const SecureChatPage = () => {
       } catch (loadError) {
         if (isMounted) {
           setError(getErrorMessage(loadError));
-          // If 403, it means the unlock token expired
           if (axiosIsForbidden(loadError)) {
             sessionStorage.removeItem(`secure_unlock_${activeChatId}`);
             setUnlockToken(null);
@@ -680,11 +631,8 @@ export const SecureChatPage = () => {
     };
   }, [activeChatId, unlockToken]);
 
-  // Connect socket and register listeners
   useEffect(() => {
-    if (!user || !activeChatId || !unlockToken) {
-      return;
-    }
+    if (!user || !activeChatId || !unlockToken) return;
 
     const socket: SecureAppSocket = connectSecureSocket();
 
@@ -769,7 +717,6 @@ export const SecureChatPage = () => {
     socket.on('secure:temp-room-invite', handleTempRoomInvite);
     socket.on('secure:error', handleSocketError);
 
-    // Join room
     socket.emit('secure:join', { chatId: activeChatId, unlockToken }, (response) => {
       if (!response.ok && response.message) {
         setError(response.message);
@@ -793,12 +740,10 @@ export const SecureChatPage = () => {
     };
   }, [activeChatId, unlockToken, user, stopTyping]);
 
-  // Invite Redirect countdown timer
   useEffect(() => {
     if (!tempRoomInvite) return;
 
     if (inviteCountdown <= 0) {
-      // Auto redirect!
       navigate(`/rooms/${tempRoomInvite.roomId}`);
       return;
     }
@@ -810,12 +755,6 @@ export const SecureChatPage = () => {
     return () => clearTimeout(timer);
   }, [tempRoomInvite, inviteCountdown, navigate]);
 
-  // Seen detection logic.
-  // One persistent IntersectionObserver for the whole conversation: each
-  // messages change only re-observes messages that are still unseen
-  // (observe() is a no-op for already-observed targets), so a busy
-  // conversation no longer tears down and rebuilds the observer — with its
-  // O(n) work and DOM queries — on every message update.
   const seenObserverRef = useRef<IntersectionObserver | null>(null);
   const deliveredEmittedRef = useRef<Set<string>>(new Set());
   const messagesRef = useRef(messages);
@@ -869,8 +808,6 @@ export const SecureChatPage = () => {
             const currentSocket = getSecureSocket();
             if (!currentSocket.connected) return;
 
-            // Only stop tracking after a successful hand-off to the socket,
-            // so a message visible while offline is retried later.
             seenObserverRef.current?.unobserve(entry.target);
             currentSocket.emit('secure:message:seen', { chatId: currentChatId, messageId });
           });
@@ -889,8 +826,6 @@ export const SecureChatPage = () => {
     });
   }, [messages, user, unlockToken, activeChatId]);
 
-  // Re-delivery safety: after a reconnect, allow delivered pings again for
-  // messages the server may have missed while we were offline.
   useEffect(() => {
     const handleConnect = () => {
       deliveredEmittedRef.current.clear();
@@ -903,9 +838,6 @@ export const SecureChatPage = () => {
     };
   }, []);
 
-  // Switching chats (and unmount): reset seen tracking so the next
-  // conversation starts fresh. Runs as cleanup, i.e. before the observe
-  // effect re-runs for the new chat.
   useEffect(() => {
     const deliveredEmitted = deliveredEmittedRef.current;
     return () => {
@@ -915,7 +847,6 @@ export const SecureChatPage = () => {
     };
   }, [activeChatId]);
 
-  // Handle emoji click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -933,7 +864,6 @@ export const SecureChatPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
-  // Manage visual viewport height to prevent keyboard overlapping input bar
   useEffect(() => {
     if (!window.visualViewport) return;
 
@@ -943,7 +873,6 @@ export const SecureChatPage = () => {
       document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
       window.scrollTo(0, 0);
       document.body.scrollTop = 0;
-      // Scroll to bottom when keyboard opens
       setTimeout(() => {
         window.scrollTo(0, 0);
         scrollToBottom('auto');
@@ -959,7 +888,6 @@ export const SecureChatPage = () => {
     window.visualViewport.addEventListener('resize', handleResize);
     window.visualViewport.addEventListener('scroll', handleResize);
     window.addEventListener('scroll', handleWindowScroll);
-    // Initial call
     handleResize();
 
     return () => {
@@ -970,7 +898,6 @@ export const SecureChatPage = () => {
     };
   }, [scrollToBottom]);
 
-  // Handle camera trigger
   useEffect(() => {
     if (!showCamera) return;
 
@@ -1071,11 +998,13 @@ export const SecureChatPage = () => {
       deliveredTo: [],
       seenBy: [],
       tempId,
-      replyTo: replyingTo ? {
-        id: replyingTo.id,
-        content: replyingTo.content,
-        senderName: replyingTo.sender.name,
-      } : undefined,
+      replyTo: replyingTo
+        ? {
+            id: replyingTo.id,
+            content: replyingTo.content,
+            senderName: replyingTo.sender.name,
+          }
+        : undefined,
       createdAt: new Date().toISOString(),
     };
 
@@ -1105,7 +1034,6 @@ export const SecureChatPage = () => {
       }
     );
 
-    // Refocus input field to keep keyboard open on mobile
     textareaRef.current?.focus();
   };
 
@@ -1143,11 +1071,13 @@ export const SecureChatPage = () => {
         deliveredTo: [],
         seenBy: [],
         tempId,
-        replyTo: replyingTo ? {
-          id: replyingTo.id,
-          content: replyingTo.content,
-          senderName: replyingTo.sender.name,
-        } : undefined,
+        replyTo: replyingTo
+          ? {
+              id: replyingTo.id,
+              content: replyingTo.content,
+              senderName: replyingTo.sender.name,
+            }
+          : undefined,
         createdAt: new Date().toISOString(),
       };
 
@@ -1186,7 +1116,6 @@ export const SecureChatPage = () => {
     }
   };
 
-  // Create temporary room and invite other user
   const handleGoToTemporaryRoom = async () => {
     if (!chatInfo) return;
     setIsCreatingTempRoom(true);
@@ -1196,13 +1125,11 @@ export const SecureChatPage = () => {
       const res = await roomService.createRoom();
       const tempRoomId = res.room.roomId;
 
-      // Broadcast redirect code via secure socket namespace
       getSecureSocket().emit('secure:temp-room-create', {
         chatId: activeChatId,
         tempRoomId,
       });
 
-      // Redirect creator immediately
       navigate(`/rooms/${tempRoomId}`);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -1211,26 +1138,25 @@ export const SecureChatPage = () => {
     }
   };
 
-  const handleLeaveChat = () => {
-    navigate('/dashboard');
-  };
-
   const typingNames = Object.values(typingUsers);
 
-  // 1. LOCKED VIEW
+  // 1. LOCKED VIEW (Google PIN/Password Shield View)
   if (!unlockToken) {
     return (
-      <main className="fixed inset-0 flex flex-col items-center justify-center bg-slate-900 text-white p-4">
-        <div className="w-full max-w-md rounded-3xl bg-slate-950/80 p-8 text-center border border-slate-800 shadow-2xl backdrop-blur-md animate-in fade-in zoom-in-95 duration-300">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 text-3xl shadow-inner border border-emerald-500/20 animate-pulse">
-            🔒
+      <main className="fixed inset-0 flex flex-col items-center justify-center bg-[var(--color-background)] text-[var(--color-text-primary)] p-4">
+        <div className="w-full max-w-sm rounded-3xl bg-[var(--color-surface)] p-8 text-center shadow-2xl animate-in fade-in zoom-in-95 duration-300 space-y-6">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] shadow-2xs">
+            <MaterialIcon icon="lock" size={32} />
           </div>
-          <h1 className="mb-2 text-2xl font-black tracking-wide text-slate-100 uppercase">
-            Secure Chat
-          </h1>
-          <p className="mb-6 text-xs text-slate-400">
-            This conversation is encrypted and locked. Enter password to access.
-          </p>
+
+          <div className="space-y-1.5">
+            <h1 className="text-xl font-bold text-[var(--color-text-primary)] tracking-tight">
+              Encrypted Conversation
+            </h1>
+            <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+              Enter password to unlock and access messages.
+            </p>
+          </div>
 
           <form onSubmit={handleUnlock} className="space-y-4">
             <input
@@ -1238,31 +1164,31 @@ export const SecureChatPage = () => {
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               placeholder="Enter password..."
-              className="w-full rounded-full border border-slate-800 bg-slate-900/60 px-5 py-4 text-center text-lg tracking-widest outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+              className="w-full rounded-2xl bg-[var(--color-hover)] px-5 py-3.5 text-center text-base tracking-widest outline-none transition focus:bg-[var(--color-surface)] focus:ring-2 focus:ring-[var(--color-primary)] text-[var(--color-text-primary)]"
               required
               autoFocus
             />
 
             {unlockError && (
-              <p className="rounded-xl border border-red-900/30 bg-red-950/20 px-4 py-2.5 text-xs font-semibold text-red-400">
-                ⚠️ {unlockError}
+              <p className="rounded-xl bg-[var(--color-error)]/10 px-4 py-2.5 text-xs font-semibold text-[var(--color-error)]">
+                {unlockError}
               </p>
             )}
 
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => navigate('/dashboard')}
-                className="flex-1 rounded-full border border-slate-800 bg-transparent py-4 text-xs font-bold uppercase tracking-wider text-slate-400 transition hover:bg-slate-900 hover:text-white"
+                onClick={() => navigate('/secure-chats')}
+                className="flex-1 rounded-full bg-[var(--color-hover)] py-5 text-xs font-semibold text-[var(--color-text-primary)] transition hover:bg-[var(--color-hover)]/80 cursor-pointer"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isUnlocking}
-                className="flex-[2] rounded-full bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-emerald-700/20 transition hover:bg-emerald-500 active:scale-[0.98]"
+                className="flex-[2] rounded-full bg-[var(--color-primary)] py-5 text-xs font-semibold text-[var(--color-on-primary)] shadow-sm transition hover:opacity-90 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
-                {isUnlocking ? 'Unlocking...' : 'Unlock'}
+                {isUnlocking ? 'Unlocking...' : 'Unlock Chat'}
               </button>
             </div>
           </form>
@@ -1274,304 +1200,98 @@ export const SecureChatPage = () => {
   // 2. LOADING STATE
   if (isLoading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-slate-950 text-white">
+      <div className="flex min-h-dvh items-center justify-center bg-[var(--color-background)] text-[var(--color-text-primary)]">
         <Loader size="lg" />
       </div>
     );
   }
 
-  // 3. UNLOCKED CHAT VIEW (Emerald / Purple Accent theme)
+  // 3. UNLOCKED CHAT VIEW (Google Messages Pure Layout)
   return (
     <main
       style={{ height: 'var(--visual-viewport-height, 100dvh)' }}
-      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-white overflow-hidden"
+      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
     >
-      <header className="sticky top-0 z-20 border-b border-slate-200/80 bg-white/98 px-3 py-0 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-950/98 sm:px-6">
-        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-2 sm:gap-4">
+      {/* Flat Borderless Google Top App Bar */}
+      <header className="sticky top-0 z-20 bg-[var(--color-surface)] px-4 py-2.5 sm:px-6">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3">
           {/* Identity */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
-              onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 lg:hidden"
-              title="Toggle Sidebar"
+              onClick={() => navigate('/secure-chats')}
+              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
+              title="Back to Secure Chats"
             >
-              <HugeiconsIcon icon={Menu01Icon} size={20} />
+              <MaterialIcon icon="arrow_back" size={20} />
             </button>
 
+            {/* Recipient Avatar */}
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
+              style={{
+                backgroundColor: pureColor.bg,
+                color: pureColor.text,
+              }}
+            >
+              {chatInfo?.recipient.name?.slice(0, 2).toUpperCase() || 'U'}
+            </div>
+
             <div className="flex flex-col justify-center min-w-0">
-              <div className="flex items-center gap-1.5 min-w-0">
-                <h1 className="text-sm font-extrabold truncate text-slate-900 dark:text-white sm:text-base max-w-[140px] sm:max-w-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <h1 className="text-[15px] font-semibold truncate text-[var(--color-text-primary)]">
                   {chatInfo?.recipient.name}
                 </h1>
                 <span
                   className={`h-2 w-2 rounded-full shrink-0 ${
-                    chatInfo?.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-500'
+                    chatInfo?.isOnline ? 'bg-[var(--color-success)] animate-pulse' : 'bg-[var(--color-text-muted)]'
                   }`}
                   title={chatInfo?.isOnline ? 'Online' : 'Offline'}
                 />
               </div>
+              <span className="text-[11px] text-[var(--color-text-secondary)] truncate">
+                {chatInfo?.isOnline ? 'Active now' : 'Encrypted conversation'}
+              </span>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-0.5 sm:gap-1.5">
-            {/* Go to Temporary Room Shortcut */}
+          {/* Action Toolbar */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Create Temp Room Shortcut */}
             <button
               type="button"
               onClick={handleGoToTemporaryRoom}
               disabled={isCreatingTempRoom}
-              className="flex items-center gap-1 rounded-full border border-emerald-500/40 bg-emerald-950/20 px-2.5 py-1.5 text-[11px] font-extrabold text-emerald-400 shadow-sm transition hover:bg-emerald-500 hover:text-white active:scale-95 disabled:opacity-40"
-              title="Create a temporary rooms workspace for this conversation"
+              className="flex items-center gap-1.5 rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] px-3 py-1.5 text-xs font-semibold hover:opacity-90 active:scale-95 transition cursor-pointer disabled:opacity-40"
+              title="Create Temporary Room"
             >
-              <span>⚡</span>
-              <span className="hidden sm:inline">Go to Temporary Room</span>
-              <span className="sm:hidden">Temp Room</span>
+              <MaterialIcon icon="bolt" size={16} />
+              <span className="hidden sm:inline">Temp Room</span>
             </button>
-
-            <div className="hidden items-center gap-0.5 lg:flex">
-              <ThemeSelector />
-              <GlassThemeToggle />
-              <ThemeToggle />
-            </div>
 
             <button
               type="button"
               onClick={() => setSoundEnabled((current) => !current)}
-              className="hidden rounded-full p-2 text-slate-500 transition-all duration-150 hover:bg-slate-100 hover:text-slate-900 active:scale-95 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100 sm:block"
-              title={soundEnabled ? 'Mute' : 'Unmute'}
+              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
+              title={soundEnabled ? 'Mute sounds' : 'Unmute sounds'}
             >
-              <HugeiconsIcon icon={soundEnabled ? VolumeHighIcon : VolumeMuteIcon} size={20} />
+              <MaterialIcon icon={soundEnabled ? 'volume_up' : 'volume_off'} size={20} />
             </button>
 
             <button
               type="button"
-              onClick={handleLeaveChat}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm transition-all duration-150 hover:bg-slate-700 active:scale-95 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white sm:px-4 sm:text-sm"
+              onClick={() => setShowSidebar((prev) => !prev)}
+              className="rounded-full p-2 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 transition cursor-pointer"
+              title="Chat Details & Wallpaper"
             >
-              <HugeiconsIcon icon={ArrowLeft02Icon} size={16} />
-              <span className="hidden sm:inline">Back</span>
+              <MaterialIcon icon="info" size={20} />
             </button>
           </div>
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-7xl flex-1 overflow-hidden lg:gap-4 lg:p-4">
-        {/* Sidebar */}
-        <aside
-          className={`
-            fixed inset-y-0 left-0 z-35 w-72 transform border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-950 lg:static lg:block lg:w-72 lg:translate-x-0 lg:rounded-lg lg:border
-            ${showSidebar ? 'translate-x-0' : '-translate-x-full'}
-          `}
-        >
-          <div className="flex h-full flex-col p-5">
-            <div className="sticky top-0 z-10 mb-6 flex items-center justify-between py-1 bg-white dark:bg-slate-950">
-              <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                <HugeiconsIcon icon={UserGroupIcon} size={18} />
-                Participants
-              </h2>
-              <button onClick={() => setShowSidebar(false)} className="lg:hidden">
-                <HugeiconsIcon icon={Cancel01Icon} size={20} />
-              </button>
-            </div>
-            <div className="flex-1 space-y-2 overflow-y-auto scrollbar-thin">
-              {/* Recipient */}
-              <div className="rounded-xl border border-slate-100 px-4 py-3 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">{chatInfo?.recipient.name}</span>
-                  <span
-                    className={`rounded-full px-2 py-0.5 text-[9px] font-extrabold ${
-                      chatInfo?.isOnline
-                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-500/20'
-                        : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                    }`}
-                  >
-                    {chatInfo?.isOnline ? 'Online' : 'Offline'}
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate">{chatInfo?.recipient.email}</p>
-              </div>
-
-              {/* Me */}
-              <div className="rounded-xl border border-slate-100 px-4 py-3 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">{user?.name} (You)</span>
-                  <span className="rounded-full px-2 py-0.5 text-[9px] font-extrabold bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 border border-emerald-500/20">
-                    Online
-                  </span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 truncate">{user?.email}</p>
-              </div>
-            </div>
-
-            {/* Mobile Appearance and Theme Settings */}
-            <div className="mt-auto space-y-4 border-t border-slate-800 pt-6 lg:hidden">
-              <div className="flex items-center justify-between">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                  Appearance
-                </p>
-              </div>
-
-              {/* Chat Background Trigger with collapsible panel directly above it */}
-              <div className="relative">
-                {showMobileColorPicker && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl bg-slate-900 border border-slate-800 p-4 shadow-xl z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                        <HugeiconsIcon icon={PaintBrush01Icon} size={14} />
-                        Choose Vibe
-                      </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMobileColorPicker(false);
-                        }}
-                        className="rounded-full p-1 hover:bg-slate-800"
-                      >
-                        <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-5 gap-2 max-h-[160px] overflow-y-auto p-1">
-                      {themes.map((themeOption) => (
-                        <button
-                          key={themeOption.value}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setAccent(themeOption.value);
-                          }}
-                          className={`group relative flex h-8 w-8 items-center justify-center rounded-full transition-all hover:scale-110 ${accent === themeOption.value ? 'ring-2 ring-primary-500 ring-offset-2 dark:ring-offset-slate-950' : ''
-                            }`}
-                          title={themeOption.name}
-                        >
-                          <span className="h-full w-full rounded-full shadow-sm border border-slate-850" style={{ backgroundColor: themeOption.color }} />
-                          {accent === themeOption.value && (
-                            <span className="absolute inset-0 flex items-center justify-center">
-                              <span className="h-1.5 w-1.5 rounded-full bg-white shadow-sm" />
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  onClick={() => setShowMobileColorPicker((prev) => !prev)}
-                  className={`flex items-center justify-between rounded-2xl bg-slate-900/50 p-4 cursor-pointer transition hover:bg-slate-900 ${showMobileColorPicker ? 'ring-1 ring-primary-500' : ''
-                    }`}
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold">Chat Background</p>
-                    <p className="text-[10px] text-slate-500">Choose your vibe</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="h-6 w-6 rounded-full border border-slate-850 shadow-sm"
-                      style={{ backgroundColor: themes.find((t) => t.value === accent)?.color || accent }}
-                    />
-                    <HugeiconsIcon icon={PaintBrush01Icon} size={16} className="text-slate-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Chat Wallpaper Trigger with collapsible panel directly above it */}
-              <div className="relative">
-                {showMobileWallpaperPicker && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 rounded-2xl bg-white border border-slate-200 p-4 dark:bg-slate-950 dark:border-slate-800 shadow-xl z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
-                    <div className="flex items-center justify-between mb-3">
-                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                        <HugeiconsIcon icon={Image01Icon} size={14} className="text-primary-500" />
-                        Choose Wallpaper
-                      </p>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowMobileWallpaperPicker(false);
-                        }}
-                        className="rounded-full p-1 hover:bg-slate-100 dark:hover:bg-slate-800"
-                      >
-                        <HugeiconsIcon icon={Cancel01Icon} size={16} />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 max-h-[220px] overflow-y-auto p-1">
-                      {wallpapers.map((wp) => (
-                        <button
-                          key={wp.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleSelectWallpaper(wp.url);
-                          }}
-                          className={`group relative flex flex-col items-center justify-center rounded-xl p-1.5 border transition-all hover:scale-105 ${
-                            selectedWallpaper === wp.url
-                              ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-950/20'
-                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
-                          title={wp.name}
-                        >
-                          {wp.url ? (
-                            <img
-                              src={wp.url}
-                              alt={wp.name}
-                              loading="lazy"
-                              decoding="async"
-                              className="h-16 w-12 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
-                            />
-                          ) : (
-                            <div className="h-16 w-12 rounded-lg border border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center bg-slate-50 dark:bg-slate-900 text-[10px] text-slate-400 font-bold">
-                              Default
-                            </div>
-                          )}
-                          <span className="text-[9px] mt-1 truncate max-w-full font-semibold">{wp.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  onClick={() => setShowMobileWallpaperPicker((prev) => !prev)}
-                  className={`flex items-center justify-between rounded-2xl bg-slate-50 p-4 dark:bg-slate-900/50 cursor-pointer transition hover:bg-slate-100 dark:hover:bg-slate-900 ${showMobileWallpaperPicker ? 'ring-1 ring-primary-500' : ''
-                    }`}
-                >
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold">Chat Wallpaper</p>
-                    <p className="text-[10px] text-slate-500">Choose mobile wallpaper</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {selectedWallpaper ? (
-                      <img
-                        src={selectedWallpaper}
-                        className="h-6 w-5 rounded object-cover border border-slate-200 dark:border-slate-700 shadow-sm"
-                        alt="Selected Preview"
-                      />
-                    ) : (
-                      <span className="text-[10px] bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 font-bold dark:text-slate-400">Default</span>
-                    )}
-                    <HugeiconsIcon icon={Image01Icon} size={16} className="text-slate-400" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Display Mode at very bottom */}
-              <div className="flex items-center justify-between rounded-2xl bg-slate-900/50 p-4">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-bold">Display Mode</p>
-                  <p className="text-[10px] text-slate-500">Light or Dark</p>
-                </div>
-                <ThemeToggle />
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Overlay for mobile sidebar */}
-        {showSidebar && (
-          <div
-            className="fixed inset-0 z-30 bg-slate-950/50 backdrop-blur-sm lg:hidden"
-            onClick={() => setShowSidebar(false)}
-          />
-        )}
-
+      {/* Main Conversation Body */}
+      <div className="mx-auto flex w-full max-w-7xl flex-1 overflow-hidden">
         {/* Chat Area */}
         <section
           style={
@@ -1583,25 +1303,35 @@ export const SecureChatPage = () => {
                 }
               : undefined
           }
-          className="relative flex flex-1 flex-col overflow-hidden lg:rounded-lg lg:border lg:border-slate-200 lg:dark:border-slate-800 chat-area-bg"
+          className="relative flex flex-1 flex-col overflow-hidden bg-[var(--color-background)]"
         >
-          <div className="chat-bg-gradient" />
           {error && (
-            <div className="m-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
-              <HugeiconsIcon icon={Cancel01Icon} size={18} />
-              <p>{error}</p>
+            <div className="m-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--color-error)]/10 p-3.5 text-xs font-medium text-[var(--color-error)]">
+              <div className="flex items-center gap-2">
+                <MaterialIcon icon="error" size={18} />
+                <p>{error}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setError('')}
+                className="p-1 hover:opacity-75 cursor-pointer"
+              >
+                <MaterialIcon icon="close" size={16} />
+              </button>
             </div>
           )}
 
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
+            className="flex-1 overflow-y-auto scroll-smooth px-4 py-6"
           >
-            <div className="flex min-h-full flex-col justify-end px-4 py-6 space-y-3">
+            <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end">
+              {/* Security Pill */}
               <div className="flex justify-center my-4">
-                <span className="rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-center text-[10px] font-bold tracking-wider text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 uppercase">
-                  🔒 Chats are secure & persistent.
+                <span className="rounded-full bg-[var(--color-hover)] px-4 py-1.5 text-center text-[11px] font-medium text-[var(--color-text-secondary)] flex items-center gap-1.5 shadow-2xs">
+                  <MaterialIcon icon="lock" size={13} className="text-[var(--color-primary)]" />
+                  Messages are end-to-end secured & persistent.
                 </span>
               </div>
 
@@ -1612,14 +1342,17 @@ export const SecureChatPage = () => {
                 onScrollToMessage={scrollToMessage}
                 onOpenFullscreen={setFullscreenImage}
               />
+
               {typingNames.length > 0 && (
-                <div className="flex items-center gap-2 py-1">
-                  <div className="flex gap-1.5 bg-slate-900 border border-slate-800 rounded-full px-3 py-1.5 items-center">
-                    <span className="text-[10px] text-slate-400">{typingNames[0]} is typing</span>
-                    <div className="flex gap-0.5">
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.3s]" />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.15s]" />
-                      <span className="h-1 w-1 animate-bounce rounded-full bg-slate-400" />
+                <div className="flex items-center gap-2 py-2">
+                  <div className="flex gap-2 bg-[var(--color-hover)] rounded-full px-3.5 py-1.5 items-center">
+                    <span className="text-[11px] text-[var(--color-text-secondary)]">
+                      {typingNames[0]} is typing
+                    </span>
+                    <div className="flex gap-1">
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)] [animation-delay:-0.3s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)] [animation-delay:-0.15s]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[var(--color-primary)]" />
                     </div>
                   </div>
                 </div>
@@ -1629,44 +1362,44 @@ export const SecureChatPage = () => {
             </div>
           </div>
 
-          {/* Scroll to bottom */}
+          {/* Scroll to Bottom Button */}
           {showScrollButton && (
             <button
               onClick={() => scrollToBottom('smooth')}
-              className="absolute bottom-24 right-6 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 border border-slate-800 text-slate-300 shadow-xl transition hover:scale-105 active:scale-95 hover:bg-slate-850"
+              className="absolute bottom-20 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-surface)] text-[var(--color-text-primary)] shadow-xl ring-1 ring-[var(--color-primary)]/20 transition hover:scale-105 active:scale-95 cursor-pointer"
             >
-              <HugeiconsIcon icon={ArrowDown01Icon} size={18} />
+              <MaterialIcon icon="arrow_downward" size={18} />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -left-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-emerald-600 text-[9px] font-black text-white shadow-lg animate-bounce">
+                <span className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-bold text-[var(--color-on-primary)] shadow-md animate-bounce">
                   {unreadCount}
                 </span>
               )}
             </button>
           )}
 
-          {/* Input Form */}
+          {/* Google Messages-Style Bottom Composer */}
           <form
             onSubmit={sendMessage}
-            className="border-t border-slate-850 bg-slate-950 p-3 relative sm:p-4"
+            className="p-3 sm:p-4 bg-[var(--color-background)] relative"
           >
             {/* Reply banner preview */}
             {replyingTo && (
-              <div className="mx-auto mb-3 flex max-w-7xl items-center gap-3 overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-2.5 animate-in slide-in-from-bottom-2">
-                <div className="h-8 w-1 rounded-full bg-emerald-500" />
+              <div className="mx-auto mb-2 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-2xl bg-[var(--color-hover)] p-2.5 animate-in slide-in-from-bottom-2">
+                <div className="h-8 w-1 rounded-full bg-[var(--color-primary)]" />
                 <div className="flex-1 overflow-hidden text-left">
-                  <p className="text-[10px] font-bold text-emerald-400">
+                  <p className="text-[11px] font-bold text-[var(--color-primary)]">
                     Replying to {replyingTo.sender.name}
                   </p>
-                  <p className="truncate text-xs opacity-75">
+                  <p className="truncate text-xs text-[var(--color-text-secondary)]">
                     {replyingTo.content.includes('cloudinary.com') ? 'Photo' : replyingTo.content}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setReplyingTo(null)}
-                  className="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                  className="rounded-full p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] cursor-pointer"
                 >
-                  <HugeiconsIcon icon={Cancel01Icon} size={16} />
+                  <MaterialIcon icon="close" size={16} />
                 </button>
               </div>
             )}
@@ -1678,7 +1411,7 @@ export const SecureChatPage = () => {
               >
                 <Suspense
                   fallback={
-                    <div className="h-[320px] w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-900" />
+                    <div className="h-[320px] w-full animate-pulse rounded-3xl bg-[var(--color-surface)] shadow-2xl" />
                   }
                 >
                   <EmojiPickerPanel
@@ -1692,13 +1425,8 @@ export const SecureChatPage = () => {
               </div>
             )}
 
-            <div className="mx-auto flex max-w-7xl items-end gap-2 sm:gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={sendFile}
-              />
+            <div className="mx-auto flex w-full max-w-[832px] items-end gap-2 sm:gap-3">
+              <input ref={fileInputRef} type="file" className="hidden" onChange={sendFile} />
               <input
                 ref={cameraInputRef}
                 type="file"
@@ -1708,6 +1436,7 @@ export const SecureChatPage = () => {
                 onChange={sendFile}
               />
 
+              {/* Attachment Button */}
               <div className="relative mb-0.5">
                 <button
                   type="button"
@@ -1716,14 +1445,11 @@ export const SecureChatPage = () => {
                     setShowAttachmentMenu(!showAttachmentMenu);
                   }}
                   disabled={isUploading}
-                  className={`rounded-full p-2.5 transition-all active:scale-90 ${showAttachmentMenu
-                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
-                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                    }`}
-                  title="Attachments"
+                  className="rounded-full p-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] transition active:scale-90 cursor-pointer"
+                  title="Attach file"
                 >
-                  <HugeiconsIcon
-                    icon={Add01Icon}
+                  <MaterialIcon
+                    icon="add"
                     size={24}
                     className={`transition-transform duration-300 ${
                       showAttachmentMenu ? 'rotate-45' : ''
@@ -1733,7 +1459,7 @@ export const SecureChatPage = () => {
 
                 {showAttachmentMenu && (
                   <div
-                    className="absolute bottom-full left-0 mb-4 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 dark:border-slate-800 dark:bg-slate-900 z-[60]"
+                    className="absolute bottom-full left-0 mb-3 w-48 overflow-hidden rounded-3xl bg-[var(--color-surface)] p-2 shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -1742,12 +1468,10 @@ export const SecureChatPage = () => {
                         fileInputRef.current?.click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-500/10 text-primary-600">
-                        <HugeiconsIcon icon={Image01Icon} size={20} />
-                      </div>
-                      Device
+                      <MaterialIcon icon="image" size={20} className="text-[var(--color-primary)]" />
+                      Device Media
                     </button>
                     <button
                       type="button"
@@ -1755,29 +1479,32 @@ export const SecureChatPage = () => {
                         setShowCamera(true);
                         setShowAttachmentMenu(false);
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-500/10 text-primary-600">
-                        <HugeiconsIcon icon={Camera01Icon} size={20} />
-                      </div>
+                      <MaterialIcon
+                        icon="photo_camera"
+                        size={20}
+                        className="text-[var(--color-primary)]"
+                      />
                       Camera
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Text Input Container */}
-              <div className="relative flex-1 flex items-end bg-slate-100 dark:bg-slate-900 rounded-full px-3 py-1 transition-all focus-within:ring-1 focus-within:ring-primary-500/50">
+              {/* Text Input Pill */}
+              <div className="relative flex-1 flex items-end bg-[var(--color-surface)] rounded-3xl px-4 py-1.5 shadow-2xs focus-within:ring-2 focus-within:ring-[var(--color-primary)]/40 transition">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker((current) => !current)}
-                  className={`flex-shrink-0 p-2.5 transition-all ${showEmojiPicker
-                    ? 'text-primary-600'
-                    : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                    }`}
+                  className={`flex-shrink-0 p-2 transition cursor-pointer ${
+                    showEmojiPicker
+                      ? 'text-[var(--color-primary)]'
+                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
+                  }`}
                   title="Emoji"
                 >
-                  <HugeiconsIcon icon={SmileIcon} size={24} />
+                  <MaterialIcon icon="mood" size={22} />
                 </button>
 
                 <textarea
@@ -1798,40 +1525,205 @@ export const SecureChatPage = () => {
                     }
                   }}
                   rows={1}
-                  className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400 sm:text-[17px]"
+                  className="flex-1 max-h-40 min-h-[40px] w-full resize-none bg-transparent py-2.5 px-2 text-[15px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                   placeholder={placeholder}
                 />
               </div>
 
+              {/* Send FAB Button */}
               <button
                 type="submit"
                 disabled={!messageText.trim()}
                 onMouseDown={(e) => e.preventDefault()}
-                className="flex-shrink-0 mb-0.5 rounded-full bg-primary-600 p-3 text-white shadow-lg shadow-primary-600/20 transition-all hover:bg-primary-500 hover:scale-105 active:scale-95 disabled:bg-slate-300 disabled:shadow-none dark:disabled:bg-slate-800"
+                className="flex-shrink-0 mb-0.5 rounded-full bg-[var(--color-primary)] p-3 text-[var(--color-on-primary)] shadow-sm transition hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 cursor-pointer"
+                title="Send message"
               >
-                <HugeiconsIcon icon={SentIcon} size={26} />
+                <MaterialIcon icon="send" size={22} />
               </button>
             </div>
           </form>
         </section>
-      </section>
 
-      {/* Camera Interface */}
+        {/* Sidebar Info Panel */}
+        <aside
+          className={`
+            fixed inset-y-0 right-0 z-40 w-80 transform bg-[var(--color-surface)] transition-transform duration-300 ease-in-out shadow-2xl lg:static lg:block lg:w-80 lg:translate-x-0 lg:shadow-none
+            ${showSidebar ? 'translate-x-0' : 'translate-x-full'}
+          `}
+        >
+          <div className="flex h-full flex-col p-6 space-y-6 overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[15px] font-bold text-[var(--color-text-primary)] flex items-center gap-2">
+                <MaterialIcon icon="info" size={20} className="text-[var(--color-primary)]" />
+                Conversation Info
+              </h2>
+              <button
+                onClick={() => setShowSidebar(false)}
+                className="rounded-full p-1.5 hover:bg-[var(--color-hover)] text-[var(--color-text-secondary)] lg:hidden cursor-pointer"
+              >
+                <MaterialIcon icon="close" size={20} />
+              </button>
+            </div>
+
+            {/* Participants */}
+            <div className="space-y-3">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                Participants
+              </p>
+              <div className="space-y-2">
+                {/* Recipient */}
+                <div className="flex items-center justify-between rounded-2xl bg-[var(--color-hover)] p-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
+                      style={{
+                        backgroundColor: pureColor.bg,
+                        color: pureColor.text,
+                      }}
+                    >
+                      {chatInfo?.recipient.name?.slice(0, 2).toUpperCase() || 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
+                        {chatInfo?.recipient.name}
+                      </p>
+                      <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
+                        {chatInfo?.recipient.email}
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                      chatInfo?.isOnline
+                        ? 'bg-[var(--color-success)]/15 text-[var(--color-success)]'
+                        : 'bg-[var(--color-hover)] text-[var(--color-text-muted)]'
+                    }`}
+                  >
+                    {chatInfo?.isOnline ? 'Online' : 'Offline'}
+                  </span>
+                </div>
+
+                {/* You */}
+                <div className="flex items-center justify-between rounded-2xl bg-[var(--color-hover)] p-3.5">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold shadow-2xs"
+                      style={{
+                        backgroundColor: pureColor.bg,
+                        color: pureColor.text,
+                      }}
+                    >
+                      {user?.name?.slice(0, 2).toUpperCase() || 'U'}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[var(--color-text-primary)] truncate">
+                        {user?.name} (You)
+                      </p>
+                      <p className="text-[10px] text-[var(--color-text-secondary)] truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full px-2 py-0.5 text-[9px] font-bold bg-[var(--color-success)]/15 text-[var(--color-success)]">
+                    Online
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Customization Options */}
+            <div className="space-y-3 pt-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--color-text-muted)]">
+                Chat Theme & Vibe
+              </p>
+
+              {/* Wallpaper Picker */}
+              <div className="rounded-2xl bg-[var(--color-hover)] p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[var(--color-text-primary)] flex items-center gap-2">
+                    <MaterialIcon icon="image" size={16} className="text-[var(--color-primary)]" />
+                    Wallpaper
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowMobileWallpaperPicker(!showMobileWallpaperPicker)}
+                    className="text-[11px] font-bold text-[var(--color-primary)] hover:underline cursor-pointer"
+                  >
+                    {showMobileWallpaperPicker ? 'Hide' : 'Change'}
+                  </button>
+                </div>
+
+                {showMobileWallpaperPicker && (
+                  <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1 animate-in fade-in duration-200">
+                    {wallpapers.map((wp) => (
+                      <button
+                        key={wp.id}
+                        onClick={() => handleSelectWallpaper(wp.url)}
+                        className={`group relative flex flex-col items-center justify-center rounded-xl p-1.5 transition hover:scale-105 cursor-pointer ${
+                          selectedWallpaper === wp.url
+                            ? 'ring-2 ring-[var(--color-primary)] bg-[var(--color-primary-container)]/30'
+                            : 'hover:bg-[var(--color-hover)]'
+                        }`}
+                      >
+                        {wp.url ? (
+                          <img
+                            src={wp.url}
+                            alt={wp.name}
+                            className="h-14 w-10 rounded-lg object-cover shadow-2xs"
+                          />
+                        ) : (
+                          <div className="h-14 w-10 rounded-lg flex items-center justify-center bg-[var(--color-surface)] text-[9px] font-bold text-[var(--color-text-muted)] shadow-2xs">
+                            Default
+                          </div>
+                        )}
+                        <span className="text-[9px] mt-1 truncate max-w-full font-medium">
+                          {wp.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Theme Quick Toggle */}
+              <div className="rounded-2xl bg-[var(--color-hover)] p-4 flex items-center justify-between">
+                <span className="text-xs font-semibold text-[var(--color-text-primary)]">
+                  Appearance
+                </span>
+                <div className="flex items-center gap-2">
+                  <GlassThemeToggle />
+                  <ThemeToggle />
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Sidebar Mobile Backdrop */}
+        {showSidebar && (
+          <div
+            className="fixed inset-0 z-30 bg-black/50 backdrop-blur-xs lg:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+      </div>
+
+      {/* Camera Capture Modal */}
       {showCamera && (
         <div className="fixed inset-0 z-50 flex flex-col bg-black animate-in fade-in duration-300">
           <div className="flex items-center justify-between p-4">
             <button
               onClick={() => setShowCamera(false)}
-              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={24} />
+              <MaterialIcon icon="close" size={24} />
             </button>
             <span className="font-semibold text-white">Camera</span>
             <button
               onClick={() => setFacingMode((prev) => (prev === 'user' ? 'environment' : 'user'))}
-              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20"
+              className="rounded-full bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
             >
-              <HugeiconsIcon icon={Camera01Icon} size={24} />
+              <MaterialIcon icon="photo_camera" size={24} />
             </button>
           </div>
 
@@ -1843,64 +1735,75 @@ export const SecureChatPage = () => {
           <div className="flex flex-col items-center justify-center p-8 pb-12">
             <button
               onClick={handleCapture}
-              className="h-20 w-20 rounded-full border-4 border-white p-1 transition active:scale-90"
+              className="h-20 w-20 rounded-full border-4 border-white p-1 transition active:scale-90 cursor-pointer"
             >
               <div className="h-full w-full rounded-full bg-white" />
             </button>
-            <p className="mt-4 text-xs text-white/60">Click to take picture</p>
+            <p className="mt-4 text-xs text-white/60">Tap to capture photo</p>
           </div>
         </div>
       )}
 
       {/* Temporary Room Redirect Modal */}
       {tempRoomInvite && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md animate-in fade-in duration-350">
-          <div className="w-full max-w-sm rounded-3xl bg-slate-900 p-8 text-center border border-slate-800 shadow-2xl animate-in zoom-in-95 duration-300">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400 text-3xl">
-              ⚡
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+          <div className="w-full max-w-sm rounded-3xl bg-[var(--color-surface)] p-8 text-center shadow-2xl animate-in zoom-in-95 duration-300 space-y-6">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] shadow-2xs">
+              <MaterialIcon icon="bolt" size={32} />
             </div>
-            <h2 className="mb-2 text-xl font-black text-slate-100 uppercase tracking-wide">
-              Joining Workspace...
-            </h2>
-            <p className="mb-8 text-xs text-slate-400 leading-relaxed">
-              <strong>{tempRoomInvite.createdBy}</strong> has initiated a temporary room session.{' '}
-              Redirecting you to temporary workspace in{' '}
-              <strong className="text-emerald-400 text-base">{inviteCountdown}s</strong>...
-            </p>
-            <button
-              onClick={() => navigate(`/rooms/${tempRoomInvite.roomId}`)}
-              className="w-full rounded-full bg-emerald-600 py-4 text-xs font-bold uppercase tracking-wider text-white hover:bg-emerald-500 transition active:scale-[0.98]"
-            >
-              Join Now
-            </button>
-            <button
-              onClick={() => setTempRoomInvite(null)}
-              className="mt-3 w-full rounded-full bg-slate-850 py-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:bg-slate-800 transition"
-            >
-              Dismiss
-            </button>
+
+            <div className="space-y-2">
+              <h2 className="text-xl font-bold text-[var(--color-text-primary)]">
+                Temporary Room Invite
+              </h2>
+              <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                <span className="font-bold text-[var(--color-text-primary)]">
+                  {tempRoomInvite.createdBy}
+                </span>{' '}
+                invited you to a temporary workspace. Auto-joining in{' '}
+                <span className="font-bold text-[var(--color-primary)] text-sm">
+                  {inviteCountdown}s
+                </span>
+                ...
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={() => setTempRoomInvite(null)}
+                className="flex-1 rounded-full bg-[var(--color-hover)] py-3 text-xs font-semibold text-[var(--color-text-primary)] transition hover:bg-[var(--color-hover)]/80 cursor-pointer"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => navigate(`/rooms/${tempRoomInvite.roomId}`)}
+                className="flex-[2] rounded-full bg-[var(--color-primary)] py-3 text-xs font-semibold text-[var(--color-on-primary)] shadow-sm transition hover:opacity-90 active:scale-[0.98] cursor-pointer"
+              >
+                Join Now
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Fullscreen Image Portal */}
+      {/* Fullscreen Image Preview Portal */}
       {fullscreenImage &&
         createPortal(
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-in fade-in duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-md animate-in fade-in duration-300"
             onClick={() => setFullscreenImage(null)}
           >
             <button
-              className="absolute top-6 right-6 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20"
+              className="absolute top-6 right-6 rounded-full bg-white/10 p-3 text-white transition hover:bg-white/20 cursor-pointer"
               onClick={() => setFullscreenImage(null)}
             >
-              <HugeiconsIcon icon={Cancel01Icon} size={24} />
+              <MaterialIcon icon="close" size={24} />
             </button>
             <div className="relative h-full w-full flex items-center justify-center p-6">
               <img
                 src={fullscreenImage}
                 alt="Fullscreen"
-                className="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+                className="max-h-full max-w-full rounded-2xl object-contain shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
               />
             </div>

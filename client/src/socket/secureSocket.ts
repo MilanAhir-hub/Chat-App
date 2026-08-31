@@ -64,7 +64,15 @@ interface SecureClientToServerEvents {
 
 export type SecureAppSocket = Socket<SecureServerToClientEvents, SecureClientToServerEvents>;
 
-const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const getSocketUrl = () => {
+  const envUrl = import.meta.env.VITE_SOCKET_URL;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `http://${window.location.hostname}:5000`;
+  }
+  return envUrl || 'http://localhost:5000';
+};
+
+const socketUrl = getSocketUrl();
 
 let secureSocket: SecureAppSocket | null = null;
 

@@ -1,20 +1,23 @@
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Sun01Icon, Moon01Icon } from '@hugeicons/core-free-icons';
 import { useTheme } from '../context/ThemeContext';
+import { MaterialIcon } from './MaterialIcon';
+import { getThemeById } from '../config/themes';
 
 export const ThemeToggle = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { currentTheme, togglePairedTheme, isDark } = useTheme();
+  const paired = getThemeById(currentTheme.pairedTheme);
 
   return (
     <button
       type="button"
-      onClick={toggleTheme}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:h-10 sm:w-10"
-      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      onClick={togglePairedTheme}
+      className="inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all cursor-pointer sm:h-10 sm:w-10 border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] hover:border-[var(--color-primary)] shadow-sm"
+      title={`Switch to paired theme: ${paired.name} (${paired.mode})`}
+      aria-label={`Switch to paired theme: ${paired.name}`}
     >
-      <HugeiconsIcon 
-        icon={theme === 'dark' ? Sun01Icon : Moon01Icon} 
-        size={20} 
+      <MaterialIcon
+        icon={isDark ? 'light_mode' : 'dark_mode'}
+        size={20}
+        className="transition-transform duration-200 hover:scale-110"
       />
     </button>
   );

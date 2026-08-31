@@ -8,40 +8,45 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import {
+  THEMES,
+  DEFAULT_THEME_ID,
+  getThemeById,
+  type ThemeId,
+  type ThemeMetadata,
+} from '../config/themes';
 
-type Theme = 'light' | 'dark';
-export type Accent = '#1A1D27' | '#1C1C1E' | '#0D2137' | '#005C4B' | '#1F2C34' | '#182229' | '#1E1F22' | '#0F1117' | '#1B1F3B' | '#1A0533' | '#0A1628' | '#1F1B2E' | '#0D1F12' | '#162032' | '#1C1A2E';
+type ThemeMode = 'light' | 'dark';
+export type Accent = string;
 type GlassTheme = 'default' | 'adaptive';
 
 interface ThemeContextValue {
-  theme: Theme;
-  accent: Accent;
-  glassTheme: GlassTheme;
+  themeId: ThemeId;
+  currentTheme: ThemeMetadata;
+  theme: ThemeMode; // 'light' | 'dark' for backward compatibility
+  isDark: boolean;
+  setThemeId: (id: ThemeId) => void;
   toggleTheme: () => void;
+  togglePairedTheme: () => void;
+  accent: Accent;
   setAccent: (accent: Accent) => void;
+  glassTheme: GlassTheme;
   toggleGlassTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-const getInitialTheme = (): Theme => {
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light' || savedTheme === 'dark') {
-    return savedTheme;
+const getInitialThemeId = (): ThemeId => {
+  const saved = localStorage.getItem('selected-theme') as ThemeId | null;
+  if (saved && THEMES.some((t) => t.id === saved)) {
+    return saved;
   }
-  return window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
-};
-
-const getInitialAccent = (): Accent => {
-  const savedAccent = localStorage.getItem('accent') as Accent;
-  const validAccents: Accent[] = [
-    '#1A1D27', '#1C1C1E', '#0D2137', '#005C4B', '#1F2C34',
-    '#182229', '#1E1F22', '#0F1117', '#1B1F3B', '#1A0533',
-    '#0A1628', '#1F1B2E', '#0D1F12', '#162032', '#1C1A2E'
-  ];
-  return validAccents.includes(savedAccent) ? savedAccent : '#1A1D27';
+  // Check legacy 'theme'
+  const legacyMode = localStorage.getItem('theme');
+  if (legacyMode === 'dark') {
+    return 'N'; // Google Messages Dark
+  }
+  return DEFAULT_THEME_ID; // 'M'
 };
 
 const getInitialGlassTheme = (): GlassTheme => {
@@ -50,58 +55,73 @@ const getInitialGlassTheme = (): GlassTheme => {
 };
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [accent, setAccentState] = useState<Accent>(getInitialAccent);
+  const [themeId, setThemeIdState] = useState<ThemeId>(getInitialThemeId);
   const [glassTheme, setGlassTheme] = useState<GlassTheme>(getInitialGlassTheme);
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+  const currentTheme = useMemo(() => getThemeById(themeId), [themeId]);
+  const isDark = currentTheme.mode === 'dark';
 
+  // Apply theme to document root
   useEffect(() => {
-    document.documentElement.setAttribute('data-accent', accent.replace('#', '').toLowerCase());
-    localStorage.setItem('accent', accent);
-  }, [accent]);
+    document.documentElement.setAttribute('data-theme', themeId);
+    document.documentElement.classList.toggle('dark', isDark);
+    localStorage.setItem('selected-theme', themeId);
+    localStorage.setItem('theme', currentTheme.mode);
+  }, [themeId, isDark, currentTheme.mode]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme-style', glassTheme);
     localStorage.setItem('glassTheme', glassTheme);
   }, [glassTheme]);
 
-  // Stable callbacks so consumers that only call the setters never see
-  // changing function identities when theme values change.
-  const toggleTheme = useCallback(
-    () =>
-      setTheme((currentTheme) =>
-        currentTheme === 'dark' ? 'light' : 'dark'
-      ),
-    []
-  );
+  const setThemeId = useCallback((id: ThemeId) => {
+    setThemeIdState(id);
+  }, []);
 
-  const setAccent = useCallback(
-    (newAccent: Accent) => setAccentState(newAccent),
-    []
-  );
+  // Switches to the paired counterpart of the current active theme (e.g. M ↔ N, A ↔ B)
+  const togglePairedTheme = useCallback(() => {
+    setThemeIdState((currentId) => {
+      const themeMeta = getThemeById(currentId);
+      return themeMeta.pairedTheme || (themeMeta.mode === 'dark' ? 'M' : 'N');
+    });
+  }, []);
 
-  const toggleGlassTheme = useCallback(
-    () =>
-      setGlassTheme((current) =>
-        current === 'adaptive' ? 'default' : 'adaptive'
-      ),
-    []
-  );
+  const toggleTheme = togglePairedTheme;
+
+  const toggleGlassTheme = useCallback(() => {
+    setGlassTheme((current) => (current === 'adaptive' ? 'default' : 'adaptive'));
+  }, []);
 
   const value = useMemo(
     () => ({
-      theme,
-      accent,
-      glassTheme,
+      themeId,
+      currentTheme,
+      theme: currentTheme.mode,
+      isDark,
+      setThemeId,
       toggleTheme,
-      setAccent,
+      togglePairedTheme,
+      accent: currentTheme.previewTokens.primary,
+      setAccent: (accentVal: string) => {
+        // If an accent string matches a theme's primary, switch to that theme
+        const match = THEMES.find((t) => t.previewTokens.primary.toLowerCase() === accentVal.toLowerCase());
+        if (match) {
+          setThemeIdState(match.id);
+        }
+      },
+      glassTheme,
       toggleGlassTheme,
     }),
-    [theme, accent, glassTheme, toggleTheme, setAccent, toggleGlassTheme]
+    [
+      themeId,
+      currentTheme,
+      isDark,
+      setThemeId,
+      toggleTheme,
+      togglePairedTheme,
+      glassTheme,
+      toggleGlassTheme,
+    ]
   );
 
   return (

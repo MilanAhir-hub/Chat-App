@@ -1,14 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { HugeiconsIcon } from '@hugeicons/react';
-import {
-  ViewIcon,
-  ViewOffSlashIcon,
-  Mail02Icon,
-  SquareLockPasswordIcon,
-  UserIcon
-} from '@hugeicons/core-free-icons';
+import { MaterialIcon } from '../components/MaterialIcon';
 import { AuthShell } from '../components/AuthShell';
 import { useAuth } from '../context/AuthContext';
 import { Loader } from '../components/Loader';
@@ -52,13 +45,13 @@ export const SignupPage = () => {
       subtitle="Signup once, then start or join temporary chat rooms."
     >
       <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-        <label className="block text-left text-xs font-semibold text-[var(--text-primary)] sm:text-sm">
+        <label className="block text-left text-xs font-semibold text-[var(--color-text-primary)] sm:text-sm">
           Name
           <div className="relative mt-1.5 sm:mt-2">
-            <HugeiconsIcon
-              icon={UserIcon}
+            <MaterialIcon
+              icon="person"
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] sm:left-5"
             />
             <input
               type="text"
@@ -67,19 +60,19 @@ export const SignupPage = () => {
               onChange={(event) =>
                 setForm((current) => ({ ...current, name: event.target.value }))
               }
-              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
+              className="design-input w-full py-2.5 pl-11 pr-4 text-sm text-[var(--color-text-primary)] outline-none transition sm:py-3 sm:pl-13 sm:text-base"
               placeholder="Milan"
             />
           </div>
         </label>
 
-        <label className="block text-left text-xs font-semibold text-[var(--text-primary)] sm:text-sm">
+        <label className="block text-left text-xs font-semibold text-[var(--color-text-primary)] sm:text-sm">
           Email
           <div className="relative mt-1.5 sm:mt-2">
-            <HugeiconsIcon
-              icon={Mail02Icon}
+            <MaterialIcon
+              icon="mail"
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] sm:left-5"
             />
             <input
               type="text"
@@ -90,19 +83,19 @@ export const SignupPage = () => {
               onChange={(event) =>
                 setForm((current) => ({ ...current, email: event.target.value }))
               }
-              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
+              className="design-input w-full py-2.5 pl-11 pr-4 text-sm text-[var(--color-text-primary)] outline-none transition sm:py-3 sm:pl-13 sm:text-base"
               placeholder="you@example.com"
             />
           </div>
         </label>
 
-        <label className="block text-left text-xs font-semibold text-[var(--text-primary)] sm:text-sm">
+        <label className="block text-left text-xs font-semibold text-[var(--color-text-primary)] sm:text-sm">
           Password
           <div className="relative mt-1.5 sm:mt-2">
-            <HugeiconsIcon
-              icon={SquareLockPasswordIcon}
+            <MaterialIcon
+              icon="lock"
               size={18}
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] sm:left-5"
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] sm:left-5"
             />
             <input
               type={showPassword ? 'text' : 'password'}
@@ -116,28 +109,28 @@ export const SignupPage = () => {
                   password: event.target.value,
                 }))
               }
-              className="w-full rounded-full border border-[var(--border-color)] bg-[var(--input-color)] py-2.5 pl-11 pr-12 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--primary-500)] focus:ring-4 focus:ring-[var(--primary-500)]/10 sm:py-3 sm:pl-13 sm:text-base"
+              className="design-input w-full py-2.5 pl-11 pr-12 text-sm text-[var(--color-text-primary)] outline-none transition sm:py-3 sm:pl-13 sm:text-base"
               placeholder="At least 8 characters"
             />
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[var(--text-tertiary)] transition hover:text-[var(--text-secondary)]"
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-[var(--color-text-muted)] transition hover:text-[var(--color-text-primary)]"
               title={showPassword ? 'Hide password' : 'Show password'}
             >
-              <HugeiconsIcon icon={showPassword ? ViewOffSlashIcon : ViewIcon} size={18} />
+              <MaterialIcon icon={showPassword ? "visibility_off" : "visibility"} size={18} />
             </button>
           </div>
         </label>
 
         {error && (
-          <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-medium text-red-700 sm:px-4 sm:py-3 sm:text-sm">
+          <p className="rounded-xl border border-[var(--color-error)]/30 bg-[var(--color-error)]/10 px-3 py-2.5 text-xs font-medium text-[var(--color-error)] sm:px-4 sm:py-3 sm:text-sm">
             {error}
           </p>
         )}
 
         {success && (
-          <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-medium text-emerald-700 sm:px-4 sm:py-3 sm:text-sm">
+          <p className="rounded-xl border border-[var(--color-success)]/30 bg-[var(--color-success)]/10 px-3 py-2.5 text-xs font-medium text-[var(--color-success)] sm:px-4 sm:py-3 sm:text-sm">
             {success}
           </p>
         )}
@@ -145,17 +138,17 @@ export const SignupPage = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--primary-500)] px-4 py-2.5 text-sm font-bold text-black transition hover:bg-[color-mix(in_srgb,var(--primary-500)_90%,white)] hover:shadow-[0_0_15px_color-mix(in_srgb,var(--primary-500)_30%,transparent)] active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-primary-800 sm:py-3"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-[var(--color-on-primary)] transition hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:py-3 cursor-pointer shadow-md"
         >
           {isSubmitting ? <Loader size="sm" light /> : 'Signup'}
         </button>
       </form>
 
-      <p className="mt-5 text-center text-xs text-[var(--text-secondary)] sm:mt-6 sm:text-sm">
+      <p className="mt-5 text-center text-xs text-[var(--color-text-secondary)] sm:mt-6 sm:text-sm">
         Already have an account?{' '}
         <Link
           to="/login"
-          className="font-semibold text-[var(--primary-600)] hover:text-[var(--primary-500)]"
+          className="font-semibold text-[var(--color-primary)] hover:underline"
         >
           Login
         </Link>

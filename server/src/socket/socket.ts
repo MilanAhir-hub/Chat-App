@@ -194,7 +194,7 @@ const authenticateSocket = async (socket: Socket, next: (err?: Error) => void) =
 export const initializeSocket = (server: http.Server) => {
   io = new Server(server, {
     cors: {
-      origin: [env.CLIENT_URL, 'http://localhost:5173', 'http://localhost:5174'],
+      origin: env.NODE_ENV === 'development' ? true : [env.CLIENT_URL],
       credentials: true,
       methods: ['GET', 'POST'],
     },

@@ -1,24 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { HugeiconsIcon } from '@hugeicons/react';
 import { playIncomingRing, playOutgoingRing } from '../../utils/sound';
-import {
-  CallEnd01Icon,
-  ComputerScreenShareIcon,
-  Mic01Icon,
-  MicOff01Icon,
-  Video01Icon,
-  VideoOffIcon,
-  ArrowLeft02Icon,
-  Maximize01Icon,
-  Minimize01Icon,
-  UserIcon,
-  MoreHorizontalIcon,
-  Camera01Icon,
-} from '@hugeicons/core-free-icons';
 import type { User } from '../../types';
 import { useVideoCall } from './useVideoCall';
 import type { VideoMediaState } from './types';
+import { MaterialIcon } from '../../components/MaterialIcon';
 
 interface VideoCallPanelProps {
   roomId: string;
@@ -102,7 +88,7 @@ const VideoTile = ({
         {!showVideo && (
           <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center bg-gradient-to-br from-slate-800 to-slate-950">
             <div className="flex h-24 w-24 sm:h-32 sm:w-32 items-center justify-center rounded-full bg-slate-800/50 text-4xl font-black uppercase text-white/20 border border-white/5 backdrop-blur-sm shadow-2xl">
-              {label ? label.slice(0, 1) : <HugeiconsIcon icon={UserIcon} size={48} />}
+              {label ? label.slice(0, 1) : <MaterialIcon icon="person" size={48} />}
             </div>
             {!isFloating && (
               <p className="mt-6 text-sm font-bold tracking-widest text-slate-500 uppercase">
@@ -125,7 +111,7 @@ const VideoTile = ({
           </span>
           {!media.isAudioEnabled && (
             <div className="flex items-center justify-center text-red-400">
-              <HugeiconsIcon icon={MicOff01Icon} size={12} />
+              <MaterialIcon icon="mic_off" size={12} />
             </div>
           )}
         </div>
@@ -239,7 +225,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             className="group flex h-12 w-12 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 transition-all hover:bg-white/10 active:scale-90"
             title="Leave Call"
           >
-            <HugeiconsIcon icon={ArrowLeft02Icon} size={24} className="text-white/80 group-hover:text-white transition-colors" />
+            <MaterialIcon icon="arrow_back" size={24} className="text-white/80 group-hover:text-white transition-colors" />
           </button>
           
           <div className="hidden sm:block text-left">
@@ -267,19 +253,19 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 transition-all hover:bg-white/10 active:scale-90"
             title="Minimize"
           >
-            <HugeiconsIcon icon={Minimize01Icon} size={20} className="text-white/70" />
+            <MaterialIcon icon="fullscreen_exit" size={20} className="text-white/70" />
           </button>
           <button
             onClick={() => setIsFullscreen(!isFullscreen)}
             className="hidden sm:flex h-12 w-12 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 transition-all hover:bg-white/10 active:scale-90"
             title="Fullscreen"
           >
-            <HugeiconsIcon icon={isFullscreen ? Minimize01Icon : Maximize01Icon} size={20} className="text-white/70" />
+            <MaterialIcon icon={isFullscreen  ? "fullscreen_exit" : "fullscreen"} size={20} className="text-white/70" />
           </button>
           <button
             className="flex h-12 w-12 items-center justify-center rounded-full bg-white/5 backdrop-blur-xl border border-white/10 transition-all hover:bg-white/10 active:scale-90"
           >
-            <HugeiconsIcon icon={MoreHorizontalIcon} size={20} className="text-white/70" />
+            <MaterialIcon icon="more_horiz" size={20} className="text-white/70" />
           </button>
         </div>
       </header>
@@ -309,7 +295,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             <div className="relative mb-8">
               <div className="absolute inset-0 animate-ping rounded-full bg-emerald-500/20" />
               <div className="relative h-32 w-32 rounded-full bg-white/5 border border-white/10 flex items-center justify-center backdrop-blur-xl">
-                <HugeiconsIcon icon={UserIcon} size={48} className="text-white/20" />
+                <MaterialIcon icon="person" size={48} className="text-white/20" />
               </div>
             </div>
             <div className="text-center">
@@ -359,8 +345,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
                 : 'bg-red-500 text-white border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.5)]'
             }`}
           >
-            <HugeiconsIcon
-              icon={mediaState.isVideoEnabled ? Video01Icon : VideoOffIcon}
+            <MaterialIcon icon={mediaState.isVideoEnabled  ? "videocam" : "videocam_off"}
               size={24}
               className="sm:scale-125"
             />
@@ -373,7 +358,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             className={`group flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-500 hover:scale-110 active:scale-90 border-2 bg-white/5 text-white border-white/10 hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none`}
             title="Flip Camera"
           >
-            <HugeiconsIcon icon={Camera01Icon} size={24} className="sm:scale-125" />
+            <MaterialIcon icon="photo_camera" size={24} className="sm:scale-125" />
           </button>
 
           <button
@@ -385,8 +370,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
                 : 'bg-white text-slate-950 border-white shadow-[0_0_30px_rgba(255,255,255,0.3)]'
             }`}
           >
-            <HugeiconsIcon
-              icon={mediaState.isAudioEnabled ? Mic01Icon : MicOff01Icon}
+            <MaterialIcon icon={mediaState.isAudioEnabled  ? "mic" : "mic_off"}
               size={24}
               className="sm:scale-125"
             />
@@ -402,7 +386,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
                   : 'bg-white/5 text-white border-white/10 hover:bg-white/10'
               }`}
             >
-              <HugeiconsIcon icon={ComputerScreenShareIcon} size={24} className="sm:scale-125" />
+              <MaterialIcon icon="screen_share" size={24} className="sm:scale-125" />
             </button>
           )}
 
@@ -411,7 +395,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
             onClick={endCall}
             className="group flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_0_50px_rgba(239,68,68,0.4)] transition-all duration-500 hover:bg-red-600 hover:scale-110 active:scale-90 border-4 border-red-400/20"
           >
-            <HugeiconsIcon icon={CallEnd01Icon} size={32} className="sm:scale-125" />
+            <MaterialIcon icon="call_end" size={32} className="sm:scale-125" />
           </button>
         </div>
       </footer>
@@ -430,7 +414,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
           className="fixed bottom-6 right-6 z-[9999] w-32 h-44 sm:w-48 sm:h-64 rounded-3xl overflow-hidden shadow-2xl border-2 border-primary-500/50 bg-slate-900 cursor-pointer animate-in zoom-in-75 duration-300 group"
         >
           <div className="absolute inset-0 bg-primary-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm z-10">
-            <HugeiconsIcon icon={Maximize01Icon} size={32} className="text-white drop-shadow-lg" />
+            <MaterialIcon icon="fullscreen" size={32} className="text-white drop-shadow-lg" />
           </div>
           <VideoTile
             label="Live Call"
@@ -461,14 +445,14 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
         type="button"
         onClick={startCall}
         disabled={!currentUser || isBusy}
-        className={`group relative flex h-12 w-12 items-center justify-center rounded-full transition-all duration-500 active:scale-90 disabled:opacity-50 ${
+        className={`group relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 cursor-pointer ${
           hasActiveRoomCall
-            ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] hover:bg-emerald-600'
-            : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+            ? 'bg-[var(--color-success)] text-white shadow-md hover:opacity-90'
+            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
         }`}
         title={hasActiveRoomCall ? `Join ${startedByName}'s Call` : 'Video Call'}
       >
-        <HugeiconsIcon icon={Video01Icon} size={22} className="group-hover:scale-110 transition-transform" />
+        <MaterialIcon icon="videocam" size={22} className="group-hover:scale-110 transition-transform" />
         {hasActiveRoomCall && (
           <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center">
             <span className="absolute h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
