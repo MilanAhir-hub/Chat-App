@@ -11,7 +11,7 @@ export const HomePage = () => {
   const pureColor = getThemePureColor(themeId);
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center px-4 py-8 max-w-xl mx-auto text-center">
+    <div className="h-full flex flex-col items-center justify-center px-4 max-w-xl mx-auto text-center">
       {/* Minimal Greeting Header */}
       <div className="space-y-3 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
         <div
@@ -84,6 +84,6 @@ export const HomePage = () => {
           </div>
         </button>
       </div>
-    </main>
+    </div>
   );
 };

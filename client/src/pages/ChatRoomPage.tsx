@@ -36,6 +36,9 @@ import {
 import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { AppSidebar } from '../components/AppSidebar';
+import { AmbientGradient } from '../components/AmbientGradient';
+import { triggerAmbientPulse } from '../hooks/useAmbientGradient';
 
 // Loaded on demand: renders only when the user opens the emoji picker.
 const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
@@ -502,7 +505,7 @@ export const ChatRoomPage = () => {
   const { roomId } = useParams();
   const activeRoomId = useMemo(() => (roomId || '').toUpperCase(), [roomId]);
   const { user } = useAuth();
-  const { theme, accent, setAccent } = useTheme();
+  const { theme, isDark, accent, setAccent } = useTheme();
   const [showMobileColorPicker, setShowMobileColorPicker] = useState(false);
   const navigate = useNavigate();
 
@@ -520,6 +523,7 @@ export const ChatRoomPage = () => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showAppNavSidebar, setShowAppNavSidebar] = useState(false);
   const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [terminationNotice, setTerminationNotice] = useState<string | null>(null);
@@ -920,35 +924,21 @@ export const ChatRoomPage = () => {
     };
   }, [activeRoomId]);
 
+  // Handle click outside for reaction picker
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      // Check emoji picker
-      if (
-        showEmojiPicker &&
-        emojiPickerRef.current &&
-        !emojiPickerRef.current.contains(event.target as Node)
-      ) {
-        // Only close if it's not the trigger button
-        const isTrigger = (event.target as HTMLElement).closest('button')?.title === 'Emoji';
-        if (!isTrigger) {
-          setShowEmojiPicker(false);
-        }
-      }
-
-      // Check reaction picker
       if (
         activeReactionMessageId &&
         reactionPickerRef.current &&
         !reactionPickerRef.current.contains(event.target as Node)
       ) {
-        // Delay closing slightly to allow any pending onClick to fire
         setTimeout(() => setActiveReactionMessageId(null), 0);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showEmojiPicker, activeReactionMessageId]);
+  }, [activeReactionMessageId]);
 
   // Handle click outside for attachment menu
   useEffect(() => {
@@ -957,43 +947,12 @@ export const ChatRoomPage = () => {
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, [showAttachmentMenu]);
-
-  // Manage visual viewport height to prevent keyboard overlapping input bar
+  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!window.visualViewport) return;
-
-    const handleResize = () => {
-      const vv = window.visualViewport;
-      if (!vv) return;
-      document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      // Scroll to bottom when keyboard opens
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        scrollToBottom('auto');
-      }, 100);
-    };
-
-    const handleWindowScroll = () => {
-      if (window.scrollY !== 0 || window.scrollX !== 0) {
-        window.scrollTo(0, 0);
-      }
-    };
-
-    window.visualViewport.addEventListener('resize', handleResize);
-    window.visualViewport.addEventListener('scroll', handleResize);
-    window.addEventListener('scroll', handleWindowScroll);
-    // Initial call
-    handleResize();
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('scroll', handleResize);
-      window.removeEventListener('scroll', handleWindowScroll);
-      document.documentElement.style.removeProperty('--visual-viewport-height');
-    };
-  }, [scrollToBottom]);
+    if (isAtBottomRef.current) {
+      scrollToBottom('smooth');
+    }
+  }, [messages, notices, scrollToBottom]);
 
   useEffect(() => {
     if (!showCamera) return;
@@ -1062,6 +1021,7 @@ export const ChatRoomPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     const socket = getSocket();
     socket.emit('typing:start', { roomId: activeRoomId });
 
@@ -1078,6 +1038,7 @@ export const ChatRoomPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     const cleanContent = messageText.trim();
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: ChatMessage = {
@@ -1136,6 +1097,7 @@ export const ChatRoomPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     setError('');
 
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -1245,14 +1207,6 @@ export const ChatRoomPage = () => {
     }
   };
 
-  const copyRoomId = async () => {
-    await navigator.clipboard.writeText(activeRoomId);
-    addNotice({
-      type: 'joined',
-      message: 'Room ID copied.',
-      createdAt: new Date().toISOString(),
-    });
-  };
 
   const toggleReaction = useCallback((messageId: string, emoji: string) => {
     getSocket().emit('message:react', { messageId, emoji }, (response) => {
@@ -1287,39 +1241,66 @@ export const ChatRoomPage = () => {
   }
   return (
     <main
-      style={{ height: 'var(--visual-viewport-height, 100dvh)' }}
-      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
+      className="fixed inset-0 w-full h-dvh flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
     >
-      <header className="sticky top-0 z-20 border-b border-[var(--color-divider)] bg-[var(--color-surface)]/95 px-4 py-0 shadow-sm backdrop-blur-md sm:px-6">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3">
+      <AmbientGradient />
+      {/* APP NAVIGATION SIDEBAR (same as /home) */}
+      <AppSidebar
+        isOpen={showAppNavSidebar}
+        onClose={() => setShowAppNavSidebar(false)}
+        actions={
+          <>
+            {isCreator && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAppNavSidebar(false);
+                  closeRoom();
+                }}
+                disabled={isClosing}
+                className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-error)] text-white px-4 py-2 text-xs font-bold tracking-wide shadow-md hover:shadow-lg hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer disabled:opacity-50"
+              >
+                <MaterialIcon
+                  icon="close"
+                  size={16}
+                  className="text-white transition-transform duration-300 group-hover:rotate-90"
+                />
+                <span className="whitespace-nowrap">Close Room</span>
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={() => setShowSidebar((prev) => !prev)}
-              className="rounded-full p-2 text-[var(--color-text-secondary)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-95 lg:hidden cursor-pointer"
-              title="Toggle Sidebar"
+              onClick={() => {
+                setShowAppNavSidebar(false);
+                leaveRoom();
+              }}
+              className="group inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] px-4 py-2 text-xs font-bold tracking-wide shadow-md hover:shadow-lg hover:scale-105 hover:-translate-y-0.5 active:scale-95 transition-all duration-200 cursor-pointer"
             >
-              <MaterialIcon icon="menu" size={20} />
+              <MaterialIcon
+                icon="logout"
+                size={16}
+                className="text-[var(--color-on-primary)] transition-transform duration-300 group-hover:-translate-x-1"
+              />
+              <span className="whitespace-nowrap">Move Out</span>
             </button>
+          </>
+        }
+      />
 
-            <div className="flex flex-col justify-center">
-              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[var(--color-primary)]">
-                Live Chat
-              </p>
-              <div className="flex items-center gap-1.5">
-                <h1 className="text-base font-extrabold tracking-widest text-[var(--color-text-primary)] sm:text-lg">
-                  {activeRoomId}
-                </h1>
-                <button
-                  type="button"
-                  onClick={copyRoomId}
-                  className="rounded-full p-1 text-[var(--color-text-muted)] transition-all duration-150 hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-90 cursor-pointer"
-                  title="Copy Room ID"
-                >
-                  <MaterialIcon icon="content_copy" size={14} />
-                </button>
-              </div>
-            </div>
+      <header className="sticky top-0 z-20 flex-shrink-0 bg-transparent px-4 py-0 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* App nav sidebar trigger (drag_handle — consistent with AppLayout) */}
+            <button
+              type="button"
+              onClick={() => setShowAppNavSidebar(true)}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
+              title="Open menu"
+              aria-label="Open navigation menu"
+            >
+              <MaterialIcon icon="drag_handle" size={24} />
+            </button>
           </div>
 
           {/* Right — actions */}
@@ -1344,33 +1325,12 @@ export const ChatRoomPage = () => {
             >
               <MaterialIcon icon={soundEnabled  ? "volume_up" : "volume_off"} size={20} />
             </button>
-
-            {isCreator && (
-              <button
-                type="button"
-                onClick={closeRoom}
-                disabled={isClosing}
-                className="rounded-full p-2 text-[var(--color-error)] transition-all duration-150 hover:bg-[var(--color-error)]/10 active:scale-95 disabled:pointer-events-none disabled:opacity-40 cursor-pointer"
-                title="Close Room"
-              >
-                <MaterialIcon icon="close" size={20} />
-              </button>
-            )}
-
-            <button
-              type="button"
-              onClick={leaveRoom}
-              className="ml-1 flex items-center gap-1.5 rounded-full bg-[var(--color-primary)] px-3 py-2 text-xs font-semibold text-[var(--color-on-primary)] shadow-sm transition-all duration-150 hover:opacity-90 active:scale-95 sm:px-4 sm:text-sm cursor-pointer"
-            >
-              <MaterialIcon icon="arrow_back" size={16} />
-              <span className="hidden sm:inline">Leave</span>
-            </button>
           </div>
 
         </div>
       </header>
 
-      <section className="mx-auto flex w-full max-w-7xl flex-1 overflow-hidden lg:gap-4 lg:p-4">
+      <section className="mx-auto flex w-full max-w-7xl flex-1 min-h-0 overflow-hidden lg:gap-4 lg:p-4">
         {/* Sidebar */}
         <aside
           className={`
@@ -1589,9 +1549,8 @@ export const ChatRoomPage = () => {
                 }
               : undefined
           }
-          className="relative flex flex-1 flex-col overflow-hidden lg:rounded-lg lg:border lg:border-slate-200 lg:dark:border-slate-800 chat-area-bg"
+          className="relative flex flex-1 min-h-0 flex-col overflow-hidden lg:rounded-lg lg:border lg:border-slate-200/40 lg:dark:border-slate-800/40 chat-area-bg"
         >
-          <div className="chat-bg-gradient" />
           {error && (
             <div className="m-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-200">
               <MaterialIcon icon="close" size={18} />
@@ -1602,7 +1561,7 @@ export const ChatRoomPage = () => {
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-smooth scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800"
           >
             <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end px-4 py-6">
               {notices.map((notice) => (
@@ -1662,17 +1621,37 @@ export const ChatRoomPage = () => {
 
           <form
             onSubmit={sendMessage}
-            className="border-t border-slate-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-950 relative sm:p-4"
+            className="flex-shrink-0 border-none bg-gradient-to-t from-[var(--color-background)]/90 via-[var(--color-background)]/50 to-transparent pt-6 pb-3 px-3 sm:px-6 sm:pb-5 relative z-20"
           >
+            {/* Gemini Dynamic Theme Ambient Light radiating from behind the input bar */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-44 -z-10 overflow-hidden"
+            >
+              <div
+                className="absolute inset-0 transition-all duration-700 ease-out"
+                style={{
+                  background: 'radial-gradient(ellipse 130% 90% at 50% 125%, var(--color-primary) 0%, var(--color-accent, var(--color-primary)) 35%, transparent 70%)',
+                  opacity: isDark ? 0.16 : 0.08,
+                }}
+              />
+              <div
+                className="absolute inset-0 transition-all duration-700 ease-out"
+                style={{
+                  background: 'radial-gradient(ellipse 80% 60% at 50% 110%, var(--color-primary-container, var(--color-primary)) 0%, transparent 65%)',
+                  opacity: isDark ? 0.12 : 0.05,
+                }}
+              />
+            </div>
+
             {/* Reply Preview */}
             {replyingTo && (
-              <div className="mx-auto mb-3 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-3 animate-in slide-in-from-bottom-2 dark:border-slate-800 dark:bg-slate-900/50">
-                <div className="h-10 w-1 rounded-full bg-primary-500" />
+              <div className="mx-auto mb-2.5 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)]/60 bg-[var(--color-surface)]/90 backdrop-blur-md p-3 shadow-lg animate-in slide-in-from-bottom-2">
+                <div className="h-10 w-1 rounded-full bg-[var(--color-primary)]" />
                 <div className="flex-1 overflow-hidden">
-                  <p className="text-xs font-bold text-primary-600 dark:text-primary-400">
+                  <p className="text-xs font-bold text-[var(--color-primary)]">
                     Replying to {replyingTo.sender.name}
                   </p>
-                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-1.5 text-[var(--color-text-secondary)]">
                     {(replyingTo.content.includes('cloudinary.com') || isImageMessage(replyingTo)) ? (
                       <>
                         <MaterialIcon icon="image" size={14} />
@@ -1688,51 +1667,33 @@ export const ChatRoomPage = () => {
                 <button
                   type="button"
                   onClick={() => setReplyingTo(null)}
-                  className="rounded-full p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800"
+                  className="rounded-full p-1.5 text-[var(--color-text-secondary)] transition hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] cursor-pointer"
                 >
                   <MaterialIcon icon="close" size={18} />
                 </button>
               </div>
             )}
 
-            {showEmojiPicker && (
-              <div
-                ref={emojiPickerRef}
-                className="absolute bottom-full left-0 right-0 z-[60] mb-3 px-2 sm:left-4 sm:right-auto sm:w-fit sm:px-0 animate-in fade-in slide-in-from-bottom-4"
-              >
-                <Suspense
-                  fallback={
-                    <div className="h-[400px] w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-900" />
-                  }
-                >
-                  <EmojiPickerPanel
-                    dark={theme === 'dark'}
-                    height={window.innerWidth < 640 ? 300 : 400}
-                    onEmojiClick={(emoji) => {
-                      setMessageText((current) => current + emoji);
-                    }}
-                  />
-                </Suspense>
-              </div>
-            )}
+            {/* Hidden File Inputs */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onChange={sendFile}
+            />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={sendFile}
+            />
 
-            <div className="mx-auto flex w-full max-w-[832px] items-end gap-2 sm:gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={sendFile}
-              />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={sendFile}
-              />
-
-              <div className="relative mb-0.5">
+            {/* Google Gemini Single Floating Pill Capsule */}
+            <div className="mx-auto flex w-full max-w-[832px] items-center gap-1.5 rounded-full bg-[var(--color-surface)]/85 backdrop-blur-2xl px-2.5 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[var(--color-border)]/50 focus-within:border-[var(--color-primary)]/50 focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 transition-all duration-200">
+              {/* Attachment Plus Button (Inside Left) */}
+              <div className="relative flex-shrink-0">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -1740,18 +1701,21 @@ export const ChatRoomPage = () => {
                     setShowAttachmentMenu(!showAttachmentMenu);
                   }}
                   disabled={isUploading}
-                  className={`rounded-full p-2.5 transition-all active:scale-90 ${showAttachmentMenu
-                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
-                    : 'text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
-                    }`}
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-90 transition cursor-pointer"
                   title="Attachments"
                 >
-                  <MaterialIcon icon="add" size={24} className={`transition-transform duration-300 ${showAttachmentMenu ? 'rotate-45' : ''}`} />
+                  <MaterialIcon
+                    icon="add"
+                    size={24}
+                    className={`transition-transform duration-300 ${
+                      showAttachmentMenu ? 'rotate-45' : ''
+                    }`}
+                  />
                 </button>
 
                 {showAttachmentMenu && (
                   <div
-                    className="absolute bottom-full left-0 mb-4 w-48 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-2xl animate-in slide-in-from-bottom-4 fade-in duration-200 dark:border-slate-800 dark:bg-slate-900 z-[60]"
+                    className="absolute bottom-full left-0 mb-3 w-48 overflow-hidden rounded-3xl bg-[var(--color-surface)]/95 backdrop-blur-xl border border-[var(--color-border)]/60 p-2 shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -1760,12 +1724,10 @@ export const ChatRoomPage = () => {
                         fileInputRef.current?.click();
                         setShowAttachmentMenu(false);
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-500/10 text-blue-600">
-                        <MaterialIcon icon="image" size={20} />
-                      </div>
-                      Device
+                      <MaterialIcon icon="image" size={20} className="text-[var(--color-primary)]" />
+                      <span>Device Media</span>
                     </button>
                     <button
                       type="button"
@@ -1773,69 +1735,62 @@ export const ChatRoomPage = () => {
                         setShowCamera(true);
                         setShowAttachmentMenu(false);
                       }}
-                      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+                      className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
                     >
-                      <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600">
-                        <MaterialIcon icon="photo_camera" size={20} />
-                      </div>
-                      Camera
+                      <MaterialIcon
+                        icon="photo_camera"
+                        size={20}
+                        className="text-[var(--color-primary)]"
+                      />
+                      <span>Camera</span>
                     </button>
                   </div>
                 )}
               </div>
 
-              <div className="relative flex-1 flex items-end bg-[var(--color-composer)] border border-[var(--color-border)] rounded-[24px] px-4 py-1.5 transition-all focus-within:ring-1 focus-within:ring-[var(--color-focus)]">
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker((current) => !current)}
-                  className={`flex-shrink-0 p-2.5 transition-all cursor-pointer ${showEmojiPicker
-                    ? 'text-[var(--color-primary)]'
-                    : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                    }`}
-                  title="Emoji"
-                >
-                  <MaterialIcon icon="mood" size={24} />
-                </button>
-
-                <div className="relative flex-1 self-stretch">
-                  {messageText.length === 0 && (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center py-2.5 text-[16px] text-[var(--color-text-muted)] sm:text-[17px]"
-                    >
-                      <AnimatedPlaceholder />
-                    </div>
-                  )}
-                  <textarea
-                    ref={textareaRef}
-                    value={messageText}
-                    onChange={(event) => handleMessageChange(event.target.value)}
-                    onFocus={() => {
-                      window.scrollTo(0, 0);
-                      setTimeout(() => {
-                        window.scrollTo(0, 0);
-                        scrollToBottom('auto');
-                      }, 100);
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        event.currentTarget.form?.requestSubmit();
-                      }
-                    }}
-                    rows={1}
-                    className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)] sm:text-[17px]"
-                  />
-                </div>
+              {/* Text Area & Placeholder (Middle) */}
+              <div className="relative flex-1 min-w-0 self-center">
+                {messageText.length === 0 && (
+                  <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center text-[15px] sm:text-[16px] text-[var(--color-text-muted)] overflow-hidden whitespace-nowrap select-none"
+                  >
+                    <AnimatedPlaceholder />
+                  </div>
+                )}
+                <textarea
+                  ref={textareaRef}
+                  value={messageText}
+                  onChange={(event) => handleMessageChange(event.target.value)}
+                  onFocus={() => {
+                    setTimeout(() => {
+                      scrollToBottom('auto');
+                    }, 100);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      event.currentTarget.form?.requestSubmit();
+                    }
+                  }}
+                  rows={1}
+                  className="flex-1 max-h-36 min-h-[38px] w-full resize-none bg-transparent py-2 px-1 text-[15px] sm:text-[16px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
+                />
               </div>
 
+              {/* Send Button (Inside Far Right — Gemini style) */}
               <button
                 type="submit"
                 disabled={!messageText.trim()}
                 onMouseDown={(e) => e.preventDefault()}
-                className="flex-shrink-0 mb-0.5 rounded-full bg-[var(--color-primary)] p-3 text-[var(--color-on-primary)] shadow-md transition-all hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:shadow-none cursor-pointer"
+                className={`flex h-10 items-center justify-center gap-1 rounded-full px-3.5 sm:px-4 text-xs font-bold transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                  messageText.trim()
+                    ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-md hover:opacity-95 hover:scale-105 active:scale-95'
+                    : 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]/40 opacity-50 cursor-not-allowed'
+                }`}
+                title="Send message"
               >
-                <MaterialIcon icon="send" size={26} />
+                <MaterialIcon icon="send" size={18} />
               </button>
             </div>
           </form>

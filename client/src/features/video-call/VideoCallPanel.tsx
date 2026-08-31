@@ -448,7 +448,7 @@ export const VideoCallPanel = ({ roomId, currentUser }: VideoCallPanelProps) => 
         className={`group relative flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full transition-all duration-300 active:scale-90 disabled:opacity-50 cursor-pointer ${
           hasActiveRoomCall
             ? 'bg-[var(--color-success)] text-white shadow-md hover:opacity-90'
-            : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] border border-[var(--color-border)]'
+            : 'bg-[var(--color-hover)] text-[var(--color-text-primary)] hover:bg-[var(--color-selected)]'
         }`}
         title={hasActiveRoomCall ? `Join ${startedByName}'s Call` : 'Video Call'}
       >

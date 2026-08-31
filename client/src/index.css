@@ -591,27 +591,137 @@ body {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Static Gradient for Chat Area */
-.chat-bg-gradient {
+/* ============================================================
+   AMBIENT GRADIENT SYSTEM — Gemini-inspired top-down atmosphere
+   ─────────────────────────────────────────────────────────────
+   Architecture:
+   · Dual stacked radial-gradient layers composited on GPU
+   · Cascades smoothly from top to down upon typing/sending
+   · Active for ~9s, then takes a 30s resting break before next breath
+   · Cross-fade theme transitions (smooth 1.2s fade)
+   · prefers-reduced-motion: keeps gradient static
+   ============================================================ */
+
+/* Container: full-bleed behind all content with smooth fade */
+.ambient-gradient-host {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
-  background: radial-gradient(circle at center,
-      var(--color-primary) 0%,
-      transparent 70%);
-  opacity: 0.04;
+  inset: 0;
+  overflow: hidden;
   pointer-events: none;
   z-index: 0;
-  filter: blur(40px);
+  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ambient-gradient-host.is-active {
+  opacity: 1;
+}
+
+.ambient-gradient-host.is-resting {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Layer 1: Base fluid atmospheric canvas (top-to-bottom cascade) */
+.ambient-atmosphere-base {
+  position: absolute;
+  top: -18%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
+  will-change: transform, opacity;
+  animation: gemini-top-down-base 4s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+/* Layer 2: Shimmering aurora highlight wave (top-to-bottom flow) */
+.ambient-atmosphere-aurora {
+  position: absolute;
+  top: -18%;
+  left: -15%;
+  width: 130%;
+  height: 130%;
+  will-change: transform, opacity;
+  animation: gemini-top-down-aurora 3.5s cubic-bezier(0.25, 1, 0.5, 1) infinite alternate;
+}
+
+/* Cross-fade exit layers */
+.ambient-atmosphere-exit {
+  animation: ambient-fade-out 1.2s ease forwards !important;
+}
+
+/* ─── Gemini Top-to-Bottom Cascading Keyframes ───────────── */
+
+@keyframes gemini-top-down-base {
+  0% {
+    transform: translate(0%, -6%) scale(0.98);
+    opacity: 0.25;
+  }
+  20% {
+    transform: translate(-2%, 0%) scale(1.03);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(2%, 3%) scale(1.06);
+    opacity: 1.00;
+  }
+  75% {
+    transform: translate(-1%, 5%) scale(1.02);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(1%, 2%) scale(0.99);
+    opacity: 0.35;
+  }
+}
+
+@keyframes gemini-top-down-aurora {
+  0% {
+    transform: translate(0%, -8%) scale(0.95);
+    opacity: 0.15;
+  }
+  25% {
+    transform: translate(3%, -1%) scale(1.04);
+    opacity: 0.90;
+  }
+  55% {
+    transform: translate(-3%, 4%) scale(1.05);
+    opacity: 0.95;
+  }
+  80% {
+    transform: translate(2%, 2%) scale(1.01);
+    opacity: 0.60;
+  }
+  100% {
+    transform: translate(-1%, -3%) scale(0.96);
+    opacity: 0.20;
+  }
+}
+
+/* Theme-change cross-fade exit */
+@keyframes ambient-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Respect reduced-motion: keep the atmospheric tinting, just static */
+@media (prefers-reduced-motion: reduce) {
+  .ambient-atmosphere-base,
+  .ambient-atmosphere-aurora,
+  .ambient-atmosphere-exit {
+    animation: none !important;
+  }
+}
+
+/* Legacy static gradient — hidden when AmbientGradient is mounted */
+.chat-bg-gradient {
+  display: none;
 }
 
 .chat-area-bg {
-  background-color: var(--color-background) !important;
+  background-color: transparent !important;
   transition: background-color 0.2s ease;
 }
+
+
 
 /* Glassmorphism Card Base */
 .glass-card {

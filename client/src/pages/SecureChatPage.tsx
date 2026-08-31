@@ -39,6 +39,8 @@ import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
 import { MaterialIcon } from '../components/MaterialIcon';
 import { getThemePureColor } from '../config/themes';
+import { AmbientGradient } from '../components/AmbientGradient';
+import { triggerAmbientPulse } from '../hooks/useAmbientGradient';
 
 // Loaded on demand: renders only when the user opens the emoji picker.
 const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
@@ -864,39 +866,12 @@ export const SecureChatPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showEmojiPicker]);
 
+  // Auto scroll to bottom when new messages arrive
   useEffect(() => {
-    if (!window.visualViewport) return;
-
-    const handleResize = () => {
-      const vv = window.visualViewport;
-      if (!vv) return;
-      document.documentElement.style.setProperty('--visual-viewport-height', `${vv.height}px`);
-      window.scrollTo(0, 0);
-      document.body.scrollTop = 0;
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        scrollToBottom('auto');
-      }, 100);
-    };
-
-    const handleWindowScroll = () => {
-      if (window.scrollY !== 0 || window.scrollX !== 0) {
-        window.scrollTo(0, 0);
-      }
-    };
-
-    window.visualViewport.addEventListener('resize', handleResize);
-    window.visualViewport.addEventListener('scroll', handleResize);
-    window.addEventListener('scroll', handleWindowScroll);
-    handleResize();
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleResize);
-      window.visualViewport?.removeEventListener('scroll', handleResize);
-      window.removeEventListener('scroll', handleWindowScroll);
-      document.documentElement.style.removeProperty('--visual-viewport-height');
-    };
-  }, [scrollToBottom]);
+    if (isAtBottomRef.current) {
+      scrollToBottom('smooth');
+    }
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (!showCamera) return;
@@ -968,6 +943,7 @@ export const SecureChatPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     const socket = getSecureSocket();
     if (socket.connected) {
       socket.emit('secure:typing:start', { chatId: activeChatId });
@@ -986,6 +962,7 @@ export const SecureChatPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     const cleanContent = messageText.trim();
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: SecureChatMessage = {
@@ -1044,6 +1021,7 @@ export const SecureChatPage = () => {
       return;
     }
 
+    triggerAmbientPulse();
     setError('');
 
     if (file.size > MAX_UPLOAD_BYTES) {
@@ -1209,11 +1187,11 @@ export const SecureChatPage = () => {
   // 3. UNLOCKED CHAT VIEW (Google Messages Pure Layout)
   return (
     <main
-      style={{ height: 'var(--visual-viewport-height, 100dvh)' }}
-      className="fixed top-0 left-0 right-0 w-full flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
+      className="fixed inset-0 w-full h-dvh flex flex-col bg-[var(--color-background)] text-[var(--color-text-primary)] overflow-hidden transition-colors duration-200"
     >
+      <AmbientGradient />
       {/* Flat Borderless Google Top App Bar */}
-      <header className="sticky top-0 z-20 bg-[var(--color-surface)] px-4 py-2.5 sm:px-6">
+      <header className="sticky top-0 z-20 flex-shrink-0 bg-transparent px-4 py-2.5 sm:px-6">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-3">
           {/* Identity */}
           <div className="flex items-center gap-3 min-w-0">
@@ -1291,7 +1269,7 @@ export const SecureChatPage = () => {
       </header>
 
       {/* Main Conversation Body */}
-      <div className="mx-auto flex w-full max-w-7xl flex-1 overflow-hidden">
+      <div className="mx-auto flex w-full max-w-7xl flex-1 min-h-0 overflow-hidden">
         {/* Chat Area */}
         <section
           style={
@@ -1303,7 +1281,7 @@ export const SecureChatPage = () => {
                 }
               : undefined
           }
-          className="relative flex flex-1 flex-col overflow-hidden bg-[var(--color-background)]"
+          className="relative flex flex-1 min-h-0 flex-col overflow-hidden bg-[var(--color-background)]"
         >
           {error && (
             <div className="m-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--color-error)]/10 p-3.5 text-xs font-medium text-[var(--color-error)]">
@@ -1324,7 +1302,7 @@ export const SecureChatPage = () => {
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto scroll-smooth px-4 py-6"
+            className="flex-1 min-h-0 overflow-y-auto overscroll-contain scroll-smooth px-4 py-6"
           >
             <div className="mx-auto flex w-full max-w-[832px] min-h-full flex-col justify-end">
               {/* Security Pill */}
@@ -1377,14 +1355,34 @@ export const SecureChatPage = () => {
             </button>
           )}
 
-          {/* Google Messages-Style Bottom Composer */}
+          {/* Google Gemini-Style Bottom Composer */}
           <form
             onSubmit={sendMessage}
-            className="p-3 sm:p-4 bg-[var(--color-background)] relative"
+            className="flex-shrink-0 border-none bg-gradient-to-t from-[var(--color-background)]/90 via-[var(--color-background)]/50 to-transparent pt-6 pb-3 px-3 sm:px-6 sm:pb-5 relative z-20"
           >
+            {/* Gemini Dynamic Theme Ambient Light radiating from behind the input bar */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-44 -z-10 overflow-hidden"
+            >
+              <div
+                className="absolute inset-0 transition-all duration-700 ease-out"
+                style={{
+                  background: 'radial-gradient(ellipse 130% 90% at 50% 125%, var(--color-primary) 0%, var(--color-accent, var(--color-primary)) 35%, transparent 70%)',
+                  opacity: 0.16,
+                }}
+              />
+              <div
+                className="absolute inset-0 transition-all duration-700 ease-out"
+                style={{
+                  background: 'radial-gradient(ellipse 80% 60% at 50% 110%, var(--color-primary-container, var(--color-primary)) 0%, transparent 65%)',
+                  opacity: 0.12,
+                }}
+              />
+            </div>
+
             {/* Reply banner preview */}
             {replyingTo && (
-              <div className="mx-auto mb-2 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-2xl bg-[var(--color-hover)] p-2.5 animate-in slide-in-from-bottom-2">
+              <div className="mx-auto mb-2.5 flex w-full max-w-[832px] items-center gap-3 overflow-hidden rounded-2xl border border-[var(--color-border)]/60 bg-[var(--color-surface)]/90 backdrop-blur-md p-3 shadow-lg animate-in slide-in-from-bottom-2">
                 <div className="h-8 w-1 rounded-full bg-[var(--color-primary)]" />
                 <div className="flex-1 overflow-hidden text-left">
                   <p className="text-[11px] font-bold text-[var(--color-primary)]">
@@ -1404,40 +1402,21 @@ export const SecureChatPage = () => {
               </div>
             )}
 
-            {showEmojiPicker && (
-              <div
-                ref={emojiPickerRef}
-                className="absolute bottom-full left-0 right-0 z-50 mb-3 px-2 sm:left-4 sm:right-auto sm:w-fit sm:px-0 animate-in fade-in slide-in-from-bottom-4"
-              >
-                <Suspense
-                  fallback={
-                    <div className="h-[320px] w-full animate-pulse rounded-3xl bg-[var(--color-surface)] shadow-2xl" />
-                  }
-                >
-                  <EmojiPickerPanel
-                    dark={theme === 'dark'}
-                    height={320}
-                    onEmojiClick={(emoji) => {
-                      setMessageText((current) => current + emoji);
-                    }}
-                  />
-                </Suspense>
-              </div>
-            )}
+            {/* Hidden File Inputs */}
+            <input ref={fileInputRef} type="file" className="hidden" onChange={sendFile} />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={sendFile}
+            />
 
-            <div className="mx-auto flex w-full max-w-[832px] items-end gap-2 sm:gap-3">
-              <input ref={fileInputRef} type="file" className="hidden" onChange={sendFile} />
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={sendFile}
-              />
-
-              {/* Attachment Button */}
-              <div className="relative mb-0.5">
+            {/* Google Gemini Single Floating Pill Capsule */}
+            <div className="mx-auto flex w-full max-w-[832px] items-center gap-1.5 rounded-full bg-[var(--color-surface)]/85 backdrop-blur-2xl px-2.5 py-1.5 shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-[var(--color-border)]/50 focus-within:border-[var(--color-primary)]/50 focus-within:ring-2 focus-within:ring-[var(--color-primary)]/20 transition-all duration-200">
+              {/* Attachment Plus Button (Inside Left) */}
+              <div className="relative flex-shrink-0">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -1445,7 +1424,7 @@ export const SecureChatPage = () => {
                     setShowAttachmentMenu(!showAttachmentMenu);
                   }}
                   disabled={isUploading}
-                  className="rounded-full p-2.5 text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] transition active:scale-90 cursor-pointer"
+                  className="flex h-10 w-10 items-center justify-center rounded-full text-[var(--color-text-secondary)] hover:bg-[var(--color-hover)] hover:text-[var(--color-text-primary)] active:scale-90 transition cursor-pointer"
                   title="Attach file"
                 >
                   <MaterialIcon
@@ -1459,7 +1438,7 @@ export const SecureChatPage = () => {
 
                 {showAttachmentMenu && (
                   <div
-                    className="absolute bottom-full left-0 mb-3 w-48 overflow-hidden rounded-3xl bg-[var(--color-surface)] p-2 shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
+                    className="absolute bottom-full left-0 mb-3 w-48 overflow-hidden rounded-3xl bg-[var(--color-surface)]/95 backdrop-blur-xl border border-[var(--color-border)]/60 p-2 shadow-2xl animate-in slide-in-from-bottom-3 fade-in duration-200 z-[60]"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -1471,7 +1450,7 @@ export const SecureChatPage = () => {
                       className="flex w-full items-center gap-3 rounded-2xl px-3.5 py-2.5 text-xs font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-hover)] transition cursor-pointer"
                     >
                       <MaterialIcon icon="image" size={20} className="text-[var(--color-primary)]" />
-                      Device Media
+                      <span>Device Media</span>
                     </button>
                     <button
                       type="button"
@@ -1486,35 +1465,20 @@ export const SecureChatPage = () => {
                         size={20}
                         className="text-[var(--color-primary)]"
                       />
-                      Camera
+                      <span>Camera</span>
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Text Input Pill */}
-              <div className="relative flex-1 flex items-end bg-[var(--color-surface)] rounded-3xl px-4 py-1.5 shadow-2xs focus-within:ring-2 focus-within:ring-[var(--color-primary)]/40 transition">
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker((current) => !current)}
-                  className={`flex-shrink-0 p-2 transition cursor-pointer ${
-                    showEmojiPicker
-                      ? 'text-[var(--color-primary)]'
-                      : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'
-                  }`}
-                  title="Emoji"
-                >
-                  <MaterialIcon icon="mood" size={22} />
-                </button>
-
+              {/* Text Area & Placeholder (Middle) */}
+              <div className="relative flex-1 min-w-0 self-center">
                 <textarea
                   ref={textareaRef}
                   value={messageText}
                   onChange={(event) => handleMessageChange(event.target.value)}
                   onFocus={() => {
-                    window.scrollTo(0, 0);
                     setTimeout(() => {
-                      window.scrollTo(0, 0);
                       scrollToBottom('auto');
                     }, 100);
                   }}
@@ -1525,20 +1489,24 @@ export const SecureChatPage = () => {
                     }
                   }}
                   rows={1}
-                  className="flex-1 max-h-40 min-h-[40px] w-full resize-none bg-transparent py-2.5 px-2 text-[15px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
+                  className="flex-1 max-h-36 min-h-[38px] w-full resize-none bg-transparent py-2 px-1 text-[15px] sm:text-[16px] text-[var(--color-text-primary)] outline-none placeholder:text-[var(--color-text-muted)]"
                   placeholder={placeholder}
                 />
               </div>
 
-              {/* Send FAB Button */}
+              {/* Send Button (Inside Far Right — Gemini style) */}
               <button
                 type="submit"
                 disabled={!messageText.trim()}
                 onMouseDown={(e) => e.preventDefault()}
-                className="flex-shrink-0 mb-0.5 rounded-full bg-[var(--color-primary)] p-3 text-[var(--color-on-primary)] shadow-sm transition hover:opacity-95 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:scale-100 cursor-pointer"
+                className={`flex h-10 items-center justify-center gap-1 rounded-full px-3.5 sm:px-4 text-xs font-bold transition-all duration-200 cursor-pointer flex-shrink-0 ${
+                  messageText.trim()
+                    ? 'bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-md hover:opacity-95 hover:scale-105 active:scale-95'
+                    : 'bg-[var(--color-primary)]/15 text-[var(--color-primary)]/40 opacity-50 cursor-not-allowed'
+                }`}
                 title="Send message"
               >
-                <MaterialIcon icon="send" size={22} />
+                <MaterialIcon icon="send" size={18} />
               </button>
             </div>
           </form>

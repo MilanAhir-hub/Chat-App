@@ -106,9 +106,9 @@ export const SecureChatsListPage = () => {
   };
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] w-full bg-[var(--color-background)] px-4 py-4 sm:py-6 max-w-[832px] mx-auto">
+    <div className="h-full w-full bg-[var(--color-background)] px-4 py-4 sm:py-6 max-w-[832px] mx-auto flex flex-col overflow-hidden relative">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4">
+      <div className="flex items-center justify-between pb-4 shrink-0">
         <div className="min-w-0">
           <h2 className="text-[16px] font-bold text-[var(--color-text-primary)] flex items-center gap-2">
             <MaterialIcon icon="lock" size={22} className="text-[var(--color-primary)]" />
@@ -122,7 +122,7 @@ export const SecureChatsListPage = () => {
         <button
           type="button"
           onClick={() => setShowSecureModal(true)}
-          className="hidden sm:flex items-center gap-2 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] px-5 py-2.5 text-xs font-semibold shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer"
+          className="hidden sm:flex items-center gap-2 rounded-full bg-[var(--color-primary)] text-[var(--color-on-primary)] px-5 py-2.5 text-xs font-semibold shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer shrink-0"
         >
           <MaterialIcon icon="add" size={18} />
           <span>New Secure Chat</span>
@@ -130,7 +130,7 @@ export const SecureChatsListPage = () => {
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--color-error)]/10 p-3.5 text-xs font-medium text-[var(--color-error)]">
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-[var(--color-error)]/10 p-3.5 text-xs font-medium text-[var(--color-error)] shrink-0">
           <div className="flex items-center gap-2">
             <MaterialIcon icon="error" size={18} />
             <p>{error}</p>
@@ -146,11 +146,11 @@ export const SecureChatsListPage = () => {
       )}
 
       {loadingChats ? (
-        <div className="flex py-16 justify-center">
+        <div className="flex-1 flex items-center justify-center">
           <Loader size="md" />
         </div>
       ) : secureChats.length === 0 ? (
-        <div className="py-20 text-center flex flex-col items-center justify-center space-y-4">
+        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4 select-none py-8">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-primary-container)] text-[var(--color-on-primary-container)] shadow-2xs">
             <MaterialIcon icon="lock" size={32} />
           </div>
@@ -171,7 +171,7 @@ export const SecureChatsListPage = () => {
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex-1 overflow-y-auto scrollbar-thin space-y-3 pr-1 pb-16 md:pb-4">
           {secureChats.map((chat) => {
             const unlocked = isUnlocked(chat.id);
             return (
@@ -263,12 +263,14 @@ export const SecureChatsListPage = () => {
                 setShowSecureModal(true);
               }
             }}
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer"
+            className={`flex h-14 w-14 items-center justify-center bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-90 transition-all duration-300 ease-out cursor-pointer ${
+              showSecureModal ? 'rounded-full ring-4 ring-[var(--color-primary)]/20' : 'rounded-2xl'
+            }`}
             title={showSecureModal ? 'Close' : 'Create Secure Chat'}
             aria-label={showSecureModal ? 'Close' : 'Create Secure Chat'}
           >
             <div
-              className={`transform transition-transform duration-300 ease-out flex items-center justify-center ${
+              className={`transform transition-transform duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center ${
                 showSecureModal ? 'rotate-45' : 'rotate-0'
               }`}
             >

@@ -5,10 +5,14 @@ import { roomService } from '../services/room.service';
 import { getErrorMessage } from '../services/http';
 import { Loader } from '../components/Loader';
 import { MaterialIcon } from '../components/MaterialIcon';
+import { useTheme } from '../context/ThemeContext';
+import { getThemePureColor } from '../config/themes';
 import type { Room } from '../types';
 
 export const TemporaryRoomsPage = () => {
   const navigate = useNavigate();
+  const { themeId } = useTheme();
+  const pureColor = getThemePureColor(themeId);
 
   // States
   const [modalJoinRoomId, setModalJoinRoomId] = useState('');
@@ -73,7 +77,28 @@ export const TemporaryRoomsPage = () => {
   const isModalJoinValid = modalJoinRoomId.trim().length === 6;
 
   return (
-    <div className="mx-auto max-w-[832px] px-4 py-4 sm:py-6 space-y-6 relative min-h-[calc(100dvh-5rem)] flex flex-col">
+    <div className="h-full flex flex-col items-center justify-center px-4 max-w-xl mx-auto text-center relative select-none">
+      {/* Hero Header / Description */}
+      <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div
+          className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl shadow-sm transition-transform hover:scale-105"
+          style={{
+            backgroundColor: pureColor.bg,
+            color: pureColor.text,
+          }}
+        >
+          <MaterialIcon icon="forum" size={32} />
+        </div>
+
+        <div className="space-y-1.5 max-w-sm mx-auto">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--color-text-primary)]">
+            Temporary Rooms
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+            Ephemeral group chat rooms. Self-destruct when all participants leave.
+          </p>
+        </div>
+      </div>
       {/* ============================================================
           BACKDROP OVERLAY (z-40: blurs top navbar at z-20 while footer & FAB are at z-50)
           ============================================================ */}
@@ -136,13 +161,15 @@ export const TemporaryRoomsPage = () => {
             disabled={isCreating}
             title={isFabOpen ? 'Close Actions' : 'Room Actions'}
             aria-label={isFabOpen ? 'Close Actions' : 'Room Actions'}
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+            className={`flex h-14 w-14 items-center justify-center bg-[var(--color-primary)] text-[var(--color-on-primary)] shadow-lg hover:shadow-xl hover:scale-105 active:scale-90 transition-all duration-300 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto ${
+              isFabOpen ? 'rounded-full ring-4 ring-[var(--color-primary)]/20' : 'rounded-2xl'
+            }`}
           >
             {isCreating ? (
               <Loader size="sm" light />
             ) : (
               <div
-                className={`transform transition-transform duration-300 ease-out flex items-center justify-center ${
+                className={`transform transition-transform duration-300 [transition-timing-function:cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center ${
                   isFabOpen ? 'rotate-45' : 'rotate-0'
                 }`}
               >

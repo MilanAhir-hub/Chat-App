@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 
 const DEFAULT_PLACEHOLDERS = [
-  'Say something...',
-  'Type a message...',
-  'Share your thoughts...',
-  'Join the conversation...',
-  'Send an emoji...',
-  'Share a file...',
+  'Type message...',
+  'Say hi...',
+  'Send emoji...',
+  'Share file...',
+  'Type here...',
 ];
 
 interface AnimatedPlaceholderProps {
@@ -19,9 +18,7 @@ interface AnimatedPlaceholderProps {
  * Self-contained typing animation for the input placeholder.
  *
  * All animation state lives in this component so the parent chat page
- * never re-renders while the placeholder cycles (previously the animation
- * state sat in the page component and re-rendered the whole chat 10-20
- * times per second).
+ * never re-renders while the placeholder cycles.
  */
 export const AnimatedPlaceholder = ({
   placeholders = DEFAULT_PLACEHOLDERS,
@@ -59,5 +56,9 @@ export const AnimatedPlaceholder = ({
     return () => clearTimeout(timeout);
   }, [text, isDeleting, index, placeholders, paused]);
 
-  return <>{paused ? '' : text}</>;
+  return (
+    <span className="truncate whitespace-nowrap inline-block max-w-full">
+      {paused ? '' : text}
+    </span>
+  );
 };
