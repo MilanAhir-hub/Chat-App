@@ -1,4 +1,7 @@
 import {
+  memo,
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -6,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import type { ChangeEvent, FormEvent } from 'react';
+import type { ChangeEvent, FormEvent, RefObject } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -30,7 +33,7 @@ import {
   TickDouble02Icon,
   PaintBrush01Icon
 } from '@hugeicons/core-free-icons';
-import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
+import { AnimatedPlaceholder } from '../components/AnimatedPlaceholder';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector, themes } from '../components/ThemeSelector';
 import { GlassThemeToggle } from '../components/GlassThemeToggle';
@@ -55,6 +58,9 @@ import {
 import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
 
+// Loaded on demand: renders only when the user opens the emoji picker.
+const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
+
 const wallpapers = [
   { id: 'default', name: 'Default', url: '' },
   { id: 'wp1', name: 'Cool Cat', url: '/wallpaper1.png' },
@@ -78,11 +84,23 @@ const reactionOptions = [0x1f44d, 0x2764, 0x1f602, 0x1f525, 0x1f389].map(
   (codePoint) => String.fromCodePoint(codePoint)
 );
 
-const formatTime = (dateValue: string) =>
-  new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(dateValue));
+// One formatter + result cache instead of a new Intl.DateTimeFormat per
+// message per render (locale resolution is not cheap at scale).
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const timeCache = new Map<string, string>();
+
+const formatTime = (dateValue: string) => {
+  const cached = timeCache.get(dateValue);
+  if (cached !== undefined) return cached;
+
+  const formatted = timeFormatter.format(new Date(dateValue));
+  if (timeCache.size > 2000) timeCache.clear();
+  timeCache.set(dateValue, formatted);
+  return formatted;
+};
 
 const resolveMediaUrl = (url: string) => {
   if (!url.startsWith('/api/')) return url;
@@ -90,11 +108,39 @@ const resolveMediaUrl = (url: string) => {
   return `${API_BASE_URL.replace(/\/api\/?$/, '')}${url}`;
 };
 
+// Hoisted regexes (built once) + result cache; these run per message.
+const FLAG_REGEX = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
+const EMOJI_REGEX = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
+const singleEmojiCache = new Map<string, boolean>();
+
 const isSingleEmoji = (str: string): boolean => {
-  const flagRegex = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
-  const emojiRegex = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
   const trimmed = str.trim();
-  return flagRegex.test(trimmed) || emojiRegex.test(trimmed);
+  const cached = singleEmojiCache.get(trimmed);
+  if (cached !== undefined) return cached;
+
+  const result = FLAG_REGEX.test(trimmed) || EMOJI_REGEX.test(trimmed);
+  if (singleEmojiCache.size > 1000) singleEmojiCache.clear();
+  singleEmojiCache.set(trimmed, result);
+  return result;
+};
+
+const IMAGE_FILE_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+const IMAGE_URL_REGEX = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
+
+const isImageMessage = (message: ChatMessage): boolean => {
+  const isImageFile =
+    message.type === 'file' &&
+    (message.fileType?.startsWith('image/') ||
+      IMAGE_FILE_REGEX.test(message.fileName || ''));
+
+  // Check if it's a direct image link or Cloudinary URL in a text message
+  const isImageUrl =
+    message.type === 'text' &&
+    (IMAGE_URL_REGEX.test(message.content) ||
+      (message.content.includes('cloudinary.com') &&
+        /image\/upload/.test(message.content)));
+
+  return isImageFile || isImageUrl;
 };
 
 
@@ -140,6 +186,331 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
   );
 };
 
+interface MessageBubbleProps {
+  message: ChatMessage;
+  currentUserId: string;
+  isReactionPickerOpen: boolean;
+  reactionPickerRef: RefObject<HTMLDivElement | null>;
+  onReply: (message: ChatMessage) => void;
+  onScrollToMessage: (id: string) => void;
+  onToggleReaction: (messageId: string, emoji: string) => void;
+  onTouchStart: (messageId: string) => void;
+  onTouchEnd: () => void;
+  onSetReactionPicker: (messageId: string | null) => void;
+  onOpenFullscreen: (url: string) => void;
+}
+
+/**
+ * Memoized per-message bubble. With stable handler props, page-level state
+ * changes (keystrokes, typing indicators, scroll button, placeholder) no
+ * longer re-render existing messages.
+ */
+const MessageBubble = memo(function MessageBubble({
+  message,
+  currentUserId,
+  isReactionPickerOpen,
+  reactionPickerRef,
+  onReply,
+  onScrollToMessage,
+  onToggleReaction,
+  onTouchStart,
+  onTouchEnd,
+  onSetReactionPicker,
+  onOpenFullscreen,
+}: MessageBubbleProps) {
+  const isMine = message.sender.id === currentUserId;
+
+  return (
+    <article
+      id={`msg-${message.id}`}
+      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
+    >
+      <SwipeableMessage isMine={isMine} onReply={() => onReply(message)}>
+        <div
+          className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
+            } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
+        >
+          {!isMine && (
+            <p className="mb-1 ml-2 text-[10px] font-bold text-slate-400">
+              {message.sender.name}
+            </p>
+          )}
+          <div
+            onPointerDown={() => onTouchStart(message.id)}
+            onPointerUp={onTouchEnd}
+            onPointerLeave={onTouchEnd}
+            className={`message-bubble ${isMine ? 'message-bubble-mine' : 'message-bubble-other'} ${message.type === 'file' || isImageMessage(message)
+                ? 'message-bubble-media'
+                : (message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo)
+                  ? 'message-bubble-emoji-only'
+                  : 'message-bubble-text'
+              }`}
+          >
+            <div className="flex flex-col relative">
+              {/* Reply Display */}
+              {message.replyTo && (
+                <div
+                  onClick={() => message.replyTo && onScrollToMessage(message.replyTo.id)}
+                  className="reply-preview-bubble"
+                >
+                  <p className="font-extrabold text-primary-600 dark:text-primary-400 mb-0.5">
+                    {message.replyTo.senderName}
+                  </p>
+                  <div className="flex items-center gap-1.5 opacity-90">
+                    {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
+                      <>
+                        <HugeiconsIcon icon={Image01Icon} size={14} />
+                        <span className="text-[11px] italic">Photo</span>
+                      </>
+                    ) : (
+                      <p className="truncate line-clamp-2 italic text-[11px]">
+                        {message.replyTo.content}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Desktop Reaction Trigger */}
+              <div className={`absolute top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover:opacity-100 transition-all duration-300 ${isMine ? '-left-20' : '-right-20'} items-center gap-1`}>
+                <button
+                  type="button"
+                  onClick={() => onSetReactionPicker(message.id)}
+                  className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
+                  title="React"
+                >
+                  <HugeiconsIcon icon={SmileIcon} size={20} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onReply(message)}
+                  className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
+                  title="Reply"
+                >
+                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={20} />
+                </button>
+              </div>
+
+              {/* Mobile Actions */}
+              <div className="absolute right-0 top-0 flex -translate-y-full items-center gap-1 opacity-0 transition-opacity group-active:opacity-100 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => onReply(message)}
+                  className="rounded-full bg-slate-900/50 p-1.5 text-white backdrop-blur-sm"
+                >
+                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} />
+                </button>
+              </div>
+
+              {/* Floating Reaction Picker */}
+              {isReactionPickerOpen && (
+                <div
+                  ref={reactionPickerRef}
+                  className={`absolute z-50 animate-in fade-in zoom-in duration-200 ${isMine ? 'right-0' : 'left-0'} bottom-full mb-2`}
+                >
+                  <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+                    {reactionOptions.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onToggleReaction(message.id, emoji);
+                          onSetReactionPicker(null);
+                        }}
+                        className="rounded-full p-1.5 transition-all hover:scale-125 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        <span className="text-xl sm:text-2xl leading-none">{emoji}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {isImageMessage(message) ? (
+                <div
+                  onClick={() => onOpenFullscreen(resolveMediaUrl(message.content))}
+                  className="media-container group/media"
+                >
+                  <img
+                    src={resolveMediaUrl(message.content)}
+                    alt={message.fileName || 'Image'}
+                    className="max-h-[400px] w-full min-w-[200px] object-cover transition-all duration-500 group-hover/media:scale-105"
+                    loading="lazy"
+                  />
+                  {message.status === 'sending' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] text-white">
+                      <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white mb-2" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Uploading</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 transition-colors group-hover/media:bg-black/10" />
+                </div>
+              ) : message.type === 'file' ? (
+                <a
+                  href={message.content}
+                  download={message.fileName}
+                  className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
+                >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
+                    <HugeiconsIcon icon={ImageAdd01Icon} size={20} />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="truncate font-bold">{message.fileName || 'Shared file'}</p>
+                    <p className="text-[10px] opacity-70 uppercase font-black tracking-wider">{formatFileSize(message.fileSize)}</p>
+                  </div>
+                </a>
+              ) : (
+                <div className="block">
+                  <span className="message-content">
+                    {message.content}
+                  </span>
+                  <div className="message-meta">
+                    <span className="message-timestamp">
+                      {formatTime(message.createdAt)}
+                    </span>
+                    {isMine && (
+                      <div className="flex transition-all duration-300">
+                        <HugeiconsIcon
+                          icon={
+                            message.status === 'sending'
+                              ? Clock01Icon
+                              : message.status === 'sent'
+                                ? Tick02Icon
+                                : TickDouble02Icon
+                          }
+                          size={14}
+                          className={`
+                                      ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
+                                      ${message.status === 'sending' ? 'animate-pulse' : ''}
+                                    `}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {(isImageMessage(message) || message.type === 'file') && (
+                <div className="message-meta">
+                  <span className="message-timestamp">
+                    {formatTime(message.createdAt)}
+                  </span>
+                  {isMine && (
+                    <div className="flex transition-all duration-300">
+                      <HugeiconsIcon
+                        icon={
+                          message.status === 'sending'
+                            ? Clock01Icon
+                            : message.status === 'sent'
+                              ? Tick02Icon
+                              : TickDouble02Icon
+                        }
+                        size={14}
+                        className={`
+                                    ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
+                                    ${message.status === 'sending' ? 'animate-pulse' : ''}
+                                  `}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Reaction Display Bubble */}
+            {message.reactions.length > 0 && message.reactions.some(r => r.count > 0) && (
+              <div className={`absolute -bottom-2 flex gap-0.5 ${isMine ? 'right-2' : 'left-2'}`}>
+                {message.reactions.filter(r => r.count > 0).map((r) => {
+                  const reacted = r.userIds.includes(currentUserId);
+                  return (
+                    <button
+                      key={r.emoji}
+                      onClick={() => onToggleReaction(message.id, r.emoji)}
+                      className={`flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-bold shadow-sm transition-all hover:scale-110 dark:border-slate-800 dark:bg-slate-900 ${reacted ? 'text-primary-600 ring-1 ring-primary-500' : 'text-slate-600 dark:text-slate-300'
+                        }`}
+                    >
+                      <span>{r.emoji}</span>
+                      {r.count > 1 && <span>{r.count}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </SwipeableMessage>
+    </article>
+  );
+});
+
+interface MessageListProps {
+  notices: RoomNotice[];
+  messages: ChatMessage[];
+  currentUserId: string;
+  activeReactionMessageId: string | null;
+  reactionPickerRef: RefObject<HTMLDivElement | null>;
+  onReply: (message: ChatMessage) => void;
+  onScrollToMessage: (id: string) => void;
+  onToggleReaction: (messageId: string, emoji: string) => void;
+  onTouchStart: (messageId: string) => void;
+  onTouchEnd: () => void;
+  onSetReactionPicker: (messageId: string | null) => void;
+  onOpenFullscreen: (url: string) => void;
+}
+
+/**
+ * Memoized message list. When a prop like `messages` is unchanged the whole
+ * list is skipped, so keystrokes/typing/scroll state never touch message
+ * DOM at all.
+ */
+const MessageList = memo(function MessageList({
+  notices,
+  messages,
+  currentUserId,
+  activeReactionMessageId,
+  reactionPickerRef,
+  onReply,
+  onScrollToMessage,
+  onToggleReaction,
+  onTouchStart,
+  onTouchEnd,
+  onSetReactionPicker,
+  onOpenFullscreen,
+}: MessageListProps) {
+  return (
+    <>
+      {notices.map((notice) => (
+        <div
+          key={`${notice.createdAt}-${notice.message}`}
+          className="flex justify-center my-2"
+        >
+          <span className="rounded-full bg-slate-100 px-4 py-1.5 text-center text-[10px] font-bold tracking-wider text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            {notice.message}
+          </span>
+        </div>
+      ))}
+
+      {messages.map((message) => (
+        <MessageBubble
+          key={message.id}
+          message={message}
+          currentUserId={currentUserId}
+          isReactionPickerOpen={activeReactionMessageId === message.id}
+          reactionPickerRef={reactionPickerRef}
+          onReply={onReply}
+          onScrollToMessage={onScrollToMessage}
+          onToggleReaction={onToggleReaction}
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          onSetReactionPicker={onSetReactionPicker}
+          onOpenFullscreen={onOpenFullscreen}
+        />
+      ))}
+    </>
+  );
+});
+
 export const ChatRoomPage = () => {
   const { roomId } = useParams();
   const activeRoomId = useMemo(() => (roomId || '').toUpperCase(), [roomId]);
@@ -175,14 +546,20 @@ export const ChatRoomPage = () => {
     return localStorage.getItem(`chat_wallpaper_${activeRoomId}`) || '';
   });
   const [showMobileWallpaperPicker, setShowMobileWallpaperPicker] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  // matchMedia fires only when the viewport crosses the breakpoint instead
+  // of on every resize frame, so no debouncing is needed.
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia('(max-width: 1023px)').matches
+  );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const handleSelectWallpaper = (url: string) => {
@@ -208,45 +585,7 @@ export const ChatRoomPage = () => {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const longPressTimerRef = useRef<number | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
-
-  // Typing placeholder logic
-  const [placeholder, setPlaceholder] = useState('');
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const placeholders = useMemo(() => [
-    'Say something...',
-    'Type a message...',
-    'Share your thoughts...',
-    'Join the conversation...',
-    'Send an emoji...',
-    'Share a file...'
-  ], []);
-
-  useEffect(() => {
-    const currentFullText = placeholders[placeholderIndex];
-    const typingSpeed = isDeleting ? 50 : 100;
-    const nextCharIndex = isDeleting ? placeholder.length - 1 : placeholder.length + 1;
-
-    const timeout = window.setTimeout(() => {
-      // Pause animation if user is typing or there is text in the input
-      if (messageText.length > 0) {
-        return;
-      }
-
-      if (!isDeleting && placeholder.length === currentFullText.length) {
-        // Pause at the end
-        window.setTimeout(() => setIsDeleting(true), 2000);
-      } else if (isDeleting && placeholder.length === 0) {
-        // Move to next placeholder
-        setIsDeleting(false);
-        setPlaceholderIndex((current) => (current + 1) % placeholders.length);
-      } else {
-        setPlaceholder(currentFullText.substring(0, nextCharIndex));
-      }
-    }, typingSpeed);
-
-    return () => clearTimeout(timeout);
-  }, [placeholder, isDeleting, placeholderIndex, placeholders]);
+  const scrollRafRef = useRef<number | null>(null);
 
   const isCreator = Boolean(room && user && room.createdBy.id === user.id);
 
@@ -266,45 +605,46 @@ export const ChatRoomPage = () => {
     isAtBottomRef.current = true;
   }, []);
 
+  // rAF-throttled: the scroll handler runs at most once per frame instead of
+  // once per scroll event, and only updates state when the bottom state flips.
   const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current) return;
+    if (scrollRafRef.current !== null) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    // Buffer of 100px to consider "at bottom"
-    const isBottom = scrollHeight - scrollTop - clientHeight < 100;
+    scrollRafRef.current = window.requestAnimationFrame(() => {
+      scrollRafRef.current = null;
 
-    isAtBottomRef.current = isBottom;
-    setShowScrollButton(!isBottom);
+      if (!scrollContainerRef.current) return;
 
-    if (isBottom) {
-      setUnreadCount(0);
-    }
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      // Buffer of 100px to consider "at bottom"
+      const isBottom = scrollHeight - scrollTop - clientHeight < 100;
 
+      isAtBottomRef.current = isBottom;
+      setShowScrollButton(!isBottom);
 
+      if (isBottom) {
+        setUnreadCount(0);
+      }
+    });
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, []);
+
+  // Typing indicators must not scroll the chat — only new content should.
   useEffect(() => {
     if (isAtBottomRef.current) {
       scrollToBottom('smooth');
     }
-  }, [messages, notices, typingUsers, scrollToBottom]);
+  }, [messages, notices, scrollToBottom]);
 
-  const isImageMessage = useCallback((message: ChatMessage) => {
-    const isImageFile = message.type === 'file' && (
-      message.fileType?.startsWith('image/') ||
-      /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(message.fileName || '')
-    );
-
-    // Check if it's a direct image link or Cloudinary URL in a text message
-    const isImageUrl = message.type === 'text' && (
-      /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(message.content) ||
-      (message.content.includes('cloudinary.com') && /image\/upload/.test(message.content))
-    );
-
-    return isImageFile || isImageUrl;
-  }, []);
-
-  const scrollToMessage = (id: string) => {
+  const scrollToMessage = useCallback((id: string) => {
     const element = document.getElementById(`msg-${id}`);
     if (element && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -319,12 +659,12 @@ export const ChatRoomPage = () => {
         element.classList.remove('bg-primary-500/20', 'dark:bg-primary-500/30');
       }, 1500);
     }
-  };
+  }, []);
 
-  const handleReply = (message: ChatMessage) => {
+  const handleReply = useCallback((message: ChatMessage) => {
     setReplyingTo(message);
     textareaRef.current?.focus();
-  };
+  }, []);
 
   const addNotice = useCallback((notice: RoomNotice) => {
     setNotices((current) => [...current.slice(-9), notice]);
@@ -494,47 +834,104 @@ export const ChatRoomPage = () => {
     };
   }, [activeRoomId, addNotice, navigate, stopTyping, user]);
 
-  // Seen detection logic
+  // Seen detection logic.
+  // One persistent IntersectionObserver for the whole conversation: each
+  // messages change only re-observes messages that are still unseen
+  // (observe() is a no-op for already-observed targets), so a busy
+  // conversation no longer tears down and rebuilds the observer — with its
+  // O(n) work and DOM queries — on every message update.
+  const seenObserverRef = useRef<IntersectionObserver | null>(null);
+  const deliveredEmittedRef = useRef<Set<string>>(new Set());
+  const messagesRef = useRef(messages);
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user]);
+
   useEffect(() => {
     if (!user || !messages.length) return;
 
     const socket = getSocket();
+
     if (socket.connected) {
-      messages
-        .filter((m) => m.sender.id !== user.id && !m.deliveredTo.includes(user.id))
-        .forEach((m) => {
+      messages.forEach((m) => {
+        if (
+          m.sender.id !== user.id &&
+          !m.deliveredTo.includes(user.id) &&
+          !deliveredEmittedRef.current.has(m.id)
+        ) {
+          deliveredEmittedRef.current.add(m.id);
           socket.emit('message:delivered', { messageId: m.id });
-        });
+        }
+      });
     }
 
-    const unreadMessages = messages.filter(
-      (m) => m.sender.id !== user.id && !m.seenBy.includes(user.id)
-    );
+    if (!seenObserverRef.current) {
+      seenObserverRef.current = new IntersectionObserver(
+        (entries) => {
+          const currentUserId = userIdRef.current;
+          if (!currentUserId) return;
 
-    if (!unreadMessages.length) return;
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
             const messageId = entry.target.id.replace('msg-', '');
-            const socket = getSocket();
-            if (socket.connected) {
-              socket.emit('message:seen', { messageId });
-            }
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+            const message = messagesRef.current.find((m) => m.id === messageId);
+            if (!message || message.sender.id === currentUserId) return;
 
-    unreadMessages.forEach((m) => {
+            const currentSocket = getSocket();
+            if (!currentSocket.connected) return;
+
+            // Only stop tracking after a successful hand-off to the socket,
+            // so a message visible while offline is retried later.
+            seenObserverRef.current?.unobserve(entry.target);
+            currentSocket.emit('message:seen', { messageId });
+          });
+        },
+        { threshold: 0.5 }
+      );
+    }
+
+    const observer = seenObserverRef.current;
+
+    messages.forEach((m) => {
+      if (m.sender.id === user.id || m.seenBy.includes(user.id)) return;
+
       const el = document.getElementById(`msg-${m.id}`);
       if (el) observer.observe(el);
     });
-
-    return () => observer.disconnect();
   }, [messages, user]);
+
+  // Re-delivery safety: after a reconnect, allow delivered pings again for
+  // messages the server may have missed while we were offline.
+  useEffect(() => {
+    const handleConnect = () => {
+      deliveredEmittedRef.current.clear();
+    };
+
+    const socket = getSocket();
+    socket.on('connect', handleConnect);
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, []);
+
+  // Switching rooms (and unmount): reset seen tracking so the next
+  // conversation starts fresh. Runs as cleanup, i.e. before the observe
+  // effect re-runs for the new room.
+  useEffect(() => {
+    const deliveredEmitted = deliveredEmittedRef.current;
+    return () => {
+      seenObserverRef.current?.disconnect();
+      seenObserverRef.current = null;
+      deliveredEmitted.clear();
+    };
+  }, [activeRoomId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -870,27 +1267,27 @@ export const ChatRoomPage = () => {
     });
   };
 
-  const toggleReaction = (messageId: string, emoji: string) => {
+  const toggleReaction = useCallback((messageId: string, emoji: string) => {
     getSocket().emit('message:react', { messageId, emoji }, (response) => {
       if (!response.ok) {
         setError(response.message || 'Unable to update reaction.');
       }
     });
-  };
+  }, []);
 
-  const handleTouchStart = (messageId: string) => {
+  const handleTouchStart = useCallback((messageId: string) => {
     longPressTimerRef.current = window.setTimeout(() => {
       setActiveReactionMessageId(messageId);
       if (navigator.vibrate) navigator.vibrate(50);
     }, 600);
-  };
+  }, []);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
     }
-  };
+  }, []);
 
   const typingNames = Object.values(typingUsers);
 
@@ -1134,6 +1531,8 @@ export const ChatRoomPage = () => {
                             <img
                               src={wp.url}
                               alt={wp.name}
+                              loading="lazy"
+                              decoding="async"
                               className="h-16 w-12 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
                             />
                           ) : (
@@ -1230,234 +1629,20 @@ export const ChatRoomPage = () => {
                 </div>
               ))}
 
-              {messages.map((message) => {
-                const isMine = message.sender.id === user?.id;
-
-                return (
-                  <article
-                    key={message.id}
-                    id={`msg-${message.id}`}
-                    className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <SwipeableMessage isMine={isMine} onReply={() => handleReply(message)}>
-                      <div
-                        className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'
-                          } ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
-                      >
-                        {!isMine && (
-                          <p className="mb-1 ml-2 text-[10px] font-bold text-slate-400">
-                            {message.sender.name}
-                          </p>
-                        )}
-                        <div
-                          onPointerDown={() => handleTouchStart(message.id)}
-                          onPointerUp={handleTouchEnd}
-                          onPointerLeave={handleTouchEnd}
-                          className={`message-bubble ${isMine ? 'message-bubble-mine' : 'message-bubble-other'} ${message.type === 'file' || isImageMessage(message)
-                              ? 'message-bubble-media'
-                              : (message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo)
-                                ? 'message-bubble-emoji-only'
-                                : 'message-bubble-text'
-                            }`}
-                        >
-                          <div className="flex flex-col relative">
-                            {/* Reply Display */}
-                            {message.replyTo && (
-                              <div
-                                onClick={() => message.replyTo && scrollToMessage(message.replyTo.id)}
-                                className="reply-preview-bubble"
-                              >
-                                <p className="font-extrabold text-primary-600 dark:text-primary-400 mb-0.5">
-                                  {message.replyTo.senderName}
-                                </p>
-                                <div className="flex items-center gap-1.5 opacity-90">
-                                  {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
-                                    <>
-                                      <HugeiconsIcon icon={Image01Icon} size={14} />
-                                      <span className="text-[11px] italic">Photo</span>
-                                    </>
-                                  ) : (
-                                    <p className="truncate line-clamp-2 italic text-[11px]">
-                                      {message.replyTo.content}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                            {/* Desktop Reaction Trigger */}
-                            <div className={`absolute top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover:opacity-100 transition-all duration-300 ${isMine ? '-left-20' : '-right-20'} items-center gap-1`}>
-                              <button
-                                type="button"
-                                onClick={() => setActiveReactionMessageId(message.id)}
-                                className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
-                                title="React"
-                              >
-                                <HugeiconsIcon icon={SmileIcon} size={20} />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleReply(message)}
-                                className="rounded-full bg-white/80 p-2 text-slate-500 shadow-sm backdrop-blur-sm transition-all hover:bg-white hover:text-primary-600 hover:scale-110 dark:bg-slate-800/80 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-primary-400"
-                                title="Reply"
-                              >
-                                <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={20} />
-                              </button>
-                            </div>
-
-                            {/* Mobile Actions */}
-                            <div className="absolute right-0 top-0 flex -translate-y-full items-center gap-1 opacity-0 transition-opacity group-active:opacity-100 lg:hidden">
-                              <button
-                                type="button"
-                                onClick={() => handleReply(message)}
-                                className="rounded-full bg-slate-900/50 p-1.5 text-white backdrop-blur-sm"
-                              >
-                                <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={14} />
-                              </button>
-                            </div>
-
-                            {/* Floating Reaction Picker */}
-                            {activeReactionMessageId === message.id && (
-                              <div
-                                ref={reactionPickerRef}
-                                className={`absolute z-50 animate-in fade-in zoom-in duration-200 ${isMine ? 'right-0' : 'left-0'} bottom-full mb-2`}
-                              >
-                                <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                                  {reactionOptions.map((emoji) => (
-                                    <button
-                                      key={emoji}
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        toggleReaction(message.id, emoji);
-                                        setActiveReactionMessageId(null);
-                                      }}
-                                      className="rounded-full p-1.5 transition-all hover:scale-125 hover:bg-slate-100 dark:hover:bg-slate-800"
-                                    >
-                                      <span className="text-xl sm:text-2xl leading-none">{emoji}</span>
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {isImageMessage(message) ? (
-                              <div
-                                onClick={() => setFullscreenImage(resolveMediaUrl(message.content))}
-                                className="media-container group/media"
-                              >
-                                <img
-                                  src={resolveMediaUrl(message.content)}
-                                  alt={message.fileName || 'Image'}
-                                  className="max-h-[400px] w-full min-w-[200px] object-cover transition-all duration-500 group-hover/media:scale-105"
-                                  loading="lazy"
-                                />
-                                {message.status === 'sending' && (
-                                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] text-white">
-                                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white mb-2" />
-                                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-80">Uploading</span>
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-black/0 transition-colors group-hover/media:bg-black/10" />
-                              </div>
-                            ) : message.type === 'file' ? (
-                              <a
-                                href={message.content}
-                                download={message.fileName}
-                                className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
-                              >
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500/10 text-primary-600 dark:bg-primary-500/20 dark:text-primary-400">
-                                  <HugeiconsIcon icon={ImageAdd01Icon} size={20} />
-                                </div>
-                                <div className="overflow-hidden">
-                                  <p className="truncate font-bold">{message.fileName || 'Shared file'}</p>
-                                  <p className="text-[10px] opacity-70 uppercase font-black tracking-wider">{formatFileSize(message.fileSize)}</p>
-                                </div>
-                              </a>
-                            ) : (
-                              <div className="block">
-                                <span className="message-content">
-                                  {message.content}
-                                </span>
-                                <div className="message-meta">
-                                  <span className="message-timestamp">
-                                    {formatTime(message.createdAt)}
-                                  </span>
-                                  {isMine && (
-                                    <div className="flex transition-all duration-300">
-                                      <HugeiconsIcon
-                                        icon={
-                                          message.status === 'sending'
-                                            ? Clock01Icon
-                                            : message.status === 'sent'
-                                              ? Tick02Icon
-                                              : TickDouble02Icon
-                                        }
-                                        size={14}
-                                        className={`
-                                      ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
-                                      ${message.status === 'sending' ? 'animate-pulse' : ''}
-                                    `}
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {(isImageMessage(message) || message.type === 'file') && (
-                              <div className="message-meta">
-                                <span className="message-timestamp">
-                                  {formatTime(message.createdAt)}
-                                </span>
-                                {isMine && (
-                                  <div className="flex transition-all duration-300">
-                                    <HugeiconsIcon
-                                      icon={
-                                        message.status === 'sending'
-                                          ? Clock01Icon
-                                          : message.status === 'sent'
-                                            ? Tick02Icon
-                                            : TickDouble02Icon
-                                      }
-                                      size={14}
-                                      className={`
-                                    ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
-                                    ${message.status === 'sending' ? 'animate-pulse' : ''}
-                                  `}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Reaction Display Bubble */}
-                          {message.reactions.length > 0 && message.reactions.some(r => r.count > 0) && (
-                            <div className={`absolute -bottom-2 flex gap-0.5 ${isMine ? 'right-2' : 'left-2'}`}>
-                              {message.reactions.filter(r => r.count > 0).map((r) => {
-                                const reacted = r.userIds.includes(user?.id || '');
-                                return (
-                                  <button
-                                    key={r.emoji}
-                                    onClick={() => toggleReaction(message.id, r.emoji)}
-                                    className={`flex items-center gap-1 rounded-full border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-bold shadow-sm transition-all hover:scale-110 dark:border-slate-800 dark:bg-slate-900 ${reacted ? 'text-primary-600 ring-1 ring-primary-500' : 'text-slate-600 dark:text-slate-300'
-                                      }`}
-                                  >
-                                    <span>{r.emoji}</span>
-                                    {r.count > 1 && <span>{r.count}</span>}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </SwipeableMessage>
-                  </article>
-                );
-              })}
-
+              <MessageList
+                notices={notices}
+                messages={messages}
+                currentUserId={user?.id ?? ''}
+                activeReactionMessageId={activeReactionMessageId}
+                reactionPickerRef={reactionPickerRef}
+                onReply={handleReply}
+                onScrollToMessage={scrollToMessage}
+                onToggleReaction={toggleReaction}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onSetReactionPicker={setActiveReactionMessageId}
+                onOpenFullscreen={setFullscreenImage}
+              />
               {typingNames.length > 0 && (
                 <div className="flex items-center gap-2 py-2">
                   <div className="flex gap-1">
@@ -1528,17 +1713,19 @@ export const ChatRoomPage = () => {
                 ref={emojiPickerRef}
                 className="absolute bottom-full left-0 right-0 z-[60] mb-3 px-2 sm:left-4 sm:right-auto sm:w-fit sm:px-0 animate-in fade-in slide-in-from-bottom-4"
               >
-                <div className="overflow-hidden rounded-2xl shadow-2xl">
-                  <EmojiPicker
-                    theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
-                    emojiStyle={EmojiStyle.APPLE}
-                    width="100%"
+                <Suspense
+                  fallback={
+                    <div className="h-[400px] w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-900" />
+                  }
+                >
+                  <EmojiPickerPanel
+                    dark={theme === 'dark'}
                     height={window.innerWidth < 640 ? 300 : 400}
-                    onEmojiClick={(emojiData) => {
-                      setMessageText((current) => current + emojiData.emoji);
+                    onEmojiClick={(emoji) => {
+                      setMessageText((current) => current + emoji);
                     }}
                   />
-                </div>
+                </Suspense>
               </div>
             )}
 
@@ -1623,27 +1810,36 @@ export const ChatRoomPage = () => {
                   <HugeiconsIcon icon={SmileIcon} size={24} />
                 </button>
 
-                <textarea
-                  ref={textareaRef}
-                  value={messageText}
-                  onChange={(event) => handleMessageChange(event.target.value)}
-                  onFocus={() => {
-                    window.scrollTo(0, 0);
-                    setTimeout(() => {
+                <div className="relative flex-1 self-stretch">
+                  {messageText.length === 0 && (
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-y-0 left-1 right-1 flex items-center py-2.5 text-[16px] text-slate-500 dark:text-slate-400 sm:text-[17px]"
+                    >
+                      <AnimatedPlaceholder />
+                    </div>
+                  )}
+                  <textarea
+                    ref={textareaRef}
+                    value={messageText}
+                    onChange={(event) => handleMessageChange(event.target.value)}
+                    onFocus={() => {
                       window.scrollTo(0, 0);
-                      scrollToBottom('auto');
-                    }, 100);
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && !event.shiftKey) {
-                      event.preventDefault();
-                      event.currentTarget.form?.requestSubmit();
-                    }
-                  }}
-                  rows={1}
-                  className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400 sm:text-[17px]"
-                  placeholder={placeholder}
-                />
+                      setTimeout(() => {
+                        window.scrollTo(0, 0);
+                        scrollToBottom('auto');
+                      }, 100);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && !event.shiftKey) {
+                        event.preventDefault();
+                        event.currentTarget.form?.requestSubmit();
+                      }
+                    }}
+                    rows={1}
+                    className="flex-1 max-h-48 min-h-[44px] w-full resize-none bg-transparent py-2.5 px-1 text-[16px] text-slate-950 outline-none placeholder:text-slate-500 dark:text-white dark:placeholder:text-slate-400 sm:text-[17px]"
+                  />
+                </div>
               </div>
 
               <button

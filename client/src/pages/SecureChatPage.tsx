@@ -1,5 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import {
+  memo,
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useMemo,
@@ -30,7 +33,6 @@ import {
   TickDouble02Icon,
   PaintBrush01Icon,
 } from '@hugeicons/core-free-icons';
-import EmojiPicker, { Theme, EmojiStyle } from 'emoji-picker-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { ThemeSelector, themes } from '../components/ThemeSelector';
 import { GlassThemeToggle } from '../components/GlassThemeToggle';
@@ -54,6 +56,9 @@ import {
 import { playNotificationSound } from '../utils/sound';
 import { useSwipeReply } from '../hooks/useSwipeReply';
 
+// Loaded on demand: renders only when the user opens the emoji picker.
+const EmojiPickerPanel = lazy(() => import('../components/EmojiPickerPanel'));
+
 const wallpapers = [
   { id: 'default', name: 'Default', url: '' },
   { id: 'wp1', name: 'Cool Cat', url: '/wallpaper1.png' },
@@ -73,22 +78,58 @@ const wallpapers = [
   { id: 'wp15', name: 'Flowers & Book', url: '/wallpaper15.png' },
 ];
 
-const formatTime = (dateValue: string) =>
-  new Intl.DateTimeFormat(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(dateValue));
+// One formatter + result cache instead of a new Intl.DateTimeFormat per
+// message per render (locale resolution is not cheap at scale).
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: '2-digit',
+  minute: '2-digit',
+});
+const timeCache = new Map<string, string>();
+
+const formatTime = (dateValue: string) => {
+  const cached = timeCache.get(dateValue);
+  if (cached !== undefined) return cached;
+
+  const formatted = timeFormatter.format(new Date(dateValue));
+  if (timeCache.size > 2000) timeCache.clear();
+  timeCache.set(dateValue, formatted);
+  return formatted;
+};
 
 const resolveMediaUrl = (url: string) => {
   if (!url.startsWith('/api/')) return url;
   return `${API_BASE_URL.replace(/\/api\/?$/, '')}${url}`;
 };
 
+// Hoisted regexes (built once) + result cache; these run per message.
+const FLAG_REGEX = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
+const EMOJI_REGEX = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
+const singleEmojiCache = new Map<string, boolean>();
+
 const isSingleEmoji = (str: string): boolean => {
-  const flagRegex = /^[\u{1F1E6}-\u{1F1FF}]{2}$/u;
-  const emojiRegex = /^(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*)(?:\u200d(?:(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})(?:[\uFE00-\uFE0F]|[\u{1F3FB}-\u{1F3FF}])*))*$/u;
   const trimmed = str.trim();
-  return flagRegex.test(trimmed) || emojiRegex.test(trimmed);
+  const cached = singleEmojiCache.get(trimmed);
+  if (cached !== undefined) return cached;
+
+  const result = FLAG_REGEX.test(trimmed) || EMOJI_REGEX.test(trimmed);
+  if (singleEmojiCache.size > 1000) singleEmojiCache.clear();
+  singleEmojiCache.set(trimmed, result);
+  return result;
+};
+
+const IMAGE_FILE_REGEX = /\.(jpg|jpeg|png|gif|webp|svg)$/i;
+const IMAGE_URL_REGEX = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i;
+
+const isImageMessage = (message: SecureChatMessage): boolean => {
+  return (
+    (message.type === 'file' &&
+      (message.fileType?.startsWith('image/') ||
+        IMAGE_FILE_REGEX.test(message.fileName || ''))) ||
+    (message.type === 'text' &&
+      (IMAGE_URL_REGEX.test(message.content) ||
+        (message.content.includes('cloudinary.com') &&
+          /image\/upload/.test(message.content))))
+  );
 };
 
 interface SwipeableMessageProps {
@@ -123,6 +164,229 @@ const SwipeableMessage = ({ isMine, onReply, children }: SwipeableMessageProps) 
     </div>
   );
 };
+
+interface SecureMessageBubbleProps {
+  message: SecureChatMessage;
+  currentUserId: string;
+  onReply: (message: SecureChatMessage) => void;
+  onScrollToMessage: (id: string) => void;
+  onOpenFullscreen: (url: string) => void;
+}
+
+/**
+ * Memoized per-message bubble. With stable handler props, page-level state
+ * changes (keystrokes, typing indicators, scroll button) no longer
+ * re-render existing messages.
+ */
+const SecureMessageBubble = memo(function SecureMessageBubble({
+  message,
+  currentUserId,
+  onReply,
+  onScrollToMessage,
+  onOpenFullscreen,
+}: SecureMessageBubbleProps) {
+  const isMine = message.sender.id === currentUserId;
+  const isEmojiOnly =
+    message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo;
+
+  return (
+    <article
+      id={`msg-${message.id}`}
+      className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
+    >
+      <SwipeableMessage isMine={isMine} onReply={() => onReply(message)}>
+        <div
+          className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'} ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
+        >
+          <div
+            className={`message-bubble ${
+              isMine ? 'message-bubble-mine' : 'message-bubble-other'
+            } ${
+              message.type === 'file' || isImageMessage(message)
+                ? 'message-bubble-media'
+                : isEmojiOnly
+                  ? 'message-bubble-emoji-only'
+                  : 'message-bubble-text'
+            }`}
+          >
+            <div className="flex flex-col relative">
+              {/* Reply preview inside bubble */}
+              {message.replyTo && (
+                <div
+                  onClick={() => message.replyTo && onScrollToMessage(message.replyTo.id)}
+                  className="reply-preview-bubble text-left"
+                >
+                  <p className="font-extrabold text-emerald-600 dark:text-emerald-400 mb-0.5">
+                    {message.replyTo.senderName}
+                  </p>
+                  <div className="flex items-center gap-1.5 opacity-90">
+                    {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
+                      <>
+                        <HugeiconsIcon icon={Image01Icon} size={14} />
+                        <span className="text-[11px] italic text-slate-350">Photo</span>
+                      </>
+                    ) : (
+                      <p className="truncate line-clamp-2 italic text-[11px]">
+                        {message.replyTo.content}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Reply Action Trigger */}
+              <div
+                className={`absolute top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover:opacity-100 transition-all duration-300 ${
+                  isMine ? '-left-12' : '-right-12'
+                }`}
+              >
+                <button
+                  type="button"
+                  onClick={() => onReply(message)}
+                  className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white transition active:scale-90"
+                  title="Reply"
+                >
+                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={16} />
+                </button>
+              </div>
+
+              {/* Message rendering */}
+              {isImageMessage(message) ? (
+                <div
+                  onClick={() => onOpenFullscreen(resolveMediaUrl(message.content))}
+                  className="media-container group/media"
+                >
+                  <img
+                    src={resolveMediaUrl(message.content)}
+                    alt={message.fileName || 'Image'}
+                    className="max-h-[300px] w-full min-w-[180px] object-cover transition-all duration-500 group-hover/media:scale-105"
+                    loading="lazy"
+                  />
+                  {message.status === 'sending' && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] text-white">
+                      <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white mb-2" />
+                      <span className="text-[10px] tracking-wider opacity-85">Uploading</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 transition-colors group-hover/media:bg-black/10" />
+                </div>
+              ) : message.type === 'file' ? (
+                <a
+                  href={message.content}
+                  download={message.fileName}
+                  className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+                    <HugeiconsIcon icon={ImageAdd01Icon} size={18} />
+                  </div>
+                  <div className="overflow-hidden text-left">
+                    <p className="truncate font-bold text-slate-200">{message.fileName || 'file'}</p>
+                    <p className="text-[9px] opacity-75 uppercase font-black tracking-wider">{formatFileSize(message.fileSize)}</p>
+                  </div>
+                </a>
+              ) : (
+                <div className="block text-left">
+                  <span className="message-content">
+                    {message.content}
+                  </span>
+                </div>
+              )}
+
+              {/* Timestamp & Seen Ticks */}
+              {!isEmojiOnly && (
+                <div className="message-meta">
+                  <span className="message-timestamp">
+                    {formatTime(message.createdAt)}
+                  </span>
+                  {isMine && (
+                    <div className="flex transition-all duration-300">
+                      <HugeiconsIcon
+                        icon={
+                          message.status === 'sending'
+                            ? Clock01Icon
+                            : message.status === 'sent'
+                              ? Tick02Icon
+                              : TickDouble02Icon
+                        }
+                        size={14}
+                        className={`
+                          ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
+                          ${message.status === 'sending' ? 'animate-pulse' : ''}
+                        `}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Emoji-only Meta */}
+              {isEmojiOnly && (
+                <div className="message-meta">
+                  <span className="message-timestamp">
+                    {formatTime(message.createdAt)}
+                  </span>
+                  {isMine && (
+                    <div className="flex transition-all duration-300">
+                      <HugeiconsIcon
+                        icon={
+                          message.status === 'sending'
+                            ? Clock01Icon
+                            : message.status === 'sent'
+                              ? Tick02Icon
+                              : TickDouble02Icon
+                        }
+                        size={14}
+                        className={`
+                          ${message.status === 'seen' ? 'text-sky-400' : 'text-slate-400'}
+                          ${message.status === 'sending' ? 'animate-pulse' : ''}
+                        `}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </SwipeableMessage>
+    </article>
+  );
+});
+
+interface SecureMessageListProps {
+  messages: SecureChatMessage[];
+  currentUserId: string;
+  onReply: (message: SecureChatMessage) => void;
+  onScrollToMessage: (id: string) => void;
+  onOpenFullscreen: (url: string) => void;
+}
+
+/**
+ * Memoized message list. When `messages` is unchanged the whole list is
+ * skipped, so keystrokes/typing/scroll state never touch message DOM.
+ */
+const SecureMessageList = memo(function SecureMessageList({
+  messages,
+  currentUserId,
+  onReply,
+  onScrollToMessage,
+  onOpenFullscreen,
+}: SecureMessageListProps) {
+  return (
+    <>
+      {messages.map((message) => (
+        <SecureMessageBubble
+          key={message.id}
+          message={message}
+          currentUserId={currentUserId}
+          onReply={onReply}
+          onScrollToMessage={onScrollToMessage}
+          onOpenFullscreen={onOpenFullscreen}
+        />
+      ))}
+    </>
+  );
+});
 
 export const SecureChatPage = () => {
   const { chatId } = useParams();
@@ -175,14 +439,20 @@ export const SecureChatPage = () => {
     return localStorage.getItem(`secure_wallpaper_${activeChatId}`) || '';
   });
   const [showMobileWallpaperPicker, setShowMobileWallpaperPicker] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+  // matchMedia fires only when the viewport crosses the breakpoint instead
+  // of on every resize frame, so no debouncing is needed.
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia('(max-width: 1023px)').matches
+  );
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
+    const mediaQuery = window.matchMedia('(max-width: 1023px)');
+    const handleChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   const handleSelectWallpaper = (url: string) => {
@@ -213,6 +483,7 @@ export const SecureChatPage = () => {
   const typingTimeoutRef = useRef<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const soundEnabledRef = useRef(soundEnabled);
+  const scrollRafRef = useRef<number | null>(null);
 
   // typing placeholders
   const placeholder = 'Type a secure message...';
@@ -262,40 +533,45 @@ export const SecureChatPage = () => {
     isAtBottomRef.current = true;
   }, []);
 
+  // rAF-throttled: the scroll handler runs at most once per frame instead of
+  // once per scroll event, and only updates state when the bottom state flips.
   const handleScroll = useCallback(() => {
-    if (!scrollContainerRef.current) return;
+    if (scrollRafRef.current !== null) return;
 
-    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
-    const isBottom = scrollHeight - scrollTop - clientHeight < 100;
+    scrollRafRef.current = window.requestAnimationFrame(() => {
+      scrollRafRef.current = null;
 
-    isAtBottomRef.current = isBottom;
-    setShowScrollButton(!isBottom);
+      if (!scrollContainerRef.current) return;
 
-    if (isBottom) {
-      setUnreadCount(0);
-    }
+      const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+      const isBottom = scrollHeight - scrollTop - clientHeight < 100;
 
+      isAtBottomRef.current = isBottom;
+      setShowScrollButton(!isBottom);
 
+      if (isBottom) {
+        setUnreadCount(0);
+      }
+    });
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
+  }, []);
+
+  // Typing indicators must not scroll the chat — only new content should.
   useEffect(() => {
     if (isAtBottomRef.current && unlockToken) {
       scrollToBottom('smooth');
     }
-  }, [messages, typingUsers, scrollToBottom, unlockToken]);
+  }, [messages, scrollToBottom, unlockToken]);
 
-  const isImageMessage = useCallback((message: SecureChatMessage) => {
-    return (
-      (message.type === 'file' &&
-        (message.fileType?.startsWith('image/') ||
-          /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(message.fileName || ''))) ||
-      (message.type === 'text' &&
-        (/^https?:\/\/.*\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(message.content) ||
-          (message.content.includes('cloudinary.com') && /image\/upload/.test(message.content))))
-    );
-  }, []);
-
-  const scrollToMessage = (id: string) => {
+  const scrollToMessage = useCallback((id: string) => {
     const element = document.getElementById(`msg-${id}`);
     if (element && scrollContainerRef.current) {
       const container = scrollContainerRef.current;
@@ -309,12 +585,12 @@ export const SecureChatPage = () => {
         element.classList.remove('bg-emerald-500/20', 'dark:bg-emerald-500/30');
       }, 1500);
     }
-  };
+  }, []);
 
-  const handleReply = (message: SecureChatMessage) => {
+  const handleReply = useCallback((message: SecureChatMessage) => {
     setReplyingTo(message);
     textareaRef.current?.focus();
-  };
+  }, []);
 
   const stopTyping = useCallback(() => {
     if (!activeChatId) return;
@@ -534,47 +810,110 @@ export const SecureChatPage = () => {
     return () => clearTimeout(timer);
   }, [tempRoomInvite, inviteCountdown, navigate]);
 
-  // Seen detection logic
+  // Seen detection logic.
+  // One persistent IntersectionObserver for the whole conversation: each
+  // messages change only re-observes messages that are still unseen
+  // (observe() is a no-op for already-observed targets), so a busy
+  // conversation no longer tears down and rebuilds the observer — with its
+  // O(n) work and DOM queries — on every message update.
+  const seenObserverRef = useRef<IntersectionObserver | null>(null);
+  const deliveredEmittedRef = useRef<Set<string>>(new Set());
+  const messagesRef = useRef(messages);
+  const userIdRef = useRef<string | null>(user?.id ?? null);
+  const chatIdRef = useRef(activeChatId);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user]);
+
+  useEffect(() => {
+    chatIdRef.current = activeChatId;
+  }, [activeChatId]);
+
   useEffect(() => {
     if (!user || !messages.length || !unlockToken) return;
 
     const socket = getSecureSocket();
+
     if (socket.connected) {
-      messages
-        .filter((m) => m.sender.id !== user.id && !m.deliveredTo.includes(user.id))
-        .forEach((m) => {
+      messages.forEach((m) => {
+        if (
+          m.sender.id !== user.id &&
+          !m.deliveredTo.includes(user.id) &&
+          !deliveredEmittedRef.current.has(m.id)
+        ) {
+          deliveredEmittedRef.current.add(m.id);
           socket.emit('secure:message:delivered', { chatId: activeChatId, messageId: m.id });
-        });
+        }
+      });
     }
 
-    const unreadMessages = messages.filter(
-      (m) => m.sender.id !== user.id && !m.seenBy.includes(user.id)
-    );
+    if (!seenObserverRef.current) {
+      seenObserverRef.current = new IntersectionObserver(
+        (entries) => {
+          const currentUserId = userIdRef.current;
+          const currentChatId = chatIdRef.current;
+          if (!currentUserId || !currentChatId) return;
 
-    if (!unreadMessages.length) return;
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
             const messageId = entry.target.id.replace('msg-', '');
-            const socket = getSecureSocket();
-            if (socket.connected) {
-              socket.emit('secure:message:seen', { chatId: activeChatId, messageId });
-            }
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+            const message = messagesRef.current.find((m) => m.id === messageId);
+            if (!message || message.sender.id === currentUserId) return;
 
-    unreadMessages.forEach((m) => {
+            const currentSocket = getSecureSocket();
+            if (!currentSocket.connected) return;
+
+            // Only stop tracking after a successful hand-off to the socket,
+            // so a message visible while offline is retried later.
+            seenObserverRef.current?.unobserve(entry.target);
+            currentSocket.emit('secure:message:seen', { chatId: currentChatId, messageId });
+          });
+        },
+        { threshold: 0.5 }
+      );
+    }
+
+    const observer = seenObserverRef.current;
+
+    messages.forEach((m) => {
+      if (m.sender.id === user.id || m.seenBy.includes(user.id)) return;
+
       const el = document.getElementById(`msg-${m.id}`);
       if (el) observer.observe(el);
     });
-
-    return () => observer.disconnect();
   }, [messages, user, unlockToken, activeChatId]);
+
+  // Re-delivery safety: after a reconnect, allow delivered pings again for
+  // messages the server may have missed while we were offline.
+  useEffect(() => {
+    const handleConnect = () => {
+      deliveredEmittedRef.current.clear();
+    };
+
+    const socket = getSecureSocket();
+    socket.on('connect', handleConnect);
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, []);
+
+  // Switching chats (and unmount): reset seen tracking so the next
+  // conversation starts fresh. Runs as cleanup, i.e. before the observe
+  // effect re-runs for the new chat.
+  useEffect(() => {
+    const deliveredEmitted = deliveredEmittedRef.current;
+    return () => {
+      seenObserverRef.current?.disconnect();
+      seenObserverRef.current = null;
+      deliveredEmitted.clear();
+    };
+  }, [activeChatId]);
 
   // Handle emoji click outside
   useEffect(() => {
@@ -1173,6 +1512,8 @@ export const SecureChatPage = () => {
                             <img
                               src={wp.url}
                               alt={wp.name}
+                              loading="lazy"
+                              decoding="async"
                               className="h-16 w-12 rounded-lg object-cover border border-slate-200 dark:border-slate-800"
                             />
                           ) : (
@@ -1264,174 +1605,13 @@ export const SecureChatPage = () => {
                 </span>
               </div>
 
-              {messages.map((message) => {
-                const isMine = message.sender.id === user?.id;
-
-                return (
-                  <article
-                    key={message.id}
-                    id={`msg-${message.id}`}
-                    className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${isMine ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <SwipeableMessage isMine={isMine} onReply={() => handleReply(message)}>
-                      <div
-                        className={`group relative flex flex-col transition-opacity duration-300 ${isMine ? 'items-end' : 'items-start'} ${message.status === 'sending' ? 'opacity-70' : 'opacity-100'}`}
-                      >
-                        <div
-                          className={`message-bubble ${
-                            isMine ? 'message-bubble-mine' : 'message-bubble-other'
-                          } ${
-                            message.type === 'file' || isImageMessage(message)
-                              ? 'message-bubble-media'
-                              : (message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo)
-                                ? 'message-bubble-emoji-only'
-                                : 'message-bubble-text'
-                          }`}
-                        >
-                          <div className="flex flex-col relative">
-                            {/* Reply preview inside bubble */}
-                            {message.replyTo && (
-                              <div
-                                onClick={() => message.replyTo && scrollToMessage(message.replyTo.id)}
-                                className="reply-preview-bubble text-left"
-                              >
-                                <p className="font-extrabold text-emerald-600 dark:text-emerald-400 mb-0.5">
-                                  {message.replyTo.senderName}
-                                </p>
-                                <div className="flex items-center gap-1.5 opacity-90">
-                                  {(message.replyTo.content.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp|svg)/i.test(message.replyTo.content)) ? (
-                                    <>
-                                      <HugeiconsIcon icon={Image01Icon} size={14} />
-                                      <span className="text-[11px] italic text-slate-350">Photo</span>
-                                    </>
-                                  ) : (
-                                    <p className="truncate line-clamp-2 italic text-[11px]">
-                                      {message.replyTo.content}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Reply Action Trigger */}
-                            <div
-                              className={`absolute top-1/2 -translate-y-1/2 hidden lg:flex opacity-0 group-hover:opacity-100 transition-all duration-300 ${
-                                isMine ? '-left-12' : '-right-12'
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => handleReply(message)}
-                                className="rounded-full bg-slate-800 p-2 text-slate-400 hover:text-white transition active:scale-90"
-                                title="Reply"
-                              >
-                                <HugeiconsIcon icon={ArrowTurnBackwardIcon} size={16} />
-                              </button>
-                            </div>
-
-                            {/* Message rendering */}
-                            {isImageMessage(message) ? (
-                              <div
-                                onClick={() => setFullscreenImage(resolveMediaUrl(message.content))}
-                                className="media-container group/media"
-                              >
-                                <img
-                                  src={resolveMediaUrl(message.content)}
-                                  alt={message.fileName || 'Image'}
-                                  className="max-h-[300px] w-full min-w-[180px] object-cover transition-all duration-500 group-hover/media:scale-105"
-                                  loading="lazy"
-                                />
-                                {message.status === 'sending' && (
-                                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] text-white">
-                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white mb-2" />
-                                    <span className="text-[10px] tracking-wider opacity-85">Uploading</span>
-                                  </div>
-                                )}
-                                <div className="absolute inset-0 bg-black/0 transition-colors group-hover/media:bg-black/10" />
-                              </div>
-                            ) : message.type === 'file' ? (
-                              <a
-                                href={message.content}
-                                download={message.fileName}
-                                className="flex items-center gap-3 rounded-xl border border-white/20 bg-black/5 p-3 text-sm font-medium transition hover:bg-black/10 dark:bg-white/5 dark:hover:bg-white/10 mb-2"
-                              >
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
-                                  <HugeiconsIcon icon={ImageAdd01Icon} size={18} />
-                                </div>
-                                <div className="overflow-hidden text-left">
-                                  <p className="truncate font-bold text-slate-200">{message.fileName || 'file'}</p>
-                                  <p className="text-[9px] opacity-75 uppercase font-black tracking-wider">{formatFileSize(message.fileSize)}</p>
-                                </div>
-                              </a>
-                            ) : (
-                              <div className="block text-left">
-                                <span className="message-content">
-                                  {message.content}
-                                </span>
-                              </div>
-                            )}
-
-                            {/* Timestamp & Seen Ticks */}
-                            {!(message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo) && (
-                              <div className="message-meta">
-                                <span className="message-timestamp">
-                                  {formatTime(message.createdAt)}
-                                </span>
-                                {isMine && (
-                                  <div className="flex transition-all duration-300">
-                                    <HugeiconsIcon
-                                      icon={
-                                        message.status === 'sending'
-                                          ? Clock01Icon
-                                          : message.status === 'sent'
-                                          ? Tick02Icon
-                                          : TickDouble02Icon
-                                      }
-                                      size={14}
-                                      className={`
-                                        ${message.status === 'seen' ? 'text-sky-400' : 'text-white'}
-                                        ${message.status === 'sending' ? 'animate-pulse' : ''}
-                                      `}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-
-                            {/* Emoji-only Meta */}
-                            {(message.type === 'text' && isSingleEmoji(message.content) && !message.replyTo) && (
-                              <div className="message-meta">
-                                <span className="message-timestamp">
-                                  {formatTime(message.createdAt)}
-                                </span>
-                                {isMine && (
-                                  <div className="flex transition-all duration-300">
-                                    <HugeiconsIcon
-                                      icon={
-                                        message.status === 'sending'
-                                          ? Clock01Icon
-                                          : message.status === 'sent'
-                                          ? Tick02Icon
-                                          : TickDouble02Icon
-                                      }
-                                      size={14}
-                                      className={`
-                                        ${message.status === 'seen' ? 'text-sky-400' : 'text-slate-400'}
-                                        ${message.status === 'sending' ? 'animate-pulse' : ''}
-                                      `}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </SwipeableMessage>
-                  </article>
-                );
-              })}
-
+              <SecureMessageList
+                messages={messages}
+                currentUserId={user?.id ?? ''}
+                onReply={handleReply}
+                onScrollToMessage={scrollToMessage}
+                onOpenFullscreen={setFullscreenImage}
+              />
               {typingNames.length > 0 && (
                 <div className="flex items-center gap-2 py-1">
                   <div className="flex gap-1.5 bg-slate-900 border border-slate-800 rounded-full px-3 py-1.5 items-center">
@@ -1496,17 +1676,19 @@ export const SecureChatPage = () => {
                 ref={emojiPickerRef}
                 className="absolute bottom-full left-0 right-0 z-50 mb-3 px-2 sm:left-4 sm:right-auto sm:w-fit sm:px-0 animate-in fade-in slide-in-from-bottom-4"
               >
-                <div className="overflow-hidden rounded-2xl shadow-2xl">
-                  <EmojiPicker
-                    theme={theme === 'dark' ? Theme.DARK : Theme.LIGHT}
-                    emojiStyle={EmojiStyle.APPLE}
-                    width="100%"
+                <Suspense
+                  fallback={
+                    <div className="h-[320px] w-full animate-pulse rounded-2xl bg-slate-100 dark:bg-slate-900" />
+                  }
+                >
+                  <EmojiPickerPanel
+                    dark={theme === 'dark'}
                     height={320}
-                    onEmojiClick={(emojiData) => {
-                      setMessageText((current) => current + emojiData.emoji);
+                    onEmojiClick={(emoji) => {
+                      setMessageText((current) => current + emoji);
                     }}
                   />
-                </div>
+                </Suspense>
               </div>
             )}
 

@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -68,22 +69,39 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('glassTheme', glassTheme);
   }, [glassTheme]);
 
+  // Stable callbacks so consumers that only call the setters never see
+  // changing function identities when theme values change.
+  const toggleTheme = useCallback(
+    () =>
+      setTheme((currentTheme) =>
+        currentTheme === 'dark' ? 'light' : 'dark'
+      ),
+    []
+  );
+
+  const setAccent = useCallback(
+    (newAccent: Accent) => setAccentState(newAccent),
+    []
+  );
+
+  const toggleGlassTheme = useCallback(
+    () =>
+      setGlassTheme((current) =>
+        current === 'adaptive' ? 'default' : 'adaptive'
+      ),
+    []
+  );
+
   const value = useMemo(
     () => ({
       theme,
       accent,
       glassTheme,
-      toggleTheme: () =>
-        setTheme((currentTheme) =>
-          currentTheme === 'dark' ? 'light' : 'dark'
-        ),
-      setAccent: (newAccent: Accent) => setAccentState(newAccent),
-      toggleGlassTheme: () =>
-        setGlassTheme((current) =>
-          current === 'adaptive' ? 'default' : 'adaptive'
-        ),
+      toggleTheme,
+      setAccent,
+      toggleGlassTheme,
     }),
-    [theme, accent, glassTheme]
+    [theme, accent, glassTheme, toggleTheme, setAccent, toggleGlassTheme]
   );
 
   return (

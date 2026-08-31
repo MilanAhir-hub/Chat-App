@@ -2,16 +2,38 @@ type WindowWithWebkitAudio = Window & {
   webkitAudioContext?: typeof AudioContext;
 };
 
-export const playNotificationSound = () => {
+// One shared AudioContext for short notification beeps. Creating a new
+// AudioContext per sound allocates OS-level audio resources every time and
+// can exhaust the browser's concurrent-context limit in busy chats.
+let sharedContext: AudioContext | null = null;
+
+const getSharedAudioContext = (): AudioContext | null => {
   const AudioContextClass =
     window.AudioContext ||
     (window as WindowWithWebkitAudio).webkitAudioContext;
 
   if (!AudioContextClass) {
+    return null;
+  }
+
+  if (!sharedContext || sharedContext.state === 'closed') {
+    sharedContext = new AudioContextClass();
+  }
+
+  if (sharedContext.state === 'suspended') {
+    void sharedContext.resume();
+  }
+
+  return sharedContext;
+};
+
+export const playNotificationSound = () => {
+  const context = getSharedAudioContext();
+
+  if (!context) {
     return;
   }
 
-  const context = new AudioContextClass();
   const oscillator = context.createOscillator();
   const gain = context.createGain();
 
@@ -23,10 +45,6 @@ export const playNotificationSound = () => {
   gain.connect(context.destination);
   oscillator.start();
   oscillator.stop(context.currentTime + 0.12);
-
-  oscillator.onended = () => {
-    void context.close();
-  };
 };
 
 export const playIncomingRing = () => {
