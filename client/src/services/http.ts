@@ -4,15 +4,8 @@ interface ApiErrorBody {
   message?: string;
 }
 
-const getApiBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return `http://${window.location.hostname}:5000/api`;
-  }
-  return envUrl || 'http://localhost:5000/api';
-};
-
-export const API_BASE_URL = getApiBaseUrl();
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
